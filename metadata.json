@@ -1,0 +1,6 @@
+{
+  "name": "Centro de Servicios",
+  "description": "Plataforma de autoservicio móvil para operarios de producción nuevos en la industria manufacturera.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
