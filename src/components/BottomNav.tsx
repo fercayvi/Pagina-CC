@@ -26,9 +26,9 @@ export default function BottomNav({ currentTab, setCurrentTab, unreadAvisosCount
   return (
     <nav 
       id="bottom-navigation-bar"
-      className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 shadow-[0_-4px_16px_rgba(0,0,0,0.03)] z-40"
+      className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-xs z-40"
     >
-      <div className="flex justify-around items-center h-16 max-w-5xl mx-auto px-4 md:px-8">
+      <div className="flex justify-around items-center h-16 max-w-4xl mx-auto px-2 md:px-6">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = currentTab === tab.id;
@@ -37,14 +37,14 @@ export default function BottomNav({ currentTab, setCurrentTab, unreadAvisosCount
               key={tab.id}
               id={`nav-tab-${tab.id}`}
               onClick={() => setCurrentTab(tab.id)}
-              className="relative flex flex-col items-center justify-center w-full h-full text-center transition-colors focus:outline-none"
-              style={{ minHeight: '48px' }} // Touch target guidelines
+              className="relative flex flex-col items-center justify-center w-full h-full text-center transition-colors focus:outline-none group"
+              style={{ minHeight: '48px' }}
               aria-label={tab.label}
             >
-              <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-blue-50 text-blue-600 scale-110' : 'text-slate-400 hover:text-slate-600'}`}>
-                <Icon className="w-5 font-bold h-5" />
+              <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-slate-900 text-white' : 'text-slate-400 group-hover:text-slate-700'}`}>
+                <Icon className="w-4.5 h-4.5" strokeWidth={2.2} />
               </div>
-              <span className={`text-[10px] font-medium mt-0.5 tracking-wide transition-colors ${isActive ? 'text-blue-600 font-semibold' : 'text-slate-400'}`}>
+              <span className={`text-[10px] mt-1 tracking-tight transition-colors ${isActive ? 'text-slate-900 font-bold' : 'text-slate-500 font-medium'}`}>
                 {tab.label}
               </span>
               
@@ -52,7 +52,7 @@ export default function BottomNav({ currentTab, setCurrentTab, unreadAvisosCount
               {tab.badge !== undefined && tab.badge > 0 && (
                 <span 
                   id="nav-badge"
-                  className="absolute top-2 right-1/2 translate-x-4 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white animate-pulse"
+                  className="absolute top-1.5 right-1/2 translate-x-3.5 bg-rose-600 text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full border-2 border-white"
                 >
                   {tab.badge}
                 </span>
@@ -64,3 +64,4 @@ export default function BottomNav({ currentTab, setCurrentTab, unreadAvisosCount
     </nav>
   );
 }
+

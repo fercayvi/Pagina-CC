@@ -181,107 +181,92 @@ export const avisosData: Aviso[] = [
 export const faqsData: FAQ[] = [
   {
     category: ServiceId.Nomina,
-    question: '¿Qué día de la semana pagan?',
-    answer: 'Para los operadores de planta, el pago es SEMANAL y se deposita cada VIERNES por la mañana. Si hay un día festivo bancario el viernes, se deposita el jueves.'
+    question: '¿Qué día de la semana depositan la nómina?',
+    answer: 'Para todo el personal operativo de planta, el pago es SEMANAL y se deposita cada VIERNES por la mañana antes de las 9:00 AM. Si el viernes es día festivo bancario, el depósito se realiza el jueves inmediato anterior.'
   },
   {
     category: ServiceId.Nomina,
-    question: '¿Cómo obtengo mis recibos de nómina?',
-    answer: 'Los recibos se envían automáticamente por correo electrónico de la empresa o puedes descargarlos enviando la palabra "RECIBO" al WhatsApp oficial de RH de la empresa. También puedes solicitar su impresión mensual con tu supervisor.'
-  },
-  {
-    category: ServiceId.FondoAhorro,
-    question: '¿Cuánto me descuentan del fondo de ahorro?',
-    answer: 'Se te descuenta el 8% de tu salario base semanal, y la empresa aporta una cantidad exactamente igual (8%). Es decir, guardas el doble de lo que te quitan. Se entrega todo junto en la primera semana de diciembre.'
+    question: '¿Cómo puedo obtener mis recibos de nómina impresos o digitales?',
+    answer: 'Los recibos digitales se envían semanalmente a tu correo institucional. Si requieres tus recibos impresos para un trámite personal, puedes solicitarlos en la ventanilla de Recursos Humanos de Lunes a Viernes de 8:00 AM a 5:00 PM.'
   },
   {
     category: ServiceId.TarjetaDespensa,
-    question: '¿Cuándo cargan el saldo de los vales de despensa?',
-    answer: 'Los vales de despensa se depositan el día 25 de cada mes. Si cae en fin de semana, se deposita el viernes anterior.'
+    question: '¿Cuándo se realiza la dispersión de vales de despensa?',
+    answer: 'El saldo de la tarjeta de vales Toka se deposita el día 25 de cada mes. Si el día 25 cae en fin de semana o día festivo, la dispersión se adelanta al día hábil anterior.'
+  },
+  {
+    category: ServiceId.TarjetaDespensa,
+    question: '¿Qué debo hacer si pierdo o me roban la tarjeta de vales?',
+    answer: 'Llama inmediatamente a la línea de Toka al 800-400-8652 para bloquear el plástico. Posteriormente, acude a Recursos Humanos con tu número de reporte de bloqueo para tramitar el repuesto.'
+  },
+  {
+    category: ServiceId.RelojChecador,
+    question: '¿Cómo solicito la justificación por omisión de chequeo?',
+    answer: 'Solicita la Papeleta de Corrección de Chequeo a tu supervisor de turno (Ing. Héctor Ramírez), pide su firma de autorización y entrégala en la ventanilla de RH antes del martes a las 12:00 PM.'
+  },
+  {
+    category: ServiceId.AclaracionPago,
+    question: '¿Cuál es el tiempo límite para solicitar aclaraciones de mi sueldo?',
+    answer: 'Tienes un plazo máximo de 5 días hábiles contados a partir del viernes de pago. Debes presentar tu recibo de nómina físico y contar con la verificación del supervisor de turno.'
+  },
+  {
+    category: ServiceId.CajaAhorro,
+    question: '¿Cuándo puedo modificar mi porcentaje de ahorro en la Caja?',
+    answer: 'Los cambios de porcentaje (entre 2% y 10%) se solicitan en la ventanilla de Recursos Humanos durante los meses de Enero y Julio de cada año.'
   },
   {
     category: ServiceId.Vacaciones,
-    question: '¿Cuántos días de vacaciones tengo en mi primer año?',
-    answer: 'Por la nueva ley mexicana, al cumplir tu primer año completo de trabajo tienes derecho a 12 DÍAS hábiles de vacaciones pagadas.'
+    question: '¿Con cuánta anticipación debo programar mis vacaciones?',
+    answer: 'Debes acordar las fechas con tu supervisor inmediato con al menos 15 días de anticipación y firmar la Solicitud de Vacaciones en RH para garantizar la cobertura en la línea de producción.'
+  },
+  {
+    category: ServiceId.Vacaciones,
+    question: '¿Cuántos días de descanso me corresponden por antigüedad?',
+    answer: 'De acuerdo con la Ley Federal del Trabajo: 1 año = 12 días; 2 años = 14 días; 3 años = 16 días; 4 años = 18 días; 5 años = 20 días; de 6 a 10 años = 22 días.'
+  },
+  {
+    category: ServiceId.Infonavit,
+    question: '¿Dónde entregó mi Aviso de Retención de Descuentos de Infonavit?',
+    answer: 'Debes entregar el documento impreso original en la oficina de Nóminas de Planta de Lunes a Viernes de 9:00 AM a 2:00 PM para su aplicación en la siguiente nómina.'
+  },
+  {
+    category: ServiceId.Incapacidades,
+    question: '¿Cómo se deben reportar las incapacidades expedidas por el IMSS?',
+    answer: 'Notifica a tu supervisor y envía una foto legible de la copia patronal de la incapacidad al WhatsApp de RH (+52 55 1234 5678) dentro de las primeras 24 horas. El original en papel se entrega al regresar a laborar.'
+  },
+  {
+    category: ServiceId.Incapacidades,
+    question: '¿Cómo se pagan los días de incapacidad por enfermedad general?',
+    answer: 'El IMSS paga a partir del 4to día de incapacidad el 60% de tu salario diario integrado registrado. Los primeros 3 días no son cubiertos por el instituto salvo disposición de contrato colectivo.'
+  },
+  {
+    category: ServiceId.Prestamos,
+    question: '¿Cuáles son los requisitos para solicitar un préstamo de empresa?',
+    answer: 'Antigüedad mínima de 1 año ininterrumpido en la planta, no contar con ningún adeudo previo activo y que la deducción semanal no exceda el 30% de tu sueldo base.'
   },
   {
     category: ServiceId.Transporte,
-    question: '¿Qué pasa si el camión de transporte se retrasa?',
-    answer: 'Si el camión llega tarde a la planta por tráfico o falla mecánica, tu retardo está JUSTIFICADO al 100%. Debes avisar de inmediato al grupo de WhatsApp de tu ruta.'
+    question: '¿Qué tolerancia existe si la unidad de transporte sufre un retraso?',
+    answer: 'Si la unidad oficial de la empresa sufre una falla o demora en el tráfico, la llegada a la planta se registra como asistencia justificada sin penalización de retardo.'
   },
   {
     category: ServiceId.Uniformes,
-    question: '¿Qué hago si se daña mi uniforme o botas?',
-    answer: 'Acude con tu supervisor para que llene el formato de "Reposición por Daño Operativo". Con este papel firmado, asistes a Almacén para recibir tu nueva prenda o calzado sin costo.'
+    question: '¿Cada cuánto tiempo se renueva el uniforme y las botas de casquillo?',
+    answer: 'La reposición ordinaria de uniforme (playeras y pantalones) y calzado de seguridad Berrendo se realiza de manera programada cada 6 meses sin costo para el trabajador.'
   },
   {
-    category: ServiceId.RelojChecador,
-    question: '¿Cómo reporto una omisión de marca?',
-    answer: 'Debes solicitar a tu supervisor Héctor Ramírez que firme el formato de Corrección de Marcaje y entregarlo en la oficina de RH en un plazo no mayor a 3 días.'
-  },
-  {
-    category: ServiceId.RelojChecador,
-    question: '¿Qué pasa si olvido registrar mi entrada?',
-    answer: 'Se registrará como falta injustificada temporalmente hasta que presentes el formato de corrección debidamente autorizado por tu jefe inmediato.'
-  },
-  {
-    category: ServiceId.AclaracionPago,
-    question: '¿Cuánto tiempo tengo para reclamar un error en mi recibo?',
-    answer: 'Tienes un plazo de 5 días hábiles a partir del día de pago para realizar cualquier aclaración sobre horas extra, bonos o deducciones en tu recibo.'
-  },
-  {
-    category: ServiceId.AclaracionPago,
-    question: '¿Con quién debo acudir para aclarar mi nómina?',
-    answer: 'Puedes mandar un mensaje a través del asistente virtual "Sofía" o acudir directamente a la ventanilla de atención de nóminas los martes y jueves de 2:00 PM a 4:00 PM.'
-  },
-  {
-    category: ServiceId.CajaAhorro,
-    question: '¿Cuándo puedo retirar fondos de la caja de ahorro?',
-    answer: 'Los retiros ordinarios se pueden realizar dos veces al año (en junio y diciembre). Para retiros de emergencia, consulta las condiciones con Recursos Humanos.'
-  },
-  {
-    category: ServiceId.CajaAhorro,
-    question: '¿Cuál es el rendimiento anual de la caja de ahorro?',
-    answer: 'La caja ofrece un rendimiento promedio del 6.5% anual sobre tus aportaciones acumuladas, libre de comisiones.'
-  },
-  {
-    category: ServiceId.Infonavit,
-    question: '¿Cómo solicito mi carta de retención del Infonavit?',
-    answer: 'Puedes descargarla directamente desde el portal Mi Cuenta Infonavit y enviarla digitalizada al correo de nóminas de la planta para que se aplique el descuento correspondiente.'
-  },
-  {
-    category: ServiceId.Infonavit,
-    question: '¿La empresa hace aportaciones a mi crédito Infonavit?',
-    answer: 'Sí, la empresa aporta bimestralmente el equivalente al 5% de tu salario diario integrado a tu Subcuenta de Vivienda.'
-  },
-  {
-    category: ServiceId.Incapacidades,
-    question: '¿Cómo debo reportar una incapacidad médica?',
-    answer: 'Debes enviar una foto legible de tu formato de incapacidad del IMSS al WhatsApp oficial de Recursos Humanos en las primeras 24 horas. El documento original en papel se debe entregar al regresar a laborar.'
-  },
-  {
-    category: ServiceId.Incapacidades,
-    question: '¿Cuánto paga el IMSS por incapacidad por enfermedad general?',
-    answer: 'El IMSS cubre a partir del cuarto día el 60% del salario registrado. Si es por riesgo de trabajo calificado, se paga al 100% desde el primer día.'
-  },
-  {
-    category: ServiceId.Prestamos,
-    question: '¿Cuáles son los requisitos para pedir un préstamo de la empresa?',
-    answer: 'Tener al menos 1 año de antigüedad en la planta, no contar con un préstamo activo vigente y que el descuento semanal no supere el 30% de tu sueldo base.'
-  },
-  {
-    category: ServiceId.Prestamos,
-    question: '¿Cuál es la tasa de interés de los préstamos?',
-    answer: 'Los préstamos de la empresa tienen un interés preferencial del 0% al 2% anual, diseñado exclusivamente para el apoyo de la economía de nuestros colaboradores de planta.'
+    category: ServiceId.Seguridad,
+    question: '¿Es obligatorio usar todo el Equipo de Protección Personal (EPP)?',
+    answer: 'Sí. El uso de botas de casquillo, lentes de seguridad, tapones auditivos y chaleco reflejante es estrictamente obligatorio para ingresar y permanecer en todas las áreas de manufactura.'
   },
   {
     category: 'general',
-    question: '¿Cómo justifico una falta si me enfermo?',
-    answer: 'Debes presentar ÚNICAMENTE la receta o incapacidad original emitida por el IMSS. Tienes hasta 48 horas después de tu regreso para entregarla a Recursos Humanos.'
+    question: '¿Cuál es el horario de atención de la oficina de Recursos Humanos?',
+    answer: 'La ventanilla de Recursos Humanos atiende de Lunes a Viernes en horario corrido de 8:00 AM a 5:00 PM y Sábados de 8:00 AM a 1:00 PM.'
   },
   {
     category: 'general',
-    question: '¿Perdí mi gafete de empleado, qué hago?',
-    answer: 'Reporta de inmediato con la caseta de seguridad para que te den un pase temporal. La primera reposición es gratuita; a partir de la segunda tiene un costo de $50 MXN que se descuenta de nómina.'
+    question: '¿Qué procedimiento debo seguir en caso de pérdida de mi gafete oficial?',
+    answer: 'Acude a la Caseta Principal de Seguridad para tramitar un pase provisional de acceso. La reposición física del gafete se gestiona en Recursos Humanos con un costo de $50 MXN.'
   }
 ];

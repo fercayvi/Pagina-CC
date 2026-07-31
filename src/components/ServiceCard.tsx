@@ -12,43 +12,36 @@ export default function ServiceCard({ service, onClick }: ServiceCardProps) {
   // Dynamically resolve icon from lucide-react Icons collection safely
   const IconComponent = (Icons as any)[service.iconName] || Icons.HelpCircle;
 
-  // Set background color base on category for visual grouping and beautiful look
+  // Modern corporate color pairs
   const getCategoryStyles = (category: string) => {
     switch (category) {
-      case 'dinero':
-        return {
-          cardBg: 'bg-emerald-50/40 border-emerald-100/80 hover:bg-emerald-50/80',
-          iconBg: 'bg-emerald-600 text-white shadow-xs',
-          badge: 'bg-emerald-100 text-emerald-800',
-          tag: 'Finanzas'
-        };
       case 'bienestar':
         return {
-          cardBg: 'bg-rose-50/40 border-rose-100/80 hover:bg-rose-50/80',
-          iconBg: 'bg-rose-600 text-white shadow-xs',
-          badge: 'bg-rose-100 text-rose-800',
+          cardBg: 'bg-white border-slate-200 hover:border-rose-300 hover:shadow-sm',
+          iconBg: 'bg-rose-50 text-rose-600 border border-rose-100',
+          badge: 'bg-rose-50 text-rose-700 border border-rose-200/60',
           tag: 'Bienestar'
         };
       case 'logistica':
         return {
-          cardBg: 'bg-amber-50/40 border-amber-100/80 hover:bg-amber-50/80',
-          iconBg: 'bg-amber-600 text-white shadow-xs',
-          badge: 'bg-amber-100 text-amber-800',
+          cardBg: 'bg-white border-slate-200 hover:border-amber-300 hover:shadow-sm',
+          iconBg: 'bg-amber-50 text-amber-600 border border-amber-100',
+          badge: 'bg-amber-50 text-amber-800 border border-amber-200/60',
           tag: 'Logística'
         };
       case 'servicios_personal':
         return {
-          cardBg: 'bg-purple-50/40 border-purple-100/80 hover:bg-purple-50/80',
-          iconBg: 'bg-purple-600 text-white shadow-xs',
-          badge: 'bg-purple-100 text-purple-800',
+          cardBg: 'bg-white border-slate-200 hover:border-purple-300 hover:shadow-sm',
+          iconBg: 'bg-purple-50 text-purple-600 border border-purple-100',
+          badge: 'bg-purple-50 text-purple-800 border border-purple-200/60',
           tag: 'Servicios al Personal'
         };
       case 'soporte':
       default:
         return {
-          cardBg: 'bg-blue-50/40 border-blue-100/80 hover:bg-blue-50/80',
-          iconBg: 'bg-blue-600 text-white shadow-xs',
-          badge: 'bg-blue-100 text-blue-800',
+          cardBg: 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-sm',
+          iconBg: 'bg-blue-50 text-blue-600 border border-blue-100',
+          badge: 'bg-blue-50 text-blue-700 border border-blue-200/60',
           tag: 'Soporte'
         };
     }
@@ -56,36 +49,31 @@ export default function ServiceCard({ service, onClick }: ServiceCardProps) {
 
   const styles = getCategoryStyles(service.category);
 
-  const isServiciosPersonal = service.category === 'servicios_personal';
-
   return (
     <button
       id={`service-card-${service.id}`}
       onClick={onClick}
-      className={`border-2 rounded-2xl p-4 flex flex-col justify-between text-left transition-all active:scale-98 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/30 ${styles.cardBg} ${
-        isServiciosPersonal 
-          ? 'hover:scale-[1.03] hover:shadow-md hover:border-purple-200' 
-          : 'hover:shadow-sm'
-      }`}
-      style={{ minHeight: '135px' }} // Adjusted for a bit higher polish
+      className={`group border rounded-2xl p-4 flex flex-col justify-between text-left transition-all active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-900/10 ${styles.cardBg}`}
+      style={{ minHeight: '140px' }}
     >
-      <div className="flex justify-between items-start w-full">
-        <div className={`p-2 rounded-xl ${styles.iconBg} transition-transform flex items-center justify-center`}>
-          <IconComponent className="w-5 h-5" strokeWidth={2.5} />
+      <div className="flex justify-between items-start w-full gap-2">
+        <div className={`p-2 rounded-xl ${styles.iconBg} transition-transform group-hover:scale-105 shrink-0 flex items-center justify-center`}>
+          <IconComponent className="w-4.5 h-4.5" strokeWidth={2.2} />
         </div>
-        <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md ${styles.badge} tracking-wider uppercase`}>
+        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${styles.badge} tracking-tight shrink-0`}>
           {styles.tag}
         </span>
       </div>
 
-      <div className="mt-3.5">
-        <h3 className="text-[13px] font-extrabold text-slate-900 tracking-tight leading-tight">
+      <div className="mt-3">
+        <h3 className="text-xs font-bold text-slate-900 tracking-tight leading-snug group-hover:text-blue-600 transition-colors">
           {service.title}
         </h3>
-        <p className="text-[10px] text-slate-500 font-medium mt-1.5 line-clamp-2 leading-relaxed">
+        <p className="text-[11px] text-slate-500 font-medium mt-1 line-clamp-2 leading-relaxed">
           {service.shortDesc}
         </p>
       </div>
     </button>
   );
 }
+
