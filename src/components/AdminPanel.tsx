@@ -24,32 +24,28 @@ import { Service, NewsItem, ServiceId, StepItem, ServiceFAQ } from '../types';
 import { getDefaultServiceDetails } from '../data';
 
 interface AdminPanelProps {
-  activeServices?: (Service & { hidden?: boolean })[];
-  setActiveServices?: React.Dispatch<React.SetStateAction<(Service & { hidden?: boolean })[]>>;
-  activeNews?: NewsItem[];
-  setActiveNews?: React.Dispatch<React.SetStateAction<NewsItem[]>>;
   services?: (Service & { hidden?: boolean })[];
-  onUpdateServices?: (services: (Service & { hidden?: boolean })[]) => void;
-  onSelectService?: (service: Service & { hidden?: boolean }, startInEditMode?: boolean) => void;
   news?: NewsItem[];
+  onDeleteService?: (id: string) => void;
+  onDeleteNews?: (id: string) => void;
+  onUpdateServices?: (services: (Service & { hidden?: boolean })[]) => void;
   onUpdateNews?: (news: NewsItem[]) => void;
+  onSelectService?: (service: Service & { hidden?: boolean }, startInEditMode?: boolean) => void;
   onLogout: () => void;
 }
 
 export default function AdminPanel({
-  activeServices,
-  setActiveServices,
-  activeNews,
-  setActiveNews,
-  services,
+  services = [],
+  news = [],
+  onDeleteService,
+  onDeleteNews,
   onUpdateServices,
   onSelectService,
-  news,
   onUpdateNews,
   onLogout
 }: AdminPanelProps) {
-  const currentServices = activeServices || services || [];
-  const currentNews = activeNews || news || [];
+  const currentServices = services;
+  const currentNews = news;
 
   const [activeTab, setActiveTab] = useState<'tramites' | 'noticias'>('tramites');
   const [successMessage, setSuccessMessage] = useState<string>('');
@@ -72,17 +68,13 @@ export default function AdminPanel({
   };
 
   const updateServicesList = (updater: (prev: (Service & { hidden?: boolean })[]) => (Service & { hidden?: boolean })[]) => {
-    if (setActiveServices) {
-      setActiveServices(updater);
-    } else if (onUpdateServices) {
+    if (onUpdateServices) {
       onUpdateServices(updater(currentServices));
     }
   };
 
   const updateNewsList = (updater: (prev: NewsItem[]) => NewsItem[]) => {
-    if (setActiveNews) {
-      setActiveNews(updater);
-    } else if (onUpdateNews) {
+    if (onUpdateNews) {
       onUpdateNews(updater(currentNews));
     }
   };
@@ -95,8 +87,8 @@ export default function AdminPanel({
 
   const handleDeleteService = (id: string) => {
     if (window.confirm('¿Estás seguro de eliminar este trámite por completo?')) {
-      if (setActiveServices) {
-        setActiveServices(prev => prev.filter(service => service.id !== id));
+      if (onDeleteService) {
+        onDeleteService(id);
       } else {
         updateServicesList(prev => prev.filter(service => service.id !== id));
       }
@@ -267,8 +259,8 @@ export default function AdminPanel({
   // --- NEWS HANDLERS ---
   const handleDeleteNews = (id: string) => {
     if (window.confirm('¿Estás seguro de eliminar este comunicado?')) {
-      if (setActiveNews) {
-        setActiveNews(prev => prev.filter(news => news.id !== id));
+      if (onDeleteNews) {
+        onDeleteNews(id);
       } else {
         updateNewsList(prev => prev.filter(news => news.id !== id));
       }

@@ -22,9 +22,9 @@ export default function App() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
 
-  // Dynamic content states (activeServices & activeNews)
-  const [activeServices, setActiveServices] = useState<(Service & { hidden?: boolean })[]>(servicesData);
-  const [activeNews, setActiveNews] = useState<NewsItem[]>(newsData);
+  // Dynamic content states
+  const [services, setServices] = useState<(Service & { hidden?: boolean })[]>(servicesData);
+  const [newsItems, setNewsItems] = useState<NewsItem[]>(newsData);
 
   // Public user context
   const user: UserProfile = userProfileData;
@@ -59,7 +59,7 @@ export default function App() {
   }, []);
 
   const handleUpdateService = (updated: Service & { hidden?: boolean }) => {
-    setActiveServices(prev => {
+    setServices(prev => {
       const exists = prev.some(s => s.id === updated.id);
       if (exists) {
         return prev.map(s => s.id === updated.id ? updated : s);
@@ -69,6 +69,14 @@ export default function App() {
     setSelectedService(updated);
   };
 
+  const handleDeleteService = (id: string) => {
+    setServices(prev => prev.filter(service => service.id !== id));
+  };
+
+  const handleDeleteNews = (id: string) => {
+    setNewsItems(prev => prev.filter(news => news.id !== id));
+  };
+
   const handleSelectService = (service: Service & { hidden?: boolean }, startEditing: boolean = false) => {
     setSelectedService(service);
     setServiceEditMode(startEditing);
@@ -76,7 +84,7 @@ export default function App() {
 
   // Filter services based on search text, category selection, and non-hidden status in public view
   const filteredServices = useMemo(() => {
-    return activeServices.filter((service) => {
+    return services.filter((service) => {
       if (service.hidden) return false;
 
       const matchesSearch = 
@@ -87,7 +95,7 @@ export default function App() {
       
       return matchesSearch && matchesCategory;
     });
-  }, [activeServices, searchQuery, selectedCategory]);
+  }, [services, searchQuery, selectedCategory]);
 
   // Categories helper
   const categories = [
@@ -141,14 +149,12 @@ export default function App() {
               /* ADMIN PANEL OR PUBLIC TABS */
               isAdminLoggedIn ? (
                 <AdminPanel
-                  activeServices={activeServices}
-                  setActiveServices={setActiveServices}
-                  activeNews={activeNews}
-                  setActiveNews={setActiveNews}
-                  services={activeServices}
-                  onUpdateServices={setActiveServices}
-                  news={activeNews}
-                  onUpdateNews={setActiveNews}
+                  services={services}
+                  news={newsItems}
+                  onDeleteService={handleDeleteService}
+                  onDeleteNews={handleDeleteNews}
+                  onUpdateServices={setServices}
+                  onUpdateNews={setNewsItems}
                   onSelectService={handleSelectService}
                   onLogout={() => {
                     setIsAdminLoggedIn(false);
@@ -209,7 +215,7 @@ export default function App() {
                   )}
 
                   {/* TAB 2: NOTICIAS */}
-                  {currentTab === 'noticias' && <NewsTab newsList={activeNews} />}
+                  {currentTab === 'noticias' && <NewsTab news={newsItems} />}
 
                   {/* TAB 3: ASISTENTE */}
                   {currentTab === 'asistente' && <AsistenteTab user={user} />}

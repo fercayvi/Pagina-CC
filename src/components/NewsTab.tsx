@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { Award, ChevronRight, X } from 'lucide-react';
 import { NewsItem } from '../types';
-import { newsData } from '../data';
 
 interface NewsTabProps {
+  news?: NewsItem[];
   newsList?: NewsItem[];
 }
 
-export default function NewsTab({ newsList }: NewsTabProps) {
+export default function NewsTab({ news, newsList }: NewsTabProps) {
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
-  const displayNews = newsList !== undefined ? newsList : newsData;
+  const displayNews = news || newsList || [];
 
   return (
     <div id="news-tab-container" className="space-y-5">
