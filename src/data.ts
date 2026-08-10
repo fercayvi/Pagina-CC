@@ -338,7 +338,16 @@ export function getDefaultServiceDetails(service: Service) {
     location,
     schedule,
     contact,
-    faqs
+    faqs,
+    showSteps: service.showSteps ?? true,
+    showRequirements: service.showRequirements ?? true,
+    showContact: service.showContact ?? true,
+    showFaqs: service.showFaqs ?? true,
+    imageUrl: service.imageUrl || '',
+    videoUrl: service.videoUrl || '',
+    attachments: service.attachments || [],
+    showAlertNotice: service.showAlertNotice ?? false,
+    alertNotice: service.alertNotice || ''
   };
 }
 

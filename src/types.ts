@@ -21,6 +21,13 @@ export interface ServiceFAQ {
   answer: string;
 }
 
+export interface ServiceAttachment {
+  id?: string;
+  name: string;
+  url: string;
+  fileType?: string;
+}
+
 export interface Service {
   id: ServiceId | string;
   title: string;
@@ -35,6 +42,21 @@ export interface Service {
   contact?: string;
   faqs?: ServiceFAQ[];
   hidden?: boolean;
+
+  // Dynamic Section Toggles
+  showSteps?: boolean;
+  showRequirements?: boolean;
+  showContact?: boolean;
+  showFaqs?: boolean;
+
+  // Multimedia & Attachments
+  imageUrl?: string;
+  videoUrl?: string;
+  attachments?: ServiceAttachment[];
+
+  // Free Text Alert Notice Block
+  showAlertNotice?: boolean;
+  alertNotice?: string;
 }
 
 export interface FAQ {

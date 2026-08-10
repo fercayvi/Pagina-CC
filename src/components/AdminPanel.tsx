@@ -89,6 +89,15 @@ export default function AdminPanel({
       schedule: 'Lunes a Viernes de 8:00 AM a 5:00 PM',
       contact: 'Recursos Humanos - Ext. 200',
       faqs: [{ question: '¿Cómo inicio este trámite?', answer: 'Presentándote en la ventanilla de Recursos Humanos.' }],
+      showSteps: true,
+      showRequirements: true,
+      showContact: true,
+      showFaqs: true,
+      imageUrl: '',
+      videoUrl: '',
+      attachments: [],
+      showAlertNotice: false,
+      alertNotice: '',
       hidden: false
     };
 
@@ -118,6 +127,15 @@ export default function AdminPanel({
         schedule: service.schedule || details.schedule,
         contact: service.contact || details.contact,
         faqs: service.faqs && service.faqs.length > 0 ? service.faqs : details.faqs,
+        showSteps: service.showSteps ?? details.showSteps,
+        showRequirements: service.showRequirements ?? details.showRequirements,
+        showContact: service.showContact ?? details.showContact,
+        showFaqs: service.showFaqs ?? details.showFaqs,
+        imageUrl: service.imageUrl ?? details.imageUrl,
+        videoUrl: service.videoUrl ?? details.videoUrl,
+        attachments: service.attachments ?? details.attachments,
+        showAlertNotice: service.showAlertNotice ?? details.showAlertNotice,
+        alertNotice: service.alertNotice ?? details.alertNotice,
       });
       setIsServiceModalOpen(true);
     }
