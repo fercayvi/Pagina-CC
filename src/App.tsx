@@ -24,7 +24,7 @@ export default function App() {
 
   // Dynamic content states
   const [services, setServices] = useState<(Service & { hidden?: boolean })[]>(servicesData);
-  const [newsItems, setNewsItems] = useState<NewsItem[]>(newsData);
+  const [news, setNews] = useState<NewsItem[]>(newsData);
 
   // Public user context
   const user: UserProfile = userProfileData;
@@ -74,7 +74,7 @@ export default function App() {
   };
 
   const handleDeleteNews = (id: string) => {
-    setNewsItems(prev => prev.filter(news => news.id !== id));
+    setNews(prev => prev.filter(item => item.id !== id));
   };
 
   const handleSelectService = (service: Service & { hidden?: boolean }, startEditing: boolean = false) => {
@@ -150,11 +150,11 @@ export default function App() {
               isAdminLoggedIn ? (
                 <AdminPanel
                   services={services}
-                  news={newsItems}
+                  news={news}
                   onDeleteService={handleDeleteService}
                   onDeleteNews={handleDeleteNews}
                   onUpdateServices={setServices}
-                  onUpdateNews={setNewsItems}
+                  onUpdateNews={setNews}
                   onSelectService={handleSelectService}
                   onLogout={() => {
                     setIsAdminLoggedIn(false);
@@ -215,7 +215,7 @@ export default function App() {
                   )}
 
                   {/* TAB 2: NOTICIAS */}
-                  {currentTab === 'noticias' && <NewsTab news={newsItems} />}
+                  {currentTab === 'noticias' && <NewsTab news={news} />}
 
                   {/* TAB 3: ASISTENTE */}
                   {currentTab === 'asistente' && <AsistenteTab user={user} />}

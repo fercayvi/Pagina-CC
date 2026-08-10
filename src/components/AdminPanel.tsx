@@ -28,6 +28,8 @@ interface AdminPanelProps {
   news?: NewsItem[];
   onDeleteService?: (id: string) => void;
   onDeleteNews?: (id: string) => void;
+  handleDeleteService?: (id: string) => void;
+  handleDeleteNews?: (id: string) => void;
   onUpdateServices?: (services: (Service & { hidden?: boolean })[]) => void;
   onUpdateNews?: (news: NewsItem[]) => void;
   onSelectService?: (service: Service & { hidden?: boolean }, startInEditMode?: boolean) => void;
@@ -39,6 +41,8 @@ export default function AdminPanel({
   news = [],
   onDeleteService,
   onDeleteNews,
+  handleDeleteService: handleDeleteServiceProp,
+  handleDeleteNews: handleDeleteNewsProp,
   onUpdateServices,
   onSelectService,
   onUpdateNews,
@@ -85,10 +89,13 @@ export default function AdminPanel({
     showToast('Estado del trámite actualizado correctamente.');
   };
 
+  const deleteServiceFn = handleDeleteServiceProp || onDeleteService;
+  const deleteNewsFn = handleDeleteNewsProp || onDeleteNews;
+
   const handleDeleteService = (id: string) => {
     if (window.confirm('¿Estás seguro de eliminar este trámite por completo?')) {
-      if (onDeleteService) {
-        onDeleteService(id);
+      if (deleteServiceFn) {
+        deleteServiceFn(id);
       } else {
         updateServicesList(prev => prev.filter(service => service.id !== id));
       }
@@ -259,8 +266,8 @@ export default function AdminPanel({
   // --- NEWS HANDLERS ---
   const handleDeleteNews = (id: string) => {
     if (window.confirm('¿Estás seguro de eliminar este comunicado?')) {
-      if (onDeleteNews) {
-        onDeleteNews(id);
+      if (deleteNewsFn) {
+        deleteNewsFn(id);
       } else {
         updateNewsList(prev => prev.filter(news => news.id !== id));
       }
@@ -494,9 +501,9 @@ export default function AdminPanel({
 
           {/* News List */}
           <div className="space-y-3">
-            {currentNews.map((item) => (
+            {currentNews.map((newsItem) => (
               <div
-                key={item.id}
+                key={newsItem.id}
                 className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs hover:border-slate-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
               >
                 <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -506,17 +513,17 @@ export default function AdminPanel({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
-                        {item.category}
+                        {newsItem.category}
                       </span>
                       <span className="text-[10px] text-slate-400 font-medium">
-                        {item.date}
+                        {newsItem.date}
                       </span>
                     </div>
                     <h4 className="text-sm font-bold text-slate-900 truncate">
-                      {item.title}
+                      {newsItem.title}
                     </h4>
                     <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
-                      {item.summary}
+                      {newsItem.summary}
                     </p>
                   </div>
                 </div>
@@ -524,7 +531,7 @@ export default function AdminPanel({
                 {/* Actions */}
                 <div className="flex items-center gap-1.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
                   <button
-                    onClick={() => handleOpenEditNewsModal(item)}
+                    onClick={() => handleOpenEditNewsModal(newsItem)}
                     className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
@@ -532,7 +539,7 @@ export default function AdminPanel({
                   </button>
 
                   <button
-                    onClick={() => handleDeleteNews(item.id)}
+                    onClick={() => handleDeleteNews(newsItem.id)}
                     className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 active:scale-95 cursor-pointer"
                     title="Eliminar comunicado"
                     aria-label="Eliminar comunicado"

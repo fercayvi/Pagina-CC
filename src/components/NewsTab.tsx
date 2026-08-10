@@ -4,12 +4,11 @@ import { NewsItem } from '../types';
 
 interface NewsTabProps {
   news?: NewsItem[];
-  newsList?: NewsItem[];
 }
 
-export default function NewsTab({ news, newsList }: NewsTabProps) {
+export default function NewsTab({ news = [] }: NewsTabProps) {
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
-  const displayNews = news || newsList || [];
+  const displayNews = news;
 
   return (
     <div id="news-tab-container" className="space-y-5">
