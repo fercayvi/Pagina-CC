@@ -22,35 +22,25 @@ import {
 } from 'lucide-react';
 import { Service, NewsItem, ServiceId, StepItem, ServiceFAQ } from '../types';
 import { getDefaultServiceDetails } from '../data';
+import { SERVICE_ICON_MAP } from './ServiceCard';
 
 interface AdminPanelProps {
-  services?: (Service & { hidden?: boolean })[];
-  news?: NewsItem[];
-  onDeleteService?: (id: string) => void;
-  onDeleteNews?: (id: string) => void;
-  handleDeleteService?: (id: string) => void;
-  handleDeleteNews?: (id: string) => void;
-  onUpdateServices?: (services: (Service & { hidden?: boolean })[]) => void;
-  onUpdateNews?: (news: NewsItem[]) => void;
+  services: (Service & { hidden?: boolean })[];
+  onUpdateServices: (services: (Service & { hidden?: boolean })[]) => void;
   onSelectService?: (service: Service & { hidden?: boolean }, startInEditMode?: boolean) => void;
+  news: NewsItem[];
+  onUpdateNews: (news: NewsItem[]) => void;
   onLogout: () => void;
 }
 
 export default function AdminPanel({
-  services = [],
-  news = [],
-  onDeleteService,
-  onDeleteNews,
-  handleDeleteService: handleDeleteServiceProp,
-  handleDeleteNews: handleDeleteNewsProp,
+  services,
   onUpdateServices,
   onSelectService,
+  news,
   onUpdateNews,
   onLogout
 }: AdminPanelProps) {
-  const currentServices = services;
-  const currentNews = news;
-
   const [activeTab, setActiveTab] = useState<'tramites' | 'noticias'>('tramites');
   const [successMessage, setSuccessMessage] = useState<string>('');
 
@@ -65,42 +55,33 @@ export default function AdminPanel({
   const [isNewsModalOpen, setIsNewsModalOpen] = useState<boolean>(false);
   const [isNewNews, setIsNewNews] = useState<boolean>(false);
 
+  // Delete Confirmation Modal state
+  const [deleteConfirmTarget, setDeleteConfirmTarget] = useState<{
+    type: 'service' | 'news';
+    id: string;
+    title: string;
+  } | null>(null);
+
   // Helper for notification toast
   const showToast = (msg: string) => {
     setSuccessMessage(msg);
     setTimeout(() => setSuccessMessage(''), 3000);
   };
 
-  const updateServicesList = (updater: (prev: (Service & { hidden?: boolean })[]) => (Service & { hidden?: boolean })[]) => {
-    if (onUpdateServices) {
-      onUpdateServices(updater(currentServices));
-    }
-  };
-
-  const updateNewsList = (updater: (prev: NewsItem[]) => NewsItem[]) => {
-    if (onUpdateNews) {
-      onUpdateNews(updater(currentNews));
-    }
-  };
-
   // --- SERVICE HANDLERS ---
   const handleToggleHideService = (id: string) => {
-    updateServicesList(prev => prev.map(s => s.id === id ? { ...s, hidden: !s.hidden } : s));
+    const updated = services.map(s => s.id === id ? { ...s, hidden: !s.hidden } : s);
+    onUpdateServices(updated);
     showToast('Estado del trámite actualizado correctamente.');
   };
 
-  const deleteServiceFn = handleDeleteServiceProp || onDeleteService;
-  const deleteNewsFn = handleDeleteNewsProp || onDeleteNews;
-
-  const handleDeleteService = (id: string) => {
-    if (window.confirm('¿Estás seguro de eliminar este trámite por completo?')) {
-      if (deleteServiceFn) {
-        deleteServiceFn(id);
-      } else {
-        updateServicesList(prev => prev.filter(service => service.id !== id));
-      }
-      showToast('Trámite eliminado con éxito.');
-    }
+  const handleDeleteService = (id: string, title?: string) => {
+    const serviceObj = services.find(s => s.id === id);
+    setDeleteConfirmTarget({
+      type: 'service',
+      id,
+      title: title || serviceObj?.title || 'Trámite'
+    });
   };
 
   const handleOpenNewServiceModal = () => {
@@ -174,10 +155,11 @@ export default function AdminPanel({
     if (!editingService || !editingService.title.trim()) return;
 
     if (isNewService) {
-      updateServicesList(prev => [editingService, ...prev]);
+      onUpdateServices([editingService, ...services]);
       showToast('¡Nuevo trámite creado e integrado al portal!');
     } else {
-      updateServicesList(prev => prev.map(s => s.id === editingService.id ? editingService : s));
+      const updated = services.map(s => s.id === editingService.id ? editingService : s);
+      onUpdateServices(updated);
       showToast('Trámite modificado y guardado con éxito.');
     }
     setIsServiceModalOpen(false);
@@ -264,15 +246,27 @@ export default function AdminPanel({
   };
 
   // --- NEWS HANDLERS ---
-  const handleDeleteNews = (id: string) => {
-    if (window.confirm('¿Estás seguro de eliminar este comunicado?')) {
-      if (deleteNewsFn) {
-        deleteNewsFn(id);
-      } else {
-        updateNewsList(prev => prev.filter(news => news.id !== id));
-      }
-      showToast('Comunicado eliminado correctamente.');
+  const handleDeleteNews = (id: string, title?: string) => {
+    const newsObj = news.find(n => n.id === id);
+    setDeleteConfirmTarget({
+      type: 'news',
+      id,
+      title: title || newsObj?.title || 'Noticia'
+    });
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deleteConfirmTarget) return;
+    if (deleteConfirmTarget.type === 'service') {
+      const updated = services.filter(s => s.id !== deleteConfirmTarget.id);
+      onUpdateServices(updated);
+      showToast('Trámite eliminado con éxito.');
+    } else {
+      const updated = news.filter(n => n.id !== deleteConfirmTarget.id);
+      onUpdateNews(updated);
+      showToast('Noticia eliminada correctamente.');
     }
+    setDeleteConfirmTarget(null);
   };
 
   const handleOpenNewNewsModal = () => {
@@ -300,10 +294,11 @@ export default function AdminPanel({
     if (!editingNews || !editingNews.title.trim()) return;
 
     if (isNewNews) {
-      updateNewsList(prev => [editingNews, ...prev]);
+      onUpdateNews([editingNews, ...news]);
       showToast('¡Nueva noticia publicada en el boletín!');
     } else {
-      updateNewsList(prev => prev.map(n => n.id === editingNews.id ? editingNews : n));
+      const updated = news.map(n => n.id === editingNews.id ? editingNews : n);
+      onUpdateNews(updated);
       showToast('Noticia actualizada correctamente.');
     }
     setIsNewsModalOpen(false);
@@ -329,9 +324,6 @@ export default function AdminPanel({
             <div className="flex items-center gap-2 mb-0.5">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-300 bg-blue-950/80 px-2.5 py-0.5 rounded-md border border-blue-800/60">
                 Panel Administrador
-              </span>
-              <span className="text-[10px] font-medium text-slate-400">
-                Lic. Patricia Morales (RH)
               </span>
             </div>
             <h2 className="text-xl font-bold tracking-tight font-display">
@@ -403,7 +395,7 @@ export default function AdminPanel({
 
           {/* Services List */}
           <div className="space-y-2.5">
-            {currentServices.map((service) => (
+            {services.map((service) => (
               <div
                 key={service.id}
                 className={`bg-white border rounded-2xl p-4 shadow-2xs transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
@@ -412,7 +404,9 @@ export default function AdminPanel({
               >
                 <div className="flex items-start gap-3 flex-1 min-w-0">
                   <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 font-bold flex items-center justify-center shrink-0 border border-slate-200 mt-0.5">
-                    <FileText className="w-5 h-5 text-slate-600" />
+                    {React.createElement(SERVICE_ICON_MAP[service.iconName || service.icon || 'FileText'] || FileText, {
+                      className: "w-5 h-5 text-slate-600"
+                    })}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -462,24 +456,14 @@ export default function AdminPanel({
                   </button>
 
                   <button
-                    type="button"
                     onClick={(e) => {
-                      e.preventDefault();
                       e.stopPropagation();
-                      if (window.confirm("¿Eliminar trámite?")) {
-                        if (onDeleteService) {
-                          onDeleteService(service.id);
-                        } else {
-                          handleDeleteService(service.id);
-                        }
-                      }
+                      handleDeleteService(service.id, service.title);
                     }}
-                    className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 active:scale-95 cursor-pointer"
+                    className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl transition-colors cursor-pointer"
                     title="Eliminar trámite"
-                    aria-label="Eliminar trámite"
                   >
-                    <Trash2 className="w-4 h-4 text-rose-600" />
-                    <span>Borrar</span>
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -512,9 +496,9 @@ export default function AdminPanel({
 
           {/* News List */}
           <div className="space-y-3">
-            {currentNews.map((newsItem) => (
+            {news.map((item) => (
               <div
-                key={newsItem.id}
+                key={item.id}
                 className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs hover:border-slate-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
               >
                 <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -524,17 +508,17 @@ export default function AdminPanel({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
-                        {newsItem.category}
+                        {item.category}
                       </span>
                       <span className="text-[10px] text-slate-400 font-medium">
-                        {newsItem.date}
+                        {item.date}
                       </span>
                     </div>
                     <h4 className="text-sm font-bold text-slate-900 truncate">
-                      {newsItem.title}
+                      {item.title}
                     </h4>
                     <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
-                      {newsItem.summary}
+                      {item.summary}
                     </p>
                   </div>
                 </div>
@@ -542,7 +526,7 @@ export default function AdminPanel({
                 {/* Actions */}
                 <div className="flex items-center gap-1.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
                   <button
-                    onClick={() => handleOpenEditNewsModal(newsItem)}
+                    onClick={() => handleOpenEditNewsModal(item)}
                     className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
@@ -550,24 +534,14 @@ export default function AdminPanel({
                   </button>
 
                   <button
-                    type="button"
                     onClick={(e) => {
-                      e.preventDefault();
                       e.stopPropagation();
-                      if (window.confirm("¿Eliminar noticia?")) {
-                        if (onDeleteNews) {
-                          onDeleteNews(newsItem.id);
-                        } else {
-                          handleDeleteNews(newsItem.id);
-                        }
-                      }
+                      handleDeleteNews(item.id, item.title);
                     }}
-                    className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 active:scale-95 cursor-pointer"
-                    title="Eliminar comunicado"
-                    aria-label="Eliminar comunicado"
+                    className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl transition-colors cursor-pointer"
+                    title="Eliminar noticia"
                   >
-                    <Trash2 className="w-4 h-4 text-rose-600" />
-                    <span>Borrar</span>
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -687,6 +661,31 @@ export default function AdminPanel({
                         <option value="Nómina y Pagos">Nómina y Pagos</option>
                         <option value="Tarjetas y Créditos">Tarjetas y Créditos</option>
                         <option value="Control y Asistencia">Control y Asistencia</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Ícono de la Tarjeta *
+                      </label>
+                      <select
+                        value={editingService.iconName || editingService.icon || 'FileText'}
+                        onChange={(e) => setEditingService({ ...editingService, iconName: e.target.value, icon: e.target.value })}
+                        className="w-full px-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 focus:bg-white"
+                      >
+                        <option value="Banknote">💵 Billete (Banknote)</option>
+                        <option value="FileText">📄 Documento (FileText)</option>
+                        <option value="FileCheck">✅ Documento Verificado (FileCheck)</option>
+                        <option value="HelpCircle">❓ Duda / Ayuda (HelpCircle)</option>
+                        <option value="CreditCard">💳 Tarjeta (CreditCard)</option>
+                        <option value="PiggyBank">🐷 Ahorro (PiggyBank)</option>
+                        <option value="Home">🏠 Casa (Home)</option>
+                        <option value="Calendar">📅 Calendario (Calendar)</option>
+                        <option value="CalendarDays">📆 Días Calendario (CalendarDays)</option>
+                        <option value="Shield">🛡️ Seguridad / Salud (Shield)</option>
+                        <option value="ShieldAlert">🛡️ Alerta de Seguridad (ShieldAlert)</option>
+                        <option value="Clock">⏰ Reloj (Clock)</option>
+                        <option value="Briefcase">💼 Maletín (Briefcase)</option>
                       </select>
                     </div>
 
@@ -1058,6 +1057,44 @@ export default function AdminPanel({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- CUSTOM DELETE CONFIRMATION MODAL --- */}
+      {deleteConfirmTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-sm w-full border border-slate-200 shadow-2xl overflow-hidden p-5 space-y-4 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shrink-0 shadow-2xs">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900 font-display">
+                ¿Eliminar {deleteConfirmTarget.type === 'service' ? 'Trámite' : 'Noticia'}?
+              </h3>
+              <p className="text-xs font-semibold text-slate-600 mt-1 line-clamp-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                "{deleteConfirmTarget.title}"
+              </p>
+              <p className="text-[11px] text-slate-400 mt-2">
+                Esta acción eliminará permanentemente el elemento de la lista del portal.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmTarget(null)}
+                className="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer"
+              >
+                Sí, Eliminar
+              </button>
+            </div>
           </div>
         </div>
       )}

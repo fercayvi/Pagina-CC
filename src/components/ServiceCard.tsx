@@ -1,6 +1,38 @@
 import React from 'react';
 import * as Icons from 'lucide-react';
+import {
+  Banknote,
+  FileText,
+  FileCheck,
+  HelpCircle,
+  CreditCard,
+  PiggyBank,
+  Home,
+  Calendar,
+  CalendarDays,
+  Shield,
+  ShieldAlert,
+  Clock,
+  Briefcase
+} from 'lucide-react';
 import { Service } from '../types';
+
+// Dictionary mapping icon names to Lucide icon components
+export const SERVICE_ICON_MAP: Record<string, React.ComponentType<any>> = {
+  Banknote,
+  FileText,
+  FileCheck,
+  HelpCircle,
+  CreditCard,
+  PiggyBank,
+  Home,
+  Calendar,
+  CalendarDays,
+  Shield,
+  ShieldAlert,
+  Clock,
+  Briefcase
+};
 
 interface ServiceCardProps {
   key?: string;
@@ -9,8 +41,9 @@ interface ServiceCardProps {
 }
 
 export default function ServiceCard({ service, onClick }: ServiceCardProps) {
-  // Dynamically resolve icon from lucide-react Icons collection safely
-  const IconComponent = (Icons as any)[service.iconName] || Icons.HelpCircle;
+  // Dynamically resolve icon from dictionary with fallback to FileText
+  const iconKey = service.iconName || service.icon || 'FileText';
+  const IconComponent = SERVICE_ICON_MAP[iconKey] || (Icons as any)[iconKey] || FileText;
 
   // Kiosk-optimized styles with high contrast, prominent shadows and borders
   const getCategoryStyles = (category: string) => {

@@ -24,7 +24,7 @@ export default function App() {
 
   // Dynamic content states
   const [services, setServices] = useState<(Service & { hidden?: boolean })[]>(servicesData);
-  const [newsItems, setNewsItems] = useState<NewsItem[]>(newsData);
+  const [news, setNews] = useState<NewsItem[]>(newsData);
 
   // Public user context
   const user: UserProfile = userProfileData;
@@ -69,14 +69,6 @@ export default function App() {
     setSelectedService(updated);
   };
 
-  const handleDeleteService = (id: string) => {
-    setServices(prev => prev.filter(s => s.id !== id));
-  };
-
-  const handleDeleteNews = (id: string) => {
-    setNewsItems(prev => prev.filter(n => n.id !== id));
-  };
-
   const handleSelectService = (service: Service & { hidden?: boolean }, startEditing: boolean = false) => {
     setSelectedService(service);
     setServiceEditMode(startEditing);
@@ -116,22 +108,22 @@ export default function App() {
           <div id="phone-main-scrollable-content" className={`flex-1 overflow-y-auto pt-4 relative ${isAdminLoggedIn ? 'pb-8' : 'pb-24'}`}>
             <div className="max-w-4xl mx-auto w-full px-4 md:px-6">
             
-            {/* RENDER SELECTED SERVICE DETAIL (Public or Admin) WITH BACKDROP */}
+            {/* RENDER SELECTED SERVICE DETAIL (Public or Admin) WITH LIGHT FULLSCREEN BACKDROP */}
             {selectedService ? (
-              <div className="relative animate-fadeIn">
-                {/* Interactive Backdrop Overlay - Close on tap */}
+              <div className="relative animate-fadeIn min-h-screen">
+                {/* Light Full-Screen Background Overlay */}
                 <div 
                   id="service-detail-backdrop"
-                  className="fixed inset-0 bg-slate-900/50 backdrop-blur-2xs z-30 transition-opacity cursor-pointer"
+                  className="fixed inset-0 bg-slate-100 z-30 transition-opacity"
                   onClick={() => {
                     setSelectedService(null);
                     setServiceEditMode(false);
                   }}
-                  title="Toca en el fondo oscuro para salir del trámite"
+                  title="Volver al catálogo"
                 />
 
-                {/* Service Detail Modal Container */}
-                <div className="relative z-40 max-w-4xl mx-auto">
+                {/* Service Detail Full-Width Kiosk Container */}
+                <div className="relative z-40 w-full max-w-5xl mx-auto px-1 sm:px-3 py-1 sm:py-3">
                   <ServiceDetail 
                     service={selectedService} 
                     user={user} 
@@ -150,12 +142,10 @@ export default function App() {
               isAdminLoggedIn ? (
                 <AdminPanel
                   services={services}
-                  news={newsItems}
-                  onDeleteService={handleDeleteService}
-                  onDeleteNews={handleDeleteNews}
                   onUpdateServices={setServices}
-                  onUpdateNews={setNewsItems}
                   onSelectService={handleSelectService}
+                  news={news}
+                  onUpdateNews={setNews}
                   onLogout={() => {
                     setIsAdminLoggedIn(false);
                     setSelectedService(null);
@@ -215,7 +205,7 @@ export default function App() {
                   )}
 
                   {/* TAB 2: NOTICIAS */}
-                  {currentTab === 'noticias' && <NewsTab news={newsItems} />}
+                  {currentTab === 'noticias' && <NewsTab newsList={news} />}
 
                   {/* TAB 3: ASISTENTE */}
                   {currentTab === 'asistente' && <AsistenteTab user={user} />}

@@ -32,6 +32,7 @@ export interface Service {
   id: ServiceId | string;
   title: string;
   iconName: string;
+  icon?: string;
   shortDesc: string;
   category: 'Nómina y Pagos' | 'Tarjetas y Créditos' | 'Control y Asistencia';
   fullDescription?: string;

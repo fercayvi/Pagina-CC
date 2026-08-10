@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Service, UserProfile, FAQ, StepItem, ServiceFAQ, ServiceAttachment } from '../types';
 import { getDefaultServiceDetails } from '../data';
+import { SERVICE_ICON_MAP } from './ServiceCard';
 
 // Helper to resolve video URLs (YouTube, Vimeo, direct MP4)
 function getEmbedVideoInfo(url?: string): { type: 'youtube' | 'vimeo' | 'direct' | 'iframe'; embedUrl: string } | null {
@@ -318,7 +319,7 @@ export default function ServiceDetail({
   // --- SAVE & CANCEL ACTION BAR ---
   const handleSaveEdit = () => {
     if (!draft.title.trim()) {
-      alert('El título del trámite es obligatorio.');
+      showToast('El título del trámite es obligatorio.');
       return;
     }
     if (onUpdateService) {
@@ -336,7 +337,7 @@ export default function ServiceDetail({
   const videoInfo = getEmbedVideoInfo(draft.videoUrl);
 
   return (
-    <div id={`service-detail-${service.id}`} className={`space-y-4 animate-fadeIn ${isEditing ? 'pb-28' : 'pb-20'}`}>
+    <div id={`service-detail-${service.id}`} className={`space-y-3 animate-fadeIn ${isEditing ? 'pb-28' : 'pb-16'}`}>
       
       {/* Toast Notification */}
       {toastMsg && (
@@ -345,25 +346,6 @@ export default function ServiceDetail({
           <span className="text-xs font-bold">{toastMsg}</span>
         </div>
       )}
-
-      {/* STICKY TOP KIOSK CLOSE FLOATING BAR */}
-      <div className="sticky top-2 z-30 flex items-center justify-between bg-slate-900/95 text-white px-4 py-2.5 rounded-2xl shadow-xl border border-slate-700/80 backdrop-blur-md">
-        <div className="flex items-center gap-2.5">
-          <span className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-100 truncate">
-            {draft.title || 'Detalle del Trámite'}
-          </span>
-        </div>
-
-        <button
-          onClick={onBack}
-          className="px-4 py-2 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-black text-xs rounded-xl flex items-center gap-2 shadow-md active:scale-95 transition-transform shrink-0 border border-rose-500 cursor-pointer"
-          aria-label="Cerrar trámite"
-        >
-          <X className="w-5 h-5" strokeWidth={3} />
-          <span className="uppercase tracking-wider">CERRAR</span>
-        </button>
-      </div>
 
       {/* ADMIN EDIT MODE INDICATOR BANNER & TOGGLE BUTTON */}
       {isAdminLoggedIn && (
@@ -408,7 +390,7 @@ export default function ServiceDetail({
                 setIsEditing(true);
               }
             }}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 active:scale-95 shadow-2xs ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 active:scale-95 shadow-2xs cursor-pointer ${
               isEditing
                 ? 'bg-slate-800 text-slate-100 hover:bg-slate-900'
                 : 'bg-amber-500 hover:bg-amber-600 text-white'
@@ -438,7 +420,7 @@ export default function ServiceDetail({
             <button
               type="button"
               onClick={() => setDraft({ ...draft, showSteps: !draft.showSteps })}
-              className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2 ${
+              className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2 cursor-pointer ${
                 draft.showSteps !== false 
                   ? 'bg-white border-blue-400 text-blue-950 shadow-2xs font-bold' 
                   : 'bg-slate-100/80 border-slate-200 text-slate-400 line-through'
@@ -452,7 +434,7 @@ export default function ServiceDetail({
             <button
               type="button"
               onClick={() => setDraft({ ...draft, showRequirements: !draft.showRequirements })}
-              className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2 ${
+              className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2 cursor-pointer ${
                 draft.showRequirements !== false 
                   ? 'bg-white border-blue-400 text-blue-950 shadow-2xs font-bold' 
                   : 'bg-slate-100/80 border-slate-200 text-slate-400 line-through'
@@ -466,7 +448,7 @@ export default function ServiceDetail({
             <button
               type="button"
               onClick={() => setDraft({ ...draft, showContact: !draft.showContact })}
-              className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2 ${
+              className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2 cursor-pointer ${
                 draft.showContact !== false 
                   ? 'bg-white border-blue-400 text-blue-950 shadow-2xs font-bold' 
                   : 'bg-slate-100/80 border-slate-200 text-slate-400 line-through'
@@ -480,7 +462,7 @@ export default function ServiceDetail({
             <button
               type="button"
               onClick={() => setDraft({ ...draft, showFaqs: !draft.showFaqs })}
-              className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2 ${
+              className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2 cursor-pointer ${
                 draft.showFaqs !== false 
                   ? 'bg-white border-blue-400 text-blue-950 shadow-2xs font-bold' 
                   : 'bg-slate-100/80 border-slate-200 text-slate-400 line-through'
@@ -494,7 +476,7 @@ export default function ServiceDetail({
             <button
               type="button"
               onClick={() => setDraft({ ...draft, showAlertNotice: !draft.showAlertNotice })}
-              className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2 ${
+              className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2 cursor-pointer ${
                 draft.showAlertNotice 
                   ? 'bg-amber-100 border-amber-400 text-amber-950 shadow-2xs font-bold' 
                   : 'bg-slate-100/80 border-slate-200 text-slate-400 line-through'
@@ -542,39 +524,68 @@ export default function ServiceDetail({
         </div>
       )}
 
-      {/* HEADER CARD (Title & Category & Descriptions) */}
-      <div className={`bg-white border rounded-2xl p-4 shadow-2xs transition-all ${
-        isEditing ? 'border-blue-400 ring-2 ring-blue-500/10' : 'border-slate-200'
+      {/* HEADER CARD (Title, Category & Single Return Button) */}
+      <div className={`bg-white border rounded-2xl p-4 sm:p-5 shadow-xs transition-all ${
+        isEditing ? 'border-blue-400 ring-2 ring-blue-500/10' : 'border-slate-200/90'
       }`}>
         <div className="flex items-center justify-between gap-3 mb-2">
           <div className="flex items-center gap-3 min-w-0 flex-1">
+            {/* SINGLE CLEAN BACK BUTTON */}
             <button 
               id="btn-back-to-grid"
               onClick={onBack}
-              className="px-3.5 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-2 active:scale-95 transition-all shrink-0 border border-slate-700 shadow-md cursor-pointer"
+              className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 font-extrabold text-xs flex items-center gap-1.5 active:scale-95 transition-all shrink-0 border border-slate-300 shadow-2xs cursor-pointer"
               aria-label="Volver al catálogo"
             >
-              <X className="w-5 h-5 text-rose-400" strokeWidth={3} />
-              <span className="hidden sm:inline font-extrabold uppercase tracking-wide text-[11px]">Volver</span>
+              <ChevronLeft className="w-5 h-5 text-slate-700" strokeWidth={2.5} />
+              <span>Volver</span>
             </button>
 
             <div className="min-w-0 flex-1">
               {isEditing ? (
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md uppercase tracking-wide shrink-0">
-                      Categoría:
-                    </span>
-                    <select
-                      value={draft.category}
-                      onChange={(e) => setDraft({ ...draft, category: e.target.value as any })}
-                      className="text-xs font-bold text-slate-800 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
-                    >
-                      <option value="Nómina y Pagos">Nómina y Pagos</option>
-                      <option value="Tarjetas y Créditos">Tarjetas y Créditos</option>
-                      <option value="Control y Asistencia">Control y Asistencia</option>
-                    </select>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md uppercase tracking-wide shrink-0">
+                        Categoría:
+                      </span>
+                      <select
+                        value={draft.category}
+                        onChange={(e) => setDraft({ ...draft, category: e.target.value as any })}
+                        className="text-xs font-bold text-slate-800 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                      >
+                        <option value="Nómina y Pagos">Nómina y Pagos</option>
+                        <option value="Tarjetas y Créditos">Tarjetas y Créditos</option>
+                        <option value="Control y Asistencia">Control y Asistencia</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md uppercase tracking-wide shrink-0">
+                        Ícono de la Tarjeta:
+                      </span>
+                      <select
+                        value={draft.iconName || draft.icon || 'FileText'}
+                        onChange={(e) => setDraft({ ...draft, iconName: e.target.value, icon: e.target.value })}
+                        className="text-xs font-bold text-slate-800 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                      >
+                        <option value="Banknote">💵 Billete (Banknote)</option>
+                        <option value="FileText">📄 Documento (FileText)</option>
+                        <option value="FileCheck">✅ Documento Verificado (FileCheck)</option>
+                        <option value="HelpCircle">❓ Duda / Ayuda (HelpCircle)</option>
+                        <option value="CreditCard">💳 Tarjeta (CreditCard)</option>
+                        <option value="PiggyBank">🐷 Ahorro (PiggyBank)</option>
+                        <option value="Home">🏠 Casa (Home)</option>
+                        <option value="Calendar">📅 Calendario (Calendar)</option>
+                        <option value="CalendarDays">📆 Días Calendario (CalendarDays)</option>
+                        <option value="Shield">🛡️ Seguridad / Salud (Shield)</option>
+                        <option value="ShieldAlert">🛡️ Alerta de Seguridad (ShieldAlert)</option>
+                        <option value="Clock">⏰ Reloj (Clock)</option>
+                        <option value="Briefcase">💼 Maletín (Briefcase)</option>
+                      </select>
+                    </div>
                   </div>
+
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Título del Trámite:</label>
                     <input
@@ -589,24 +600,18 @@ export default function ServiceDetail({
               ) : (
                 <div>
                   <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md uppercase tracking-wide">
-                    {draft.category} • Instrucciones y Trámite
+                    {draft.category} • Información Oficial
                   </span>
-                  <h2 className="text-base font-bold text-slate-900 mt-0.5 font-display truncate">{draft.title}</h2>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {React.createElement(SERVICE_ICON_MAP[draft.iconName || draft.icon || 'FileText'] || FileText, {
+                      className: "w-5 h-5 text-blue-600 shrink-0"
+                    })}
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 font-display truncate">{draft.title}</h2>
+                  </div>
                 </div>
               )}
             </div>
           </div>
-
-          {/* Prominent Large X Close Button in Upper Right */}
-          <button
-            id="btn-close-header-x"
-            onClick={onBack}
-            className="w-12 h-12 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center active:scale-95 transition-all shrink-0 shadow-md border border-rose-500 cursor-pointer"
-            title="Cerrar trámite"
-            aria-label="Cerrar trámite"
-          >
-            <X className="w-7 h-7" strokeWidth={3} />
-          </button>
         </div>
 
         {/* Short & Full Description Edit / Read */}
