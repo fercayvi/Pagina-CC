@@ -3,8 +3,13 @@ import { Award, Gift, Calendar, Sparkles, ChevronRight, X, Heart } from 'lucide-
 import { NewsItem } from '../types';
 import { newsData } from '../data';
 
-export default function NewsTab() {
+interface NewsTabProps {
+  newsList?: NewsItem[];
+}
+
+export default function NewsTab({ newsList }: NewsTabProps) {
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+  const displayNews = newsList || newsData;
 
   // Simulated birth list for operator team bonding
   const birthdays = [
@@ -41,7 +46,7 @@ export default function NewsTab() {
       <div className="space-y-3">
         <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider px-1">Comunidad e Información</h3>
         
-        {newsData.map((news) => (
+        {newsData.length > 0 && displayNews.map((news) => (
           <button
             key={news.id}
             id={`news-item-${news.id}`}

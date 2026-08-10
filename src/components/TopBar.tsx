@@ -1,12 +1,13 @@
 import React from 'react';
-import { Search, X, Building2 } from 'lucide-react';
+import { Search, X, Building2, Lock } from 'lucide-react';
 
 interface TopBarProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  onOpenAdminLogin?: () => void;
 }
 
-export default function TopBar({ searchQuery, setSearchQuery }: TopBarProps) {
+export default function TopBar({ searchQuery, setSearchQuery, onOpenAdminLogin }: TopBarProps) {
   return (
     <header id="app-top-header" className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs mb-4">
       {/* Header Title Bar */}
@@ -19,8 +20,21 @@ export default function TopBar({ searchQuery, setSearchQuery }: TopBarProps) {
             Guía de Trámites y Servicios RH
           </h1>
         </div>
-        <div className="w-10 h-10 bg-slate-100 text-slate-700 font-bold rounded-xl flex items-center justify-center shrink-0 border border-slate-200 shadow-2xs">
-          <Building2 className="w-5 h-5 text-slate-600" />
+        <div className="flex items-center gap-2">
+          {onOpenAdminLogin && (
+            <button
+              id="admin-login-btn"
+              onClick={onOpenAdminLogin}
+              className="w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl flex items-center justify-center shrink-0 border border-slate-200 shadow-2xs transition-colors"
+              title="Inicio de sesión para Administradores"
+              aria-label="Inicio de sesión para Administradores"
+            >
+              <Lock className="w-4 h-4 text-slate-600" />
+            </button>
+          )}
+          <div className="w-10 h-10 bg-slate-100 text-slate-700 font-bold rounded-xl flex items-center justify-center shrink-0 border border-slate-200 shadow-2xs">
+            <Building2 className="w-5 h-5 text-slate-600" />
+          </div>
         </div>
       </div>
 
