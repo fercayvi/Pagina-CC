@@ -10,12 +10,31 @@ export enum ServiceId {
   RelojChecador = 'reloj_checador'
 }
 
+export interface StepItem {
+  num?: number;
+  title: string;
+  desc: string;
+}
+
+export interface ServiceFAQ {
+  question: string;
+  answer: string;
+}
+
 export interface Service {
-  id: ServiceId;
+  id: ServiceId | string;
   title: string;
   iconName: string;
   shortDesc: string;
   category: 'Nómina y Pagos' | 'Tarjetas y Créditos' | 'Control y Asistencia';
+  fullDescription?: string;
+  steps?: StepItem[];
+  requirements?: string[];
+  location?: string;
+  schedule?: string;
+  contact?: string;
+  faqs?: ServiceFAQ[];
+  hidden?: boolean;
 }
 
 export interface FAQ {
