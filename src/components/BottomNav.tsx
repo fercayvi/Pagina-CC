@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, FileText, MessageSquare } from 'lucide-react';
+import { Home, FileText, PhoneCall } from 'lucide-react';
 
 interface BottomNavProps {
   currentTab: 'inicio' | 'noticias' | 'asistente';
@@ -16,7 +16,7 @@ export default function BottomNav({ currentTab, setCurrentTab }: BottomNavProps)
   const tabs: TabItem[] = [
     { id: 'inicio', label: 'Inicio', icon: Home },
     { id: 'noticias', label: 'Noticias', icon: FileText },
-    { id: 'asistente', label: 'Asistente', icon: MessageSquare },
+    { id: 'asistente', label: 'Contacto', icon: PhoneCall },
   ];
 
   return (
