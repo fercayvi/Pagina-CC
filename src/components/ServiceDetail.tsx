@@ -346,6 +346,25 @@ export default function ServiceDetail({
         </div>
       )}
 
+      {/* STICKY TOP KIOSK CLOSE FLOATING BAR */}
+      <div className="sticky top-2 z-30 flex items-center justify-between bg-slate-900/95 text-white px-4 py-2.5 rounded-2xl shadow-xl border border-slate-700/80 backdrop-blur-md">
+        <div className="flex items-center gap-2.5">
+          <span className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-100 truncate">
+            {draft.title || 'Detalle del Trámite'}
+          </span>
+        </div>
+
+        <button
+          onClick={onBack}
+          className="px-4 py-2 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-black text-xs rounded-xl flex items-center gap-2 shadow-md active:scale-95 transition-transform shrink-0 border border-rose-500 cursor-pointer"
+          aria-label="Cerrar trámite"
+        >
+          <X className="w-5 h-5" strokeWidth={3} />
+          <span className="uppercase tracking-wider">CERRAR</span>
+        </button>
+      </div>
+
       {/* ADMIN EDIT MODE INDICATOR BANNER & TOGGLE BUTTON */}
       {isAdminLoggedIn && (
         <div className={`rounded-2xl p-3.5 border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
@@ -532,10 +551,11 @@ export default function ServiceDetail({
             <button 
               id="btn-back-to-grid"
               onClick={onBack}
-              className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 flex items-center justify-center active:scale-95 transition-all shrink-0 border border-slate-200"
+              className="px-3.5 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-2 active:scale-95 transition-all shrink-0 border border-slate-700 shadow-md cursor-pointer"
               aria-label="Volver al catálogo"
             >
-              <ChevronLeft className="w-5 h-5" strokeWidth={2.5} />
+              <X className="w-5 h-5 text-rose-400" strokeWidth={3} />
+              <span className="hidden sm:inline font-extrabold uppercase tracking-wide text-[11px]">Volver</span>
             </button>
 
             <div className="min-w-0 flex-1">
@@ -576,6 +596,17 @@ export default function ServiceDetail({
               )}
             </div>
           </div>
+
+          {/* Prominent Large X Close Button in Upper Right */}
+          <button
+            id="btn-close-header-x"
+            onClick={onBack}
+            className="w-12 h-12 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center active:scale-95 transition-all shrink-0 shadow-md border border-rose-500 cursor-pointer"
+            title="Cerrar trámite"
+            aria-label="Cerrar trámite"
+          >
+            <X className="w-7 h-7" strokeWidth={3} />
+          </button>
         </div>
 
         {/* Short & Full Description Edit / Read */}

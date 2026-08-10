@@ -1,5 +1,5 @@
-import React from 'react';
-import { Search, X, Building2, Lock } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Search, X, Building2 } from 'lucide-react';
 
 interface TopBarProps {
   searchQuery: string;
@@ -8,30 +8,43 @@ interface TopBarProps {
 }
 
 export default function TopBar({ searchQuery, setSearchQuery, onOpenAdminLogin }: TopBarProps) {
+  const [tapCount, setTapCount] = useState<number>(0);
+  const tapTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleSecretTap = () => {
+    if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+
+    const nextCount = tapCount + 1;
+    if (nextCount >= 5) {
+      setTapCount(0);
+      if (onOpenAdminLogin) onOpenAdminLogin();
+    } else {
+      setTapCount(nextCount);
+      // Reset tap count if 5 taps are not completed within 2.5 seconds
+      tapTimerRef.current = setTimeout(() => {
+        setTapCount(0);
+      }, 2500);
+    }
+  };
+
   return (
     <header id="app-top-header" className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs mb-4">
-      {/* Header Title Bar */}
+      {/* Header Title Bar with Secret Admin Trigger (5 fast taps) */}
       <div className="flex items-center justify-between gap-3 mb-3">
-        <div>
-          <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-md mb-1">
+        <div 
+          onClick={handleSecretTap}
+          className="cursor-pointer select-none group flex-1"
+          title="Guía de Trámites"
+        >
+          <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-md mb-1 group-active:scale-95 transition-transform">
             Planta Manufactura • Portal Libre y Público
           </span>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight font-display">
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight font-display group-active:scale-95 transition-transform">
             Guía de Trámites y Servicios RH
           </h1>
         </div>
+
         <div className="flex items-center gap-2">
-          {onOpenAdminLogin && (
-            <button
-              id="admin-login-btn"
-              onClick={onOpenAdminLogin}
-              className="w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl flex items-center justify-center shrink-0 border border-slate-200 shadow-2xs transition-colors"
-              title="Inicio de sesión para Administradores"
-              aria-label="Inicio de sesión para Administradores"
-            >
-              <Lock className="w-4 h-4 text-slate-600" />
-            </button>
-          )}
           <div className="w-10 h-10 bg-slate-100 text-slate-700 font-bold rounded-xl flex items-center justify-center shrink-0 border border-slate-200 shadow-2xs">
             <Building2 className="w-5 h-5 text-slate-600" />
           </div>

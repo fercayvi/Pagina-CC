@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Info } from 'lucide-react';
 import { Service, NewsItem, UserProfile } from './types';
 import { servicesData, newsData, userProfileData } from './data';
@@ -28,6 +28,35 @@ export default function App() {
 
   // Public user context
   const user: UserProfile = userProfileData;
+
+  // Global Kiosk Inactivity Reset Timer (60 seconds)
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const resetInactivityTimer = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        // Return to home view, close modals and admin session
+        setCurrentTab('inicio');
+        setSelectedService(null);
+        setServiceEditMode(false);
+        setIsAdminLoggedIn(false);
+        setIsLoginModalOpen(false);
+        setSearchQuery('');
+        setSelectedCategory('all');
+      }, 60000); // 60 seconds
+    };
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'touchend', 'click'];
+    events.forEach((evt) => window.addEventListener(evt, resetInactivityTimer, { passive: true }));
+
+    resetInactivityTimer();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      events.forEach((evt) => window.removeEventListener(evt, resetInactivityTimer));
+    };
+  }, []);
 
   const handleUpdateService = (updated: Service & { hidden?: boolean }) => {
     setServices(prev => {
@@ -79,19 +108,35 @@ export default function App() {
           <div id="phone-main-scrollable-content" className={`flex-1 overflow-y-auto pt-4 relative ${isAdminLoggedIn ? 'pb-8' : 'pb-24'}`}>
             <div className="max-w-4xl mx-auto w-full px-4 md:px-6">
             
-            {/* RENDER SELECTED SERVICE DETAIL (Public or Admin) */}
+            {/* RENDER SELECTED SERVICE DETAIL (Public or Admin) WITH BACKDROP */}
             {selectedService ? (
-              <ServiceDetail 
-                service={selectedService} 
-                user={user} 
-                onBack={() => {
-                  setSelectedService(null);
-                  setServiceEditMode(false);
-                }} 
-                isAdminLoggedIn={isAdminLoggedIn}
-                onUpdateService={handleUpdateService}
-                initialEditMode={serviceEditMode}
-              />
+              <div className="relative animate-fadeIn">
+                {/* Interactive Backdrop Overlay - Close on tap */}
+                <div 
+                  id="service-detail-backdrop"
+                  className="fixed inset-0 bg-slate-900/50 backdrop-blur-2xs z-30 transition-opacity cursor-pointer"
+                  onClick={() => {
+                    setSelectedService(null);
+                    setServiceEditMode(false);
+                  }}
+                  title="Toca en el fondo oscuro para salir del trámite"
+                />
+
+                {/* Service Detail Modal Container */}
+                <div className="relative z-40 max-w-4xl mx-auto">
+                  <ServiceDetail 
+                    service={selectedService} 
+                    user={user} 
+                    onBack={() => {
+                      setSelectedService(null);
+                      setServiceEditMode(false);
+                    }} 
+                    isAdminLoggedIn={isAdminLoggedIn}
+                    onUpdateService={handleUpdateService}
+                    initialEditMode={serviceEditMode}
+                  />
+                </div>
+              </div>
             ) : (
               /* ADMIN PANEL OR PUBLIC TABS */
               isAdminLoggedIn ? (
