@@ -70,160 +70,121 @@ export default function ServiceDetail({ service, user, onBack }: ServiceDetailPr
   // Helper for rendering realistic structured procedural instructions for each service
   const renderInstructions = () => {
     switch (service.id) {
-      case ServiceId.Nomina:
+      case ServiceId.PoliticasPago:
         return {
           steps: [
-            { num: 1, title: 'Presentarse en Ventanilla', desc: 'Acude a la oficina de Recursos Humanos (Planta Baja, junto a Comedor) portando tu gafete oficial de empleado.' },
-            { num: 2, title: 'Verificación de Identidad', desc: 'Muestra tu credencial del INE vigente para la validación de cuenta o solicitud de estado de cuenta bancario.' },
-            { num: 3, title: 'Firma de Documentos', desc: 'En caso de cambio de cuenta CLABE o apertura de cuenta nómina (BBVA / Santander), firma el formato de domiciliación bancaria.' },
-            { num: 4, title: 'Activación del Depósito', desc: 'El cambio quedará activo para el siguiente ciclo de nómina semanal (depósito los viernes).' }
+            { num: 1, title: 'Calendario Semanal de Pago', desc: 'El depósito se efectúa todos los viernes antes de las 09:00 AM. Si el viernes es día inhábil, el pago se adelanta al jueves.' },
+            { num: 2, title: 'Corte de Horas y Asistencia', desc: 'El periodo de nómina abarca de Lunes a Domingo. Las horas extra y bonos de la semana previa se calculan en el pago del viernes.' },
+            { num: 3, title: 'Conceptos y Percepciones', desc: 'Tu nómina integra Sueldo Base, Horas Extraordinarias, Prima Dominical, Bono de Puntualidad y Vales de Despensa mensual.' },
+            { num: 4, title: 'Deducciones Oficiales', desc: 'Se aplican únicamente las retenciones de ley (ISR, IMSS), crédito Infonavit (de existir) y aportación voluntaria a la Caja de Ahorro.' }
           ],
-          requirements: ['Gafete de empleado activo', 'INE original y copia', 'Estado de cuenta con CLABE (si es cuenta propia)'],
-          schedule: 'Lunes a Viernes de 8:00 AM a 5:00 PM',
-          contact: 'Oficina de Nóminas - Ext. 201'
+          requirements: ['Gafete oficial activo', 'Cuenta Bancaria de Nómina a tu nombre (BBVA / Santander)'],
+          schedule: 'Depósito semanal cada Viernes a las 09:00 AM',
+          contact: 'Atención a Nóminas - Ext. 201'
         };
 
-      case ServiceId.TarjetaDespensa:
+      case ServiceId.RecibosCIF:
         return {
           steps: [
-            { num: 1, title: 'Consulta de Saldo', desc: 'El depósito se realiza automáticamente el día 25 de cada mes en tu tarjeta Toka Despensa. Puedes consultar tu saldo llamando al 800-400-8652.' },
-            { num: 2, title: 'Reporte por Pérdida o Extravío', desc: 'Si perdiste la tarjeta, marca inmediatamente al 800-400-8652 para solicitar el bloqueo preventivo del plástico.' },
-            { num: 3, title: 'Solicitud de Reposición', desc: 'Acude a Recursos Humanos con el folio de bloqueo proporcionado por el banco para solicitar el nuevo plástico.' },
-            { num: 4, title: 'Entrega de Plástico', desc: 'La entrega del nuevo plástico toma de 3 a 5 días hábiles en la ventanilla de Recursos Humanos.' }
+            { num: 1, title: 'Generación Digital Semanal', desc: 'Cada semana se emite tu comprobante fiscal digital de nómina (CFDI / CIF) conforme a la normativa del SAT.' },
+            { num: 2, title: 'Envío por Correo Electrónico', desc: 'Recibes tus archivos XML y PDF directamente en la cuenta de correo institucional registrada.' },
+            { num: 3, title: 'Solicitud de Impresión Física', desc: 'Si requieres tus recibos impresos sellados para trámites de crédito personal o vivienda, acude a la ventanilla de RH.' },
+            { num: 4, title: 'Verificación del Timbrado CIF', desc: 'Puedes validar la autenticidad del timbre fiscal escaneando el código QR del recibo con la app oficial del SAT.' }
           ],
-          requirements: ['Folio de bloqueo telefónico de Toka', 'Gafete de empleado', 'Número de NSS y RFC'],
-          schedule: 'Lunes a Viernes de 8:00 AM a 5:00 PM',
-          contact: 'Atención a Vales - Ext. 204'
-        };
-
-      case ServiceId.RelojChecador:
-        return {
-          steps: [
-            { num: 1, title: 'Solicitar Formato de Corrección', desc: 'Pide a tu supervisor de turno (Ing. Héctor Ramírez) el "Formato de Corrección de Omisión de Marcaje".' },
-            { num: 2, title: 'Llenado y Firma del Supervisor', desc: 'Indica la fecha, turno y hora exacta de entrada/salida. El supervisor debe firmar en señal de conformidad de tu asistencia.' },
-            { num: 3, title: 'Entrega en Recursos Humanos', desc: 'Entrega el formato físico firmado en la ventanilla de RH antes del martes a las 12:00 PM.' },
-            { num: 4, title: 'Ajuste en Sistema', desc: 'El área de nóminas registrará la asistencia para que se calcule en el pago del viernes.' }
-          ],
-          requirements: ['Formato de Corrección con firma autógrafa del supervisor', 'Aclaración antes del martes de cada semana'],
-          schedule: 'Lunes a Viernes de 8:00 AM a 5:00 PM',
-          contact: 'Control de Asistencia - Ext. 203'
+          requirements: ['RFC activo con Homoclave', 'Correo electrónico registrado', 'Identificación INE para impresión física'],
+          schedule: 'Atención en Ventanilla: Lunes a Viernes de 8:00 AM a 5:00 PM',
+          contact: 'Oficina de Timbrado y Recibos - Ext. 202'
         };
 
       case ServiceId.AclaracionPago:
         return {
           steps: [
-            { num: 1, title: 'Revisión de Recibo de Nómina', desc: 'Identifica el concepto con diferencia (horas extra, premio de puntualidad, faltas injustificadas o deducciones).' },
-            { num: 2, title: 'Validación con Supervisor', desc: 'Confirma con el Ing. Héctor Ramírez el registro de horas trabajadas y lista de asistencia de la semana anterior.' },
-            { num: 3, title: 'Atención en Ventanilla de Nómina', desc: 'Acude a la ventanilla los días martes o jueves de 2:00 PM a 4:00 PM con tu recibo de nómina impreso.' },
-            { num: 4, title: 'Ajuste Retroactivo', desc: 'Si la aclaración procede, el ajuste se aplicará en el depósito del viernes posterior.' }
+            { num: 1, title: 'Identificación de Diferencia', desc: 'Revisa tu recibo impreso o digital e identifica el concepto a aclarar (horas extra, faltas, bonos o retenciones).' },
+            { num: 2, title: 'Validación con Supervisor de Línea', desc: 'Verifica con el supervisor de tu turno el registro de horas trabajadas en las bitácoras de asistencia.' },
+            { num: 3, title: 'Atención en Talento y Cultura', desc: 'Presenta tu solicitud en la ventanilla de Talento y Cultura los días martes y jueves de 2:00 PM a 4:00 PM.' },
+            { num: 4, title: 'Resolución y Ajuste Retroactivo', desc: 'Si la aclaración procede, el ajuste retroactivo se depositará en el siguiente recibo de nómina del viernes.' }
           ],
-          requirements: ['Recibo de nómina de la semana a aclarar', 'Lista de asistencia avalada por el supervisor', 'Identificación de empleado'],
+          requirements: ['Recibo de nómina de la semana a aclarar', 'Lista de asistencia avalada por supervisor', 'Plazo máximo de 5 días hábiles'],
           schedule: 'Martes y Jueves de 2:00 PM a 4:00 PM',
-          contact: 'Mesa de Aclaraciones - Ext. 202'
+          contact: 'Mesa de Talento y Cultura - Ext. 202'
+        };
+
+      case ServiceId.ValesTarjetaNomina:
+        return {
+          steps: [
+            { num: 1, title: 'Dispersión de Vales Toka', desc: 'El saldo de la tarjeta de vales de despensa se deposita el día 25 de cada mes. Consulta tu saldo al 800-400-8652.' },
+            { num: 2, title: 'Reporte Inmediato por Robo/Extravío', desc: 'Si perdiste la tarjeta, llama de inmediato al 800-400-8652 para el bloqueo del plástico y obtención de folio.' },
+            { num: 3, title: 'Solicitud de Reposición', desc: 'Acude a Recursos Humanos con tu folio de bloqueo para tramitar la expedición del nuevo plástico.' },
+            { num: 4, title: 'Entrega y Activación de Plástico', desc: 'Recoge tu nuevo plástico en RH en un lapso de 3 a 5 días hábiles y actívalo desde la app móvil o por teléfono.' }
+          ],
+          requirements: ['Folio de bloqueo telefónico oficial', 'Gafete de empleado', 'Identificación oficial INE'],
+          schedule: 'Atención en Ventanilla: Lunes a Viernes de 8:00 AM a 5:00 PM',
+          contact: 'Atención a Vales y Nómina - Ext. 204'
         };
 
       case ServiceId.CajaAhorro:
         return {
           steps: [
-            { num: 1, title: 'Elección de Porcentaje', desc: 'Puedes aportar entre el 2% y el 10% de tu sueldo base semanal a la Caja de Ahorro de la empresa.' },
-            { num: 2, title: 'Formato de Autorización', desc: 'Llena y firma la Solicitud de Descuento por Nómina en la oficina de Recursos Humanos.' },
-            { num: 3, title: 'Fechas de Inscripción', desc: 'El registro y cambio de montos se realiza en las ventanas anuales de Enero y Julio.' },
-            { num: 4, title: 'Entrega de Rendimientos', desc: 'El fondo acumulado más los intereses generados se entregan en el mes de Diciembre.' }
+            { num: 1, title: 'Definición de Porcentaje de Ahorro', desc: 'Elige ahorrar libremente entre el 2% y el 10% de tu sueldo base semanal mediante descuento de nómina.' },
+            { num: 2, title: 'Firma de Formato de Autorización', desc: 'Presenta tu solicitud de inscripción en la oficina de Recursos Humanos durante las ventanas de Enero o Julio.' },
+            { num: 3, title: 'Solicitud de Préstamos Informativos', desc: 'Al cumplir 1 año de antigüedad puedes solicitar préstamos con tasa preferencial calculados sobre tu capacidad de pago.' },
+            { num: 4, title: 'Entrega Anual de Rendimientos', desc: 'El fondo total acumulado junto con los intereses generados se liquida en el mes de Diciembre.' }
           ],
-          requirements: ['Antigüedad mínima de 3 meses en la planta', 'Formato de inscripción firmado'],
+          requirements: ['Antigüedad mínima de 3 meses (Ahorro) / 1 año (Préstamo)', 'Formato de autorización firmado'],
           schedule: 'Lunes a Viernes de 8:00 AM a 5:00 PM',
           contact: 'Comité de Caja de Ahorro - Ext. 205'
-        };
-
-      case ServiceId.Vacaciones:
-        return {
-          steps: [
-            { num: 1, title: 'Verificación de Días Disponibles', desc: 'Los días de vacaciones se determinan según tu antigüedad conforme a la Ley Federal del Trabajo (12 días en el primer año).' },
-            { num: 2, title: 'Acuerdo de Fechas con Supervisor', desc: 'Presenta tu propuesta de fechas al supervisor de tu línea con al menos 15 días de anticipación.' },
-            { num: 3, title: 'Firma de Papeleta Oficial', desc: 'Acude a Recursos Humanos a imprimir y firmar la Papeleta Oficial de Vacaciones.' },
-            { num: 4, title: 'Goce de Descanso', desc: 'Una vez autorizada, las fechas quedan programadas en el sistema de asistencia sin afectación a bonos.' }
-          ],
-          requirements: ['Solicitud realizada con 15 días de anticipación', 'Autorización por escrito del supervisor de línea'],
-          schedule: 'Lunes a Viernes de 8:00 AM a 5:00 PM',
-          contact: 'Coordinación de Personal - Ext. 201'
         };
 
       case ServiceId.Infonavit:
         return {
           steps: [
-            { num: 1, title: 'Obtención de Aviso de Retención', desc: 'Descarga tu "Aviso de Retención de Descuentos para Modificación o Suspensión" desde el portal Mi Cuenta Infonavit.' },
-            { num: 2, title: 'Entrega en Nóminas', desc: 'Entrega el documento impreso original en la ventanilla de Recursos Humanos.' },
-            { num: 3, title: 'Cálculo de Descuento Semanal', desc: 'Nóminas calculará la deducción semanal conforme al Factor de Descuento o cuota fija determinada por Infonavit.' },
-            { num: 4, title: 'Aplicación en Recibo', desc: 'El descuento se reflejará a partir de la nómina inmediata posterior a la entrega del aviso.' }
+            { num: 1, title: 'Descarga de Aviso de Retención', desc: 'Ingresa al portal "Mi Cuenta Infonavit" y descarga tu Aviso de Retención de Descuentos vigente.' },
+            { num: 2, title: 'Entrega de Documento Original', desc: 'Entrega el documento impreso original en la ventanilla de Recursos Humanos de Lunes a Viernes de 9:00 AM a 2:00 PM.' },
+            { num: 3, title: 'Cálculo de Deducción Semanal', desc: 'Nóminas programará el descuento exacto en estricto apego al Factor de Descuento (FD) o cuota fija determinada.' },
+            { num: 4, title: 'Reflejo en Recibo de Pago', desc: 'La retención comenzará a reflejarse en la nómina inmediata posterior a la entrega oficial del aviso.' }
           ],
-          requirements: ['Aviso de Retención original vigente', 'Número de Crédito Infonavit (10 dígitos)', 'NSS y RFC'],
-          schedule: 'Lunes a Viernes de 9:00 AM a 2:00 PM',
-          contact: 'Ventanilla Infonavit / Nóminas - Ext. 202'
+          requirements: ['Aviso de Retención impreso original vigente', 'Número de Crédito Infonavit (10 dígitos)', 'NSS y RFC'],
+          schedule: 'Recepción: Lunes a Viernes de 9:00 AM a 2:00 PM',
+          contact: 'Ventanilla Infonavit - Ext. 202'
+        };
+
+      case ServiceId.Vacaciones:
+        return {
+          steps: [
+            { num: 1, title: 'Consulta de Días Disponibles', desc: 'Revisa tus días correspondientes según tu antigüedad cumplida (12 días en el 1er año conforme a la LFT).' },
+            { num: 2, title: 'Programación de Días Flex & Home Week', desc: 'Si eres personal administrativo elegible, acuerda los Días Flex o esquema Home Week con tu jefe directo.' },
+            { num: 3, title: 'Coordinación con Supervisor', desc: 'Presenta la propuesta de fechas con al menos 15 días de anticipación para asegurar la cobertura operativa.' },
+            { num: 4, title: 'Firma de Papeleta Oficial', desc: 'Acude a Recursos Humanos a firmar la Papeleta Oficial de Vacaciones para el registro formal en sistema.' }
+          ],
+          requirements: ['Solicitud realizada con 15 días de anticipación', 'Autorización firmada del supervisor de línea'],
+          schedule: 'Lunes a Viernes de 8:00 AM a 5:00 PM',
+          contact: 'Coordinación de Personal - Ext. 201'
         };
 
       case ServiceId.Incapacidades:
         return {
           steps: [
-            { num: 1, title: 'Aviso Inmediato al Supervisor', desc: 'Notifica a tu supervisor directo e informa a RH dentro de las primeras 12 horas de haber recibido atención médica.' },
-            { num: 2, title: 'Envío de Copia Digital', desc: 'Envía una foto clara y legible del documento expedido por el IMSS al WhatsApp oficial de Recursos Humanos (+52 55 1234 5678).' },
-            { num: 3, title: 'Entrega del Documento Físico', desc: 'Al reincorporarte a tus labores, entrega el certificado original en papel (copia patronal) en el Módulo de Medicina del Trabajo.' },
-            { num: 4, title: 'Registro y Justificación', desc: 'Medicina del Trabajo validará el documento para justificar las ausencias en el reloj checador.' }
+            { num: 1, title: 'Aviso Inmediato a Planta', desc: 'Notifica a tu supervisor y envía foto clara del certificado IMSS al WhatsApp de RH (+52 55 1234 5678) en las primeras 12 horas.' },
+            { num: 2, title: 'Validación en Servicio Médico', desc: 'El área médica de planta registra el tipo de incapacidad (Enfermedad General, Maternidad o Riesgo de Trabajo).' },
+            { num: 3, title: 'Entrega de Certificado en Papel', desc: 'Al reincorporarte a tu turno, entrega el certificado original en papel (Copia Patrón) en la ventanilla de Medicina del Trabajo.' },
+            { num: 4, title: 'Pago y Justificación', desc: 'Medicina del Trabajo justifica las faltas en el reloj checador. El IMSS efectúa el pago según la ley vigente.' }
           ],
-          requirements: ['Certificado de Incapacidad del IMSS original (Copia Patrón)', 'Notificación oportuna antes de inicio de turno'],
+          requirements: ['Certificado de Incapacidad del IMSS impreso original (Copia Patrón)', 'Aviso oportuno antes del turno'],
           schedule: 'Atención WhatsApp 24/7 • Servicio Médico L-S de 6:00 AM a 10:00 PM',
           contact: 'Servicio Médico de Planta - Ext. 105'
         };
 
-      case ServiceId.Prestamos:
+      case ServiceId.RelojChecador:
         return {
           steps: [
-            { num: 1, title: 'Verificación de Elegibilidad', desc: 'Requiere antigüedad mínima de 1 año ininterrumpido en la planta y no tener préstamos activos vigentes.' },
-            { num: 2, title: 'Solicitud de Formato', desc: 'Solicita el Formato de Préstamo a Colaboradores en la ventanilla de Recursos Humanos.' },
-            { num: 3, title: 'Evaluación de Comité', desc: 'El Comité evalúa la capacidad de pago semanal (el descuento no debe superar el 30% del sueldo base).' },
-            { num: 4, title: 'Dispersión de Fondos', desc: 'De ser autorizado, el monto se deposita en tu tarjeta de nómina el viernes siguiente.' }
+            { num: 1, title: 'Uso de Lectores Biométricos', desc: 'Checa tu entrada y salida colocando tu huella o rostro firmemente en las estaciones de lectura en accesos de planta.' },
+            { num: 2, title: 'Procedimiento por Omisión de Chequeo', desc: 'Si olvidaste checar, solicita a tu supervisor el Formato de Corrección de Omisión de Marcaje de forma inmediata.' },
+            { num: 3, title: 'Firma y Justificación del Supervisor', desc: 'Indica la hora exacta y turno. El supervisor de línea debe firmar el formato acreditando tu presencia física.' },
+            { num: 4, title: 'Aclaración de Asistencia en RH', desc: 'Entrega la papeleta en RH antes del martes a las 12:00 PM para evitar afectaciones en tu pago semanal.' }
           ],
-          requirements: ['Antigüedad mínima de 1 año', 'Comprobante de domicilio reciente', 'Identificación oficial INE'],
-          schedule: 'Recepción de solicitudes: Lunes y Miércoles de 9:00 AM a 1:00 PM',
-          contact: 'Atención a Fondo Social - Ext. 206'
-        };
-
-      case ServiceId.Transporte:
-        return {
-          steps: [
-            { num: 1, title: 'Ubicación de Parada Autorizada', desc: 'Identifica la ruta que corresponde a tu zona (Norte, Oriente o Poniente) y la parada más cercana a tu domicilio.' },
-            { num: 2, title: 'Abordaje de Unidad', desc: 'Preséntate en la parada 5 minutos antes del horario indicado portando tu gafete visible de empleado.' },
-            { num: 3, title: 'Registro de Retrasos en Ruta', desc: 'Si la unidad oficial sufre una falla o demora por tráfico, la llegada a planta se registra como falta justificada sin penalización.' },
-            { num: 4, title: 'Reportes y Sugerencias', desc: 'Cualquier anomalía con las unidades o choferes repórtala directo a la coordinación de logística.' }
-          ],
-          requirements: ['Gafete oficial visible', 'Llegar 5 minutos antes a la parada'],
-          schedule: 'Turno 1: Llegada a Planta 05:55 AM • Salida 02:15 PM',
-          contact: 'Coordinación de Transporte - Ext. 310'
-        };
-
-      case ServiceId.Uniformes:
-        return {
-          steps: [
-            { num: 1, title: 'Entrega de Kit Inicial', desc: 'Al ingresar recibes 2 playeras polo, 2 pantalones industriales y 1 par de botas Berrendo con casquillo.' },
-            { num: 2, title: 'Renovación Programada', desc: 'Cada 6 meses se realiza la entrega masiva de reposición sin costo en el Almacén General.' },
-            { num: 3, title: 'Reposición por Daño Operativo', desc: 'Si tu uniforme o calzado se daña en turno, pide a tu supervisor el Vale de Reposición Extraordinaria.' },
-            { num: 4, title: 'Canje en Almacén', desc: 'Presenta el vale firmado en Almacén General los días jueves de 11:00 AM a 3:00 PM.' }
-          ],
-          requirements: ['Gafete de empleado', 'Vale de reposición firmado por supervisor (si es extraordinario)'],
-          schedule: 'Atención en Almacén: Jueves de 11:00 AM a 3:00 PM',
-          contact: 'Almacén General - Ext. 112'
-        };
-
-      case ServiceId.Seguridad:
-        return {
-          steps: [
-            { num: 1, title: 'Portación de EPP Completo', desc: 'Es obligatorio usar botas de casquillo, lentes de seguridad, tapones auditivos y chaleco reflejante en todo momento.' },
-            { num: 2, title: 'Cambio de EPP Desgastado', desc: 'Solicita el cambio de lentes rayados o tapones dañados sin costo en el Módulo de Seguridad.' },
-            { num: 3, title: 'Reporte de Condición Insegura', desc: 'Si detectas fugas, cables expuestos o tarimas mal apiladas, avisa inmediatamente a tu brigadista de área.' },
-            { num: 4, title: 'Atención de Incidentes', desc: 'Ante cualquier lesión por mínima que sea, acude de inmediato a Medicina del Trabajo.' }
-          ],
-          requirements: ['Uso obligatorio de EPP en área de manufactura', 'Respeto a líneas amarillas peatonales'],
-          schedule: 'Atención 24 Horas en Módulo de Seguridad',
-          contact: 'Departamento de Seguridad e Higiene - Ext. 100'
+          requirements: ['Formato de Corrección con firma autógrafa de supervisor', 'Entrega antes del martes 12:00 PM'],
+          schedule: 'Lunes a Viernes de 8:00 AM a 5:00 PM',
+          contact: 'Control de Asistencia - Ext. 203'
         };
 
       default:

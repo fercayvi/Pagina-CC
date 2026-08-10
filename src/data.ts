@@ -1,101 +1,78 @@
 import { ServiceId, Service, FAQ, NewsItem, Aviso, UserProfile } from './types';
 
 export const servicesData: Service[] = [
+  // 1. Módulo "Nómina y Pagos"
   {
-    id: ServiceId.Nomina,
-    title: 'Tarjeta Nómina y Pago',
-    iconName: 'CreditCard',
-    shortDesc: 'Información sobre depósitos semanales, cuentas nómina y comprobantes.',
-    category: 'nomina_pagos'
+    id: ServiceId.PoliticasPago,
+    title: 'Políticas de Pago',
+    iconName: 'Banknote',
+    shortDesc: 'Explicación de fechas de pago, periodicidad, conceptos aplicables y consultas frecuentes.',
+    category: 'Nómina y Pagos'
+  },
+  {
+    id: ServiceId.RecibosCIF,
+    title: 'Recibos de Nómina & CIF',
+    iconName: 'FileCheck',
+    shortDesc: 'Guía paso a paso para solicitar recibos impresos o digitales y consultar el Timbrado CIF.',
+    category: 'Nómina y Pagos'
   },
   {
     id: ServiceId.AclaracionPago,
-    title: 'Aclaraciones de Pago Nómina',
-    iconName: 'FileText',
-    shortDesc: 'Guía para solicitar aclaraciones sobre asistencia, horas extra y bonos.',
-    category: 'nomina_pagos'
+    title: 'Aclaraciones de Nómina',
+    iconName: 'HelpCircle',
+    shortDesc: 'Contactos de Talento y Cultura, horarios de atención y FAQs sobre dudas de pago.',
+    category: 'Nómina y Pagos'
+  },
+
+  // 2. Módulo "Tarjetas y Créditos"
+  {
+    id: ServiceId.ValesTarjetaNomina,
+    title: 'Vales y Tarjeta Nómina',
+    iconName: 'CreditCard',
+    shortDesc: 'Información sobre solicitud, uso, reposición por robo o extravío y FAQs.',
+    category: 'Tarjetas y Créditos'
   },
   {
     id: ServiceId.CajaAhorro,
-    title: 'Caja de Ahorro',
+    title: 'Caja de Ahorro y Préstamos',
     iconName: 'PiggyBank',
-    shortDesc: 'Requisitos, porcentajes de descuento y periodos de retiro de caja de ahorro.',
-    category: 'nomina_pagos'
-  },
-  {
-    id: ServiceId.Prestamos,
-    title: 'Préstamos de Empresa',
-    iconName: 'Coins',
-    shortDesc: 'Requisitos, montos permitidos y deducciones para préstamos a colaboradores.',
-    category: 'nomina_pagos'
-  },
-  {
-    id: ServiceId.TarjetaDespensa,
-    title: 'Tarjeta Vale de Despensa',
-    iconName: 'CreditCard',
-    shortDesc: 'Fechas de dispersión, reposición por extravío y atención Toka Despensa.',
-    category: 'tarjetas_creditos'
+    shortDesc: 'Reglas de acceso a la caja de ahorro, tipos de préstamos y procedimiento de solicitud informativa.',
+    category: 'Tarjetas y Créditos'
   },
   {
     id: ServiceId.Infonavit,
-    title: 'Infonavit y Retenciones',
+    title: 'Infonavit',
     iconName: 'Home',
-    shortDesc: 'Entrega de aviso de retención, cálculo de aportaciones y trámites de crédito.',
-    category: 'tarjetas_creditos'
+    shortDesc: 'Información de descuentos, retención de crédito y preguntas frecuentes.',
+    category: 'Tarjetas y Créditos'
   },
-  {
-    id: ServiceId.RelojChecador,
-    title: 'Control Reloj Checador',
-    iconName: 'Clock',
-    shortDesc: 'Procedimiento para corrección de omisión de marcaje y checadas tardías.',
-    category: 'control_asistencia'
-  },
+
+  // 3. Módulo "Control y Asistencia"
   {
     id: ServiceId.Vacaciones,
-    title: 'Vacaciones y Descansos',
+    title: 'Vacaciones, Flex & Home Week',
     iconName: 'CalendarDays',
-    shortDesc: 'Tabla de días por antigüedad LFT, programación y formatos de solicitud.',
-    category: 'control_asistencia'
+    shortDesc: 'Políticas de días disponibles, reglas de uso, Home Week, Días Flex y tiempos de solicitud.',
+    category: 'Control y Asistencia'
   },
   {
     id: ServiceId.Incapacidades,
-    title: 'Incapacidades IMSS',
+    title: 'Incapacidades',
     iconName: 'ShieldAlert',
-    shortDesc: 'Reporte oportuno, entrega de certificados e ingresos por enfermedad general.',
-    category: 'control_asistencia'
+    shortDesc: 'Tipos de incapacidad, documentación requerida del IMSS y proceso para reportarla.',
+    category: 'Control y Asistencia'
   },
   {
-    id: ServiceId.Transporte,
-    title: 'Transporte de Personal',
-    iconName: 'Bus',
-    shortDesc: 'Rutas de camiones, horarios por turno y paradas oficiales autorizadas.',
-    category: 'control_asistencia'
-  },
-  {
-    id: ServiceId.Uniformes,
-    title: 'Uniformes y Botas',
-    iconName: 'Shirt',
-    shortDesc: 'Fechas de renovación semestral, calzado de seguridad y reposición por daño.',
-    category: 'control_asistencia'
-  },
-  {
-    id: ServiceId.Seguridad,
-    title: 'Seguridad Industrial (EPP)',
-    iconName: 'ShieldAlert',
-    shortDesc: 'Equipo de protección personal obligatorio, prevención de riesgos e higiene.',
-    category: 'control_asistencia'
-  },
-  {
-    id: ServiceId.PreguntasFrecuentes,
-    title: 'Preguntas Frecuentes',
-    iconName: 'HelpCircle',
-    shortDesc: 'Respuestas rápidas sobre trámites, horarios de ventanilla y reglamentos.',
-    category: 'control_asistencia'
+    id: ServiceId.RelojChecador,
+    title: 'Reloj Checador',
+    iconName: 'Clock',
+    shortDesc: 'Guía de uso de lectores en planta, política sobre omisión de marcas y aclaraciones de asistencia.',
+    category: 'Control y Asistencia'
   }
 ];
 
 export const userProfileData: UserProfile = {
-  name: 'Juan Carlos Martínez',
+  name: 'Colaborador Planta',
   employeeId: 'OP-4820',
   position: 'Operador de Ensamble A',
   department: 'Producción - Línea 3',
@@ -123,7 +100,7 @@ export const newsData: NewsItem[] = [
     id: 'n1',
     title: '¡Bienvenidos Nuevos Colaboradores!',
     summary: 'Hoy damos la bienvenida a la generación de julio en la planta de manufactura.',
-    content: 'Estamos muy emocionados de recibir a 15 nuevos operarios en las líneas de ensamble y empaque. Recuerden que su supervisor asignado los acompañará durante las primeras dos semanas para su entrenamiento práctico de seguridad y operación.',
+    content: 'Estamos muy emocionados de recibir a los nuevos operarios en las líneas de ensamble y empaque. Recuerden que su supervisor asignado los acompañará durante las primeras dos semanas para su entrenamiento práctico de seguridad y operación.',
     date: 'Hace 2 días',
     imageName: 'welcome_team',
     category: 'evento'
@@ -132,7 +109,7 @@ export const newsData: NewsItem[] = [
     id: 'n2',
     title: 'Nueva Campaña de Salud en Planta',
     summary: 'Exámenes médicos de vista y dental gratuitos para todo el personal.',
-    content: 'La próxima semana se instalará la unidad médica móvil en el estacionamiento principal. Podrás acudir en tu tiempo de comida o agendar con tu supervisor una salida de 15 minutos. Los lentes graduados tienen un subsidio del 70% por parte del sindicato y la empresa.',
+    content: 'La próxima semana se instalará la unidad médica móvil en el estacionamiento principal. Podrás acudir en tu tiempo de comida o agendar con tu supervisor una salida de 15 minutos. Los lentes graduados tienen un subsidio especial.',
     date: 'Hace 5 días',
     imageName: 'health_campaign',
     category: 'comunicado'
@@ -141,132 +118,121 @@ export const newsData: NewsItem[] = [
     id: 'n3',
     title: 'Rompe Récord Línea 3 de Ensamble',
     summary: '¡Felicidades al equipo del primer turno por lograr cero defectos esta semana!',
-    content: 'Queremos reconocer el excelente trabajo de la Línea 3 liderada por el Ing. Héctor Ramírez. Lograron armar 1,200 piezas sin una sola alerta de calidad. Todo el equipo recibirá un cupón de comida especial para el viernes de tacos.',
+    content: 'Queremos reconocer el excelente trabajo de la Línea 3 liderada por el equipo de manufactura. Lograron armar 1,200 piezas sin una sola alerta de calidad. Todo el equipo recibirá un reconocimiento especial.',
     date: 'Hace 1 semana',
     imageName: 'production_record',
     category: 'logro'
   }
 ];
 
-export const avisosData: Aviso[] = [
-  {
-    id: 'a1',
-    title: '⚠️ Cambio de Parada: Ruta Oriente',
-    message: 'Por obras viales, el autobús de la Ruta Oriente no pasará temporalmente por la parada de San Juan. La parada alterna será en la gasolinera OXXO GAS a 200 metros sobre la avenida principal. Favor de llegar 5 minutos antes.',
-    date: 'Hoy, 05:30 AM',
-    urgency: 'alta',
-    read: false,
-    sender: 'Coordinación de Transporte'
-  },
-  {
-    id: 'a2',
-    title: '👕 Entrega de Uniformes de Reposición',
-    message: 'Se les recuerda que la entrega de uniformes para quienes ingresaron hace 6 meses iniciará este jueves en la oficina de Almacén General de 11:00 AM a 3:00 PM. Deberán presentar su gafete de empleado.',
-    date: 'Ayer, 02:15 PM',
-    urgency: 'media',
-    read: false,
-    sender: 'Recursos Humanos'
-  },
-  {
-    id: 'a3',
-    title: '⚡ Mantenimiento Preventivo de Planta',
-    message: 'El domingo 20 de julio se realizará corte general de energía por mantenimiento preventivo anual en las subestaciones. Se suspenden labores de tiempo extra para ese día en todas las líneas.',
-    date: 'Hace 3 días',
-    urgency: 'baja',
-    read: true,
-    sender: 'Mantenimiento e Ingeniería'
-  }
-];
+export const avisosData: Aviso[] = [];
 
 export const faqsData: FAQ[] = [
+  // Políticas de Pago
   {
-    category: ServiceId.Nomina,
+    category: ServiceId.PoliticasPago,
     question: '¿Qué día de la semana depositan la nómina?',
-    answer: 'Para todo el personal operativo de planta, el pago es SEMANAL y se deposita cada VIERNES por la mañana antes de las 9:00 AM. Si el viernes es día festivo bancario, el depósito se realiza el jueves inmediato anterior.'
+    answer: 'Para todo el personal operativo de planta, el pago es SEMANAL y se deposita cada VIERNES por la mañana antes de las 9:00 AM. Si el viernes es día festivo bancario, el depósito se adelanta al jueves inmediato anterior.'
   },
   {
-    category: ServiceId.Nomina,
-    question: '¿Cómo puedo obtener mis recibos de nómina impresos o digitales?',
-    answer: 'Los recibos digitales se envían semanalmente a tu correo institucional. Si requieres tus recibos impresos para un trámite personal, puedes solicitarlos en la ventanilla de Recursos Humanos de Lunes a Viernes de 8:00 AM a 5:00 PM.'
+    category: ServiceId.PoliticasPago,
+    question: '¿Qué conceptos se incluyen en el pago semanal?',
+    answer: 'Tu pago incluye el sueldo base pactado, horas extraordinarias autorizadas, prima dominical (si aplica), bono de asistencia y puntualidad, con las deducciones de ley como ISR e IMSS.'
+  },
+
+  // Recibos de Nómina & CIF
+  {
+    category: ServiceId.RecibosCIF,
+    question: '¿Cómo puedo obtener mis recibos de nómina digitales?',
+    answer: 'Los recibos digitales timbrados fiscalmente (CFDI / CIF) se envían semanalmente a tu correo institucional o los puedes consultar en el portal interno de la empresa.'
   },
   {
-    category: ServiceId.TarjetaDespensa,
-    question: '¿Cuándo se realiza la dispersión de vales de despensa?',
-    answer: 'El saldo de la tarjeta de vales Toka se deposita el día 25 de cada mes. Si el día 25 cae en fin de semana o día festivo, la dispersión se adelanta al día hábil anterior.'
+    category: ServiceId.RecibosCIF,
+    question: '¿Dónde pido la versión impresa de mis recibos de nómina?',
+    answer: 'Si requieres tus recibos impresos para trámites bancarios o personales, puedes solicitarlos directamente en la ventanilla de Recursos Humanos de Lunes a Viernes de 8:00 AM a 5:00 PM.'
   },
+
+  // Aclaraciones de Nómina
   {
-    category: ServiceId.TarjetaDespensa,
-    question: '¿Qué debo hacer si pierdo o me roban la tarjeta de vales?',
-    answer: 'Llama inmediatamente a la línea de Toka al 800-400-8652 para bloquear el plástico. Posteriormente, acude a Recursos Humanos con tu número de reporte de bloqueo para tramitar el repuesto.'
-  },
-  {
-    category: ServiceId.RelojChecador,
-    question: '¿Cómo solicito la justificación por omisión de chequeo?',
-    answer: 'Solicita la Papeleta de Corrección de Chequeo a tu supervisor de turno (Ing. Héctor Ramírez), pide su firma de autorización y entrégala en la ventanilla de RH antes del martes a las 12:00 PM.'
+    category: ServiceId.AclaracionPago,
+    question: '¿Cuál es el tiempo límite para solicitar aclaraciones de pago?',
+    answer: 'Tienes un plazo máximo de 5 días hábiles contados a partir del viernes de pago para reportar cualquier omisión en horas extra o bonos con tu recibo impreso y firma de tu supervisor.'
   },
   {
     category: ServiceId.AclaracionPago,
-    question: '¿Cuál es el tiempo límite para solicitar aclaraciones de mi sueldo?',
-    answer: 'Tienes un plazo máximo de 5 días hábiles contados a partir del viernes de pago. Debes presentar tu recibo de nómina físico y contar con la verificación del supervisor de turno.'
+    question: '¿Con quién me pongo en contacto en Talento y Cultura para una duda?',
+    answer: 'Puedes acudir a la ventanilla de Talento y Cultura (Nóminas - Ext. 202) los martes y jueves de 2:00 PM a 4:00 PM o enviar un mensaje al WhatsApp oficial de RH.'
+  },
+
+  // Vales y Tarjeta Nómina
+  {
+    category: ServiceId.ValesTarjetaNomina,
+    question: '¿Cuándo se realiza la dispersión de vales de despensa?',
+    answer: 'El saldo de la tarjeta de vales Toka se deposita el día 25 de cada mes. Si cae en fin de semana o festivo, se adelanta al día hábil anterior.'
+  },
+  {
+    category: ServiceId.ValesTarjetaNomina,
+    question: '¿Qué hago en caso de robo o extravío de mi tarjeta de nómina o vales?',
+    answer: 'Llama de inmediato a la línea del banco o de Toka (800-400-8652) para realizar el bloqueo preventivo y solicita tu número de folio. Con ese folio acude a RH para tramitar la reposición.'
+  },
+
+  // Caja de Ahorro y Préstamos
+  {
+    category: ServiceId.CajaAhorro,
+    question: '¿Cómo funciona la Caja de Ahorro y los préstamos?',
+    answer: 'Puedes ahorrar libremente entre el 2% y el 10% de tu sueldo base. La caja otorga rendimientos anuales. Tras 1 año de antigüedad, puedes solicitar un préstamo con tasa preferencial cuya deducción semanal no exceda el 30% de tu sueldo.'
   },
   {
     category: ServiceId.CajaAhorro,
-    question: '¿Cuándo puedo modificar mi porcentaje de ahorro en la Caja?',
-    answer: 'Los cambios de porcentaje (entre 2% y 10%) se solicitan en la ventanilla de Recursos Humanos durante los meses de Enero y Julio de cada año.'
+    question: '¿En qué meses se puede modificar la aportación a la caja de ahorro?',
+    answer: 'Los cambios en el porcentaje de descuento se solicitan durante los meses de Enero y Julio en la ventanilla de Recursos Humanos.'
   },
-  {
-    category: ServiceId.Vacaciones,
-    question: '¿Con cuánta anticipación debo programar mis vacaciones?',
-    answer: 'Debes acordar las fechas con tu supervisor inmediato con al menos 15 días de anticipación y firmar la Solicitud de Vacaciones en RH para garantizar la cobertura en la línea de producción.'
-  },
-  {
-    category: ServiceId.Vacaciones,
-    question: '¿Cuántos días de descanso me corresponden por antigüedad?',
-    answer: 'De acuerdo con la Ley Federal del Trabajo: 1 año = 12 días; 2 años = 14 días; 3 años = 16 días; 4 años = 18 días; 5 años = 20 días; de 6 a 10 años = 22 días.'
-  },
+
+  // Infonavit
   {
     category: ServiceId.Infonavit,
     question: '¿Dónde entregó mi Aviso de Retención de Descuentos de Infonavit?',
-    answer: 'Debes entregar el documento impreso original en la oficina de Nóminas de Planta de Lunes a Viernes de 9:00 AM a 2:00 PM para su aplicación en la siguiente nómina.'
+    answer: 'Debes entregar el aviso impreso original en la oficina de Nóminas de Lunes a Viernes de 9:00 AM a 2:00 PM para que se aplique el descuento oficial en tu nómina semanal.'
+  },
+  {
+    category: ServiceId.Infonavit,
+    question: '¿Cómo se calcula el descuento semanal para el pago de Infonavit?',
+    answer: 'La deducción se realiza en estricto apego al Factor de Descuento (FD) o cuota fija expresada en VSM/UMAs contenida en tu Aviso de Retención expedido por el Infonavit.'
+  },
+
+  // Vacaciones, Flex & Home Week
+  {
+    category: ServiceId.Vacaciones,
+    question: '¿Cuántos días de vacaciones me corresponden según la Ley Federal del Trabajo?',
+    answer: 'De acuerdo con la LFT: 1er año = 12 días; 2do año = 14 días; 3er año = 16 días; 4to año = 18 días; 5to año = 20 días. A partir del 6to año se incrementan 2 días por cada 5 años laborados.'
+  },
+  {
+    category: ServiceId.Vacaciones,
+    question: '¿Cómo funcionan las políticas de Días Flex y Home Week?',
+    answer: 'Los Días Flex y esquemas de Home Week aplican para puestos administrativos elegibles coordinando la agenda previa con tu jefe directo sin descuidar la cobertura operativa.'
+  },
+
+  // Incapacidades
+  {
+    category: ServiceId.Incapacidades,
+    question: '¿Cómo y cuándo debo reportar un certificado de incapacidad IMSS?',
+    answer: 'Notifica a tu supervisor e informa a RH enviando foto legible del certificado original en las primeras 12 horas. Al regresar a laborar, entrega la copia patronal en el Módulo de Servicio Médico.'
   },
   {
     category: ServiceId.Incapacidades,
-    question: '¿Cómo se deben reportar las incapacidades expedidas por el IMSS?',
-    answer: 'Notifica a tu supervisor y envía una foto legible de la copia patronal de la incapacidad al WhatsApp de RH (+52 55 1234 5678) dentro de las primeras 24 horas. El original en papel se entrega al regresar a laborar.'
+    question: '¿Cómo se efectúa el pago de días por incapacidad médica?',
+    answer: 'Por enfermedad general, el IMSS paga a partir del 4to día el 60% del Salario Diario Integrado. En accidentes de trabajo o trayecto calificados, se otorga el 100% desde el primer día.'
+  },
+
+  // Reloj Checador
+  {
+    category: ServiceId.RelojChecador,
+    question: '¿Qué debo hacer si olvidé checar mi entrada o salida en el reloj biológico?',
+    answer: 'Solicita a tu supervisor de turno la Papeleta de Corrección de Omisión de Chequeo. Pide su firma de autorización y entrégala en la ventanilla de RH antes del martes a las 12:00 PM.'
   },
   {
-    category: ServiceId.Incapacidades,
-    question: '¿Cómo se pagan los días de incapacidad por enfermedad general?',
-    answer: 'El IMSS paga a partir del 4to día de incapacidad el 60% de tu salario diario integrado registrado. Los primeros 3 días no son cubiertos por el instituto salvo disposición de contrato colectivo.'
-  },
-  {
-    category: ServiceId.Prestamos,
-    question: '¿Cuáles son los requisitos para solicitar un préstamo de empresa?',
-    answer: 'Antigüedad mínima de 1 año ininterrumpido en la planta, no contar con ningún adeudo previo activo y que la deducción semanal no exceda el 30% de tu sueldo base.'
-  },
-  {
-    category: ServiceId.Transporte,
-    question: '¿Qué tolerancia existe si la unidad de transporte sufre un retraso?',
-    answer: 'Si la unidad oficial de la empresa sufre una falla o demora en el tráfico, la llegada a la planta se registra como asistencia justificada sin penalización de retardo.'
-  },
-  {
-    category: ServiceId.Uniformes,
-    question: '¿Cada cuánto tiempo se renueva el uniforme y las botas de casquillo?',
-    answer: 'La reposición ordinaria de uniforme (playeras y pantalones) y calzado de seguridad Berrendo se realiza de manera programada cada 6 meses sin costo para el trabajador.'
-  },
-  {
-    category: ServiceId.Seguridad,
-    question: '¿Es obligatorio usar todo el Equipo de Protección Personal (EPP)?',
-    answer: 'Sí. El uso de botas de casquillo, lentes de seguridad, tapones auditivos y chaleco reflejante es estrictamente obligatorio para ingresar y permanecer en todas las áreas de manufactura.'
-  },
-  {
-    category: 'general',
-    question: '¿Cuál es el horario de atención de la oficina de Recursos Humanos?',
-    answer: 'La ventanilla de Recursos Humanos atiende de Lunes a Viernes en horario corrido de 8:00 AM a 5:00 PM y Sábados de 8:00 AM a 1:00 PM.'
-  },
-  {
-    category: 'general',
-    question: '¿Qué procedimiento debo seguir en caso de pérdida de mi gafete oficial?',
-    answer: 'Acude a la Caseta Principal de Seguridad para tramitar un pase provisional de acceso. La reposición física del gafete se gestiona en Recursos Humanos con un costo de $50 MXN.'
+    category: ServiceId.RelojChecador,
+    question: '¿Qué sucede si llego tarde a mi turno de trabajo?',
+    answer: 'Se otorga una tolerancia de 5 minutos al inicio del turno. Pasado este tiempo se considerará retardo y requerirá visto bueno del supervisor para ingreso a la línea de producción.'
   }
 ];

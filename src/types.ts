@@ -1,19 +1,13 @@
 export enum ServiceId {
-  Nomina = 'nomina',
-  FondoAhorro = 'fondo_ahorro',
-  TarjetaDespensa = 'tarjeta_despensa',
-  Vacaciones = 'vacaciones',
-  Transporte = 'transporte',
-  Uniformes = 'uniformes',
-  Seguridad = 'seguridad',
-  PreguntasFrecuentes = 'faq',
-  ContactarRRHH = 'contacto_rrhh',
-  RelojChecador = 'reloj_checador',
+  PoliticasPago = 'politicas_pago',
+  RecibosCIF = 'recibos_cif',
   AclaracionPago = 'aclaracion_pago',
+  ValesTarjetaNomina = 'vales_tarjeta_nomina',
   CajaAhorro = 'caja_ahorro',
   Infonavit = 'infonavit',
+  Vacaciones = 'vacaciones',
   Incapacidades = 'incapacidades',
-  Prestamos = 'prestamos'
+  RelojChecador = 'reloj_checador'
 }
 
 export interface Service {
@@ -21,7 +15,7 @@ export interface Service {
   title: string;
   iconName: string;
   shortDesc: string;
-  category: 'nomina_pagos' | 'tarjetas_creditos' | 'control_asistencia';
+  category: 'Nómina y Pagos' | 'Tarjetas y Créditos' | 'Control y Asistencia';
 }
 
 export interface FAQ {

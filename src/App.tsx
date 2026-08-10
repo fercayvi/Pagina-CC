@@ -13,7 +13,7 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState<'inicio' | 'noticias' | 'asistente'>('inicio');
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'nomina_pagos' | 'tarjetas_creditos' | 'control_asistencia'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'Nómina y Pagos' | 'Tarjetas y Créditos' | 'Control y Asistencia'>('all');
   
   // Public user context
   const user: UserProfile = userProfileData;
@@ -34,9 +34,9 @@ export default function App() {
   // Categories helper
   const categories = [
     { id: 'all', label: 'Todos los trámites' },
-    { id: 'nomina_pagos', label: 'Nómina y Pagos' },
-    { id: 'tarjetas_creditos', label: 'Tarjetas y Créditos' },
-    { id: 'control_asistencia', label: 'Control y Asistencia' },
+    { id: 'Nómina y Pagos', label: 'Nómina y Pagos' },
+    { id: 'Tarjetas y Créditos', label: 'Tarjetas y Créditos' },
+    { id: 'Control y Asistencia', label: 'Control y Asistencia' },
   ] as const;
 
   return (

@@ -15,21 +15,21 @@ export default function ServiceCard({ service, onClick }: ServiceCardProps) {
   // Modern corporate color pairs for the 3 official pillars
   const getCategoryStyles = (category: string) => {
     switch (category) {
-      case 'nomina_pagos':
+      case 'Nómina y Pagos':
         return {
           cardBg: 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-xs',
           iconBg: 'bg-blue-50 text-blue-600 border border-blue-100',
           badge: 'bg-blue-50 text-blue-800 border border-blue-200/60',
           tag: 'Nómina y Pagos'
         };
-      case 'tarjetas_creditos':
+      case 'Tarjetas y Créditos':
         return {
           cardBg: 'bg-white border-slate-200 hover:border-purple-300 hover:shadow-xs',
           iconBg: 'bg-purple-50 text-purple-600 border border-purple-100',
           badge: 'bg-purple-50 text-purple-800 border border-purple-200/60',
           tag: 'Tarjetas y Créditos'
         };
-      case 'control_asistencia':
+      case 'Control y Asistencia':
       default:
         return {
           cardBg: 'bg-white border-slate-200 hover:border-emerald-300 hover:shadow-xs',
