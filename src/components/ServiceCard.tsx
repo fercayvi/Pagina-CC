@@ -12,29 +12,29 @@ export default function ServiceCard({ service, onClick }: ServiceCardProps) {
   // Dynamically resolve icon from lucide-react Icons collection safely
   const IconComponent = (Icons as any)[service.iconName] || Icons.HelpCircle;
 
-  // Modern corporate color pairs for the 3 official pillars
+  // Kiosk-optimized styles with high contrast, prominent shadows and borders
   const getCategoryStyles = (category: string) => {
     switch (category) {
       case 'Nómina y Pagos':
         return {
-          cardBg: 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-xs',
-          iconBg: 'bg-blue-50 text-blue-600 border border-blue-100',
-          badge: 'bg-blue-50 text-blue-800 border border-blue-200/60',
+          cardBg: 'bg-white border-2 border-slate-300 hover:border-blue-600 shadow-md hover:shadow-xl',
+          iconBg: 'bg-blue-100 text-blue-800 border-2 border-blue-200',
+          badge: 'bg-blue-100 text-blue-900 border border-blue-300 font-black',
           tag: 'Nómina y Pagos'
         };
       case 'Tarjetas y Créditos':
         return {
-          cardBg: 'bg-white border-slate-200 hover:border-purple-300 hover:shadow-xs',
-          iconBg: 'bg-purple-50 text-purple-600 border border-purple-100',
-          badge: 'bg-purple-50 text-purple-800 border border-purple-200/60',
+          cardBg: 'bg-white border-2 border-slate-300 hover:border-purple-600 shadow-md hover:shadow-xl',
+          iconBg: 'bg-purple-100 text-purple-800 border-2 border-purple-200',
+          badge: 'bg-purple-100 text-purple-900 border border-purple-300 font-black',
           tag: 'Tarjetas y Créditos'
         };
       case 'Control y Asistencia':
       default:
         return {
-          cardBg: 'bg-white border-slate-200 hover:border-emerald-300 hover:shadow-xs',
-          iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
-          badge: 'bg-emerald-50 text-emerald-800 border border-emerald-200/60',
+          cardBg: 'bg-white border-2 border-slate-300 hover:border-emerald-600 shadow-md hover:shadow-xl',
+          iconBg: 'bg-emerald-100 text-emerald-800 border-2 border-emerald-200',
+          badge: 'bg-emerald-100 text-emerald-900 border border-emerald-300 font-black',
           tag: 'Control y Asistencia'
         };
     }
@@ -46,23 +46,23 @@ export default function ServiceCard({ service, onClick }: ServiceCardProps) {
     <button
       id={`service-card-${service.id}`}
       onClick={onClick}
-      className={`group border rounded-2xl p-4 flex flex-col justify-between text-left transition-all active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-900/10 ${styles.cardBg}`}
-      style={{ minHeight: '140px' }}
+      className={`group border rounded-2xl p-5 sm:p-6 h-full flex flex-col justify-between text-left transition-all active:scale-[0.97] cursor-pointer focus:outline-none focus:ring-4 focus:ring-blue-500/30 ${styles.cardBg}`}
+      style={{ minHeight: '180px' }}
     >
       <div className="flex justify-between items-start w-full gap-2">
-        <div className={`p-2 rounded-xl ${styles.iconBg} transition-transform group-hover:scale-105 shrink-0 flex items-center justify-center`}>
-          <IconComponent className="w-4.5 h-4.5" strokeWidth={2.2} />
+        <div className={`p-3 rounded-2xl ${styles.iconBg} transition-transform group-hover:scale-110 shrink-0 flex items-center justify-center shadow-xs`}>
+          <IconComponent className="w-6 h-6" strokeWidth={2.5} />
         </div>
-        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${styles.badge} tracking-tight shrink-0`}>
+        <span className={`text-xs font-black px-2.5 py-1 rounded-lg ${styles.badge} tracking-tight shrink-0 shadow-2xs`}>
           {styles.tag}
         </span>
       </div>
 
-      <div className="mt-3">
-        <h3 className="text-xs font-bold text-slate-900 tracking-tight leading-snug group-hover:text-blue-600 transition-colors">
+      <div className="mt-4 flex-grow flex flex-col justify-between">
+        <h3 className="text-base font-extrabold text-slate-900 tracking-tight leading-snug group-hover:text-blue-700 transition-colors mb-1.5">
           {service.title}
         </h3>
-        <p className="text-[11px] text-slate-500 font-medium mt-1 line-clamp-2 leading-relaxed">
+        <p className="text-xs sm:text-sm text-slate-700 font-medium line-clamp-3 leading-relaxed flex-grow">
           {service.shortDesc}
         </p>
       </div>

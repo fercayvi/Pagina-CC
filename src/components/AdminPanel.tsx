@@ -24,15 +24,23 @@ import { Service, NewsItem, ServiceId, StepItem, ServiceFAQ } from '../types';
 import { getDefaultServiceDetails } from '../data';
 
 interface AdminPanelProps {
-  services: (Service & { hidden?: boolean })[];
-  onUpdateServices: (services: (Service & { hidden?: boolean })[]) => void;
+  activeServices?: (Service & { hidden?: boolean })[];
+  setActiveServices?: React.Dispatch<React.SetStateAction<(Service & { hidden?: boolean })[]>>;
+  activeNews?: NewsItem[];
+  setActiveNews?: React.Dispatch<React.SetStateAction<NewsItem[]>>;
+  services?: (Service & { hidden?: boolean })[];
+  onUpdateServices?: (services: (Service & { hidden?: boolean })[]) => void;
   onSelectService?: (service: Service & { hidden?: boolean }, startInEditMode?: boolean) => void;
-  news: NewsItem[];
-  onUpdateNews: (news: NewsItem[]) => void;
+  news?: NewsItem[];
+  onUpdateNews?: (news: NewsItem[]) => void;
   onLogout: () => void;
 }
 
 export default function AdminPanel({
+  activeServices,
+  setActiveServices,
+  activeNews,
+  setActiveNews,
   services,
   onUpdateServices,
   onSelectService,
@@ -40,6 +48,9 @@ export default function AdminPanel({
   onUpdateNews,
   onLogout
 }: AdminPanelProps) {
+  const currentServices = activeServices || services || [];
+  const currentNews = activeNews || news || [];
+
   const [activeTab, setActiveTab] = useState<'tramites' | 'noticias'>('tramites');
   const [successMessage, setSuccessMessage] = useState<string>('');
 
@@ -60,17 +71,35 @@ export default function AdminPanel({
     setTimeout(() => setSuccessMessage(''), 3000);
   };
 
+  const updateServicesList = (updater: (prev: (Service & { hidden?: boolean })[]) => (Service & { hidden?: boolean })[]) => {
+    if (setActiveServices) {
+      setActiveServices(updater);
+    } else if (onUpdateServices) {
+      onUpdateServices(updater(currentServices));
+    }
+  };
+
+  const updateNewsList = (updater: (prev: NewsItem[]) => NewsItem[]) => {
+    if (setActiveNews) {
+      setActiveNews(updater);
+    } else if (onUpdateNews) {
+      onUpdateNews(updater(currentNews));
+    }
+  };
+
   // --- SERVICE HANDLERS ---
   const handleToggleHideService = (id: string) => {
-    const updated = services.map(s => s.id === id ? { ...s, hidden: !s.hidden } : s);
-    onUpdateServices(updated);
+    updateServicesList(prev => prev.map(s => s.id === id ? { ...s, hidden: !s.hidden } : s));
     showToast('Estado del trámite actualizado correctamente.');
   };
 
   const handleDeleteService = (id: string) => {
-    if (confirm('¿Estás seguro de eliminar este trámite de la lista?')) {
-      const updated = services.filter(s => s.id !== id);
-      onUpdateServices(updated);
+    if (window.confirm('¿Estás seguro de eliminar este trámite por completo?')) {
+      if (setActiveServices) {
+        setActiveServices(prev => prev.filter(service => service.id !== id));
+      } else {
+        updateServicesList(prev => prev.filter(service => service.id !== id));
+      }
       showToast('Trámite eliminado con éxito.');
     }
   };
@@ -146,11 +175,10 @@ export default function AdminPanel({
     if (!editingService || !editingService.title.trim()) return;
 
     if (isNewService) {
-      onUpdateServices([editingService, ...services]);
+      updateServicesList(prev => [editingService, ...prev]);
       showToast('¡Nuevo trámite creado e integrado al portal!');
     } else {
-      const updated = services.map(s => s.id === editingService.id ? editingService : s);
-      onUpdateServices(updated);
+      updateServicesList(prev => prev.map(s => s.id === editingService.id ? editingService : s));
       showToast('Trámite modificado y guardado con éxito.');
     }
     setIsServiceModalOpen(false);
@@ -238,10 +266,13 @@ export default function AdminPanel({
 
   // --- NEWS HANDLERS ---
   const handleDeleteNews = (id: string) => {
-    if (confirm('¿Deseas eliminar esta noticia?')) {
-      const updated = news.filter(n => n.id !== id);
-      onUpdateNews(updated);
-      showToast('Noticia eliminada correctamente.');
+    if (window.confirm('¿Estás seguro de eliminar este comunicado?')) {
+      if (setActiveNews) {
+        setActiveNews(prev => prev.filter(news => news.id !== id));
+      } else {
+        updateNewsList(prev => prev.filter(news => news.id !== id));
+      }
+      showToast('Comunicado eliminado correctamente.');
     }
   };
 
@@ -270,11 +301,10 @@ export default function AdminPanel({
     if (!editingNews || !editingNews.title.trim()) return;
 
     if (isNewNews) {
-      onUpdateNews([editingNews, ...news]);
+      updateNewsList(prev => [editingNews, ...prev]);
       showToast('¡Nueva noticia publicada en el boletín!');
     } else {
-      const updated = news.map(n => n.id === editingNews.id ? editingNews : n);
-      onUpdateNews(updated);
+      updateNewsList(prev => prev.map(n => n.id === editingNews.id ? editingNews : n));
       showToast('Noticia actualizada correctamente.');
     }
     setIsNewsModalOpen(false);
@@ -374,7 +404,7 @@ export default function AdminPanel({
 
           {/* Services List */}
           <div className="space-y-2.5">
-            {services.map((service) => (
+            {currentServices.map((service) => (
               <div
                 key={service.id}
                 className={`bg-white border rounded-2xl p-4 shadow-2xs transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
@@ -434,10 +464,12 @@ export default function AdminPanel({
 
                   <button
                     onClick={() => handleDeleteService(service.id)}
-                    className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl transition-colors"
+                    className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 active:scale-95 cursor-pointer"
                     title="Eliminar trámite"
+                    aria-label="Eliminar trámite"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4 text-rose-600" />
+                    <span>Borrar</span>
                   </button>
                 </div>
               </div>
@@ -470,7 +502,7 @@ export default function AdminPanel({
 
           {/* News List */}
           <div className="space-y-3">
-            {news.map((item) => (
+            {currentNews.map((item) => (
               <div
                 key={item.id}
                 className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs hover:border-slate-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
@@ -509,10 +541,12 @@ export default function AdminPanel({
 
                   <button
                     onClick={() => handleDeleteNews(item.id)}
-                    className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl transition-colors"
-                    title="Eliminar noticia"
+                    className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 active:scale-95 cursor-pointer"
+                    title="Eliminar comunicado"
+                    aria-label="Eliminar comunicado"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4 text-rose-600" />
+                    <span>Borrar</span>
                   </button>
                 </div>
               </div>

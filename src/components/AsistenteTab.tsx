@@ -8,92 +8,92 @@ interface AsistenteTabProps {
 
 export default function AsistenteTab({ user }: AsistenteTabProps) {
   return (
-    <div id="contacto-rh-tab-view" className="space-y-4 animate-fadeIn">
+    <div id="contacto-rh-tab-view" className="space-y-5 animate-fadeIn">
       {/* Title block */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs">
+      <div className="bg-white border-2 border-slate-300 rounded-2xl p-5 sm:p-6 shadow-md">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
-            <Building2 className="w-5 h-5" />
+          <div className="w-12 h-12 rounded-2xl bg-blue-700 text-white flex items-center justify-center shrink-0 shadow-sm">
+            <Building2 className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md uppercase tracking-wider">
-              Atención Directa
+            <span className="text-xs font-black text-blue-800 bg-blue-100 px-3 py-1 rounded-lg uppercase tracking-wider">
+              Atención Directa en Planta
             </span>
-            <h2 className="text-lg font-bold text-slate-900 font-display">OFICINA DE RECURSOS HUMANOS</h2>
+            <h2 className="text-xl font-black text-slate-900 font-display mt-0.5">OFICINA DE RECURSOS HUMANOS</h2>
           </div>
         </div>
-        <p className="text-xs text-slate-500 leading-relaxed font-medium pl-1">
+        <p className="text-xs sm:text-sm text-slate-800 font-semibold leading-relaxed mt-2">
           Canales oficiales de atención para consultas directas, trámites urgentes, dudas de nómina y aclaraciones sobre el personal de planta.
         </p>
       </div>
 
-      {/* Direct Contact Buttons */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-3" id="rh-contact-buttons-panel">
-        <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-          <MessageSquare className="w-4 h-4 text-blue-600" />
+      {/* Direct Contact Buttons - Solid High Contrast Kiosk Buttons */}
+      <div className="bg-white border-2 border-slate-300 rounded-2xl p-5 sm:p-6 shadow-md space-y-4" id="rh-contact-buttons-panel">
+        <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+          <MessageSquare className="w-5 h-5 text-blue-700" />
           Canales de Contacto Directo
         </h3>
 
-        {/* Button 1: WhatsApp */}
+        {/* Button 1: WhatsApp (Solid Emerald Kiosk Button) */}
         <a 
           href="https://wa.me/525512345678" 
           target="_blank" 
           rel="noreferrer"
           id="btn-contact-whatsapp"
-          className="flex items-center justify-between p-3.5 bg-emerald-50 hover:bg-emerald-100/70 border border-emerald-200/80 rounded-2xl transition-all active:scale-[0.99] group shadow-2xs"
+          className="flex items-center justify-between p-5 sm:p-6 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 border-2 border-emerald-500 rounded-2xl transition-all active:scale-[0.98] group shadow-lg cursor-pointer text-white"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-extrabold shrink-0 shadow-2xs">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-white text-emerald-700 flex items-center justify-center text-base font-black shrink-0 shadow-md">
               WA
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900 group-hover:text-emerald-900">WhatsApp Oficial de RH</h4>
-              <p className="text-[11px] text-emerald-700 font-medium mt-0.5">Respuesta humana de Lunes a Viernes</p>
+              <h4 className="text-sm sm:text-base font-black text-white tracking-wide">WhatsApp Oficial de RH</h4>
+              <p className="text-xs sm:text-sm text-emerald-100 font-bold mt-0.5">Respuesta humana de Lunes a Viernes</p>
             </div>
           </div>
-          <ExternalLink className="w-4.5 h-4.5 text-emerald-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
+          <ExternalLink className="w-6 h-6 text-white group-hover:translate-x-1 transition-transform shrink-0" strokeWidth={2.5} />
         </a>
 
-        {/* Button 2: Conmutador */}
+        {/* Button 2: Conmutador (Solid Blue Kiosk Button) */}
         <a 
           href="tel:5512345678" 
           id="btn-contact-conmutador"
-          className="flex items-center justify-between p-3.5 bg-blue-50 hover:bg-blue-100/70 border border-blue-200/80 rounded-2xl transition-all active:scale-[0.99] group shadow-2xs"
+          className="flex items-center justify-between p-5 sm:p-6 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 border-2 border-blue-500 rounded-2xl transition-all active:scale-[0.98] group shadow-lg cursor-pointer text-white"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-extrabold shrink-0 shadow-2xs">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-white text-blue-700 flex items-center justify-center text-base font-black shrink-0 shadow-md">
               Tel
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-900">Conmutador Interno (Ext. 202)</h4>
-              <p className="text-[11px] text-blue-700 font-medium mt-0.5">Urgencias y permisos de incapacidad</p>
+              <h4 className="text-sm sm:text-base font-black text-white tracking-wide">Conmutador Interno (Ext. 202)</h4>
+              <p className="text-xs sm:text-sm text-blue-100 font-bold mt-0.5">Urgencias y permisos de incapacidad</p>
             </div>
           </div>
-          <ExternalLink className="w-4.5 h-4.5 text-blue-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
+          <ExternalLink className="w-6 h-6 text-white group-hover:translate-x-1 transition-transform shrink-0" strokeWidth={2.5} />
         </a>
       </div>
 
       {/* Office Schedule and Location Info */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-3">
-        <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-          <Clock className="w-4 h-4 text-slate-600" />
+      <div className="bg-white border-2 border-slate-300 rounded-2xl p-5 sm:p-6 shadow-md space-y-4">
+        <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+          <Clock className="w-5 h-5 text-slate-800" />
           Ventanilla Presencial
         </h3>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700">
-          <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/60 flex items-start gap-2.5">
-            <MapPin className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm text-slate-800">
+          <div className="bg-slate-100 p-4 rounded-2xl border-2 border-slate-200 flex items-start gap-3">
+            <MapPin className="w-5 h-5 text-slate-700 shrink-0 mt-0.5" strokeWidth={2.5} />
             <div>
-              <span className="font-bold text-slate-900 block">Ubicación física:</span>
-              <span className="text-[11px] text-slate-600">Planta Baja • Edificio Administrativo (junto al Comedor General)</span>
+              <span className="font-extrabold text-slate-900 block text-sm">Ubicación física:</span>
+              <span className="text-xs sm:text-sm text-slate-800 font-semibold block mt-1">Planta Baja • Edificio Administrativo (junto al Comedor General)</span>
             </div>
           </div>
 
-          <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/60 flex items-start gap-2.5">
-            <Clock className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+          <div className="bg-slate-100 p-4 rounded-2xl border-2 border-slate-200 flex items-start gap-3">
+            <Clock className="w-5 h-5 text-slate-700 shrink-0 mt-0.5" strokeWidth={2.5} />
             <div>
-              <span className="font-bold text-slate-900 block">Horario de atención:</span>
-              <span className="text-[11px] text-slate-600">Lunes a Viernes de 8:00 AM a 5:00 PM • Sábados de 8:00 AM a 1:00 PM</span>
+              <span className="font-extrabold text-slate-900 block text-sm">Horario de atención:</span>
+              <span className="text-xs sm:text-sm text-slate-800 font-semibold block mt-1">Lunes a Viernes de 8:00 AM a 5:00 PM • Sábados de 8:00 AM a 1:00 PM</span>
             </div>
           </div>
         </div>

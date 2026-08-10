@@ -22,9 +22,9 @@ export default function App() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
 
-  // Dynamic content states
-  const [services, setServices] = useState<(Service & { hidden?: boolean })[]>(servicesData);
-  const [news, setNews] = useState<NewsItem[]>(newsData);
+  // Dynamic content states (activeServices & activeNews)
+  const [activeServices, setActiveServices] = useState<(Service & { hidden?: boolean })[]>(servicesData);
+  const [activeNews, setActiveNews] = useState<NewsItem[]>(newsData);
 
   // Public user context
   const user: UserProfile = userProfileData;
@@ -59,7 +59,7 @@ export default function App() {
   }, []);
 
   const handleUpdateService = (updated: Service & { hidden?: boolean }) => {
-    setServices(prev => {
+    setActiveServices(prev => {
       const exists = prev.some(s => s.id === updated.id);
       if (exists) {
         return prev.map(s => s.id === updated.id ? updated : s);
@@ -76,7 +76,7 @@ export default function App() {
 
   // Filter services based on search text, category selection, and non-hidden status in public view
   const filteredServices = useMemo(() => {
-    return services.filter((service) => {
+    return activeServices.filter((service) => {
       if (service.hidden) return false;
 
       const matchesSearch = 
@@ -87,7 +87,7 @@ export default function App() {
       
       return matchesSearch && matchesCategory;
     });
-  }, [services, searchQuery, selectedCategory]);
+  }, [activeServices, searchQuery, selectedCategory]);
 
   // Categories helper
   const categories = [
@@ -141,11 +141,15 @@ export default function App() {
               /* ADMIN PANEL OR PUBLIC TABS */
               isAdminLoggedIn ? (
                 <AdminPanel
-                  services={services}
-                  onUpdateServices={setServices}
+                  activeServices={activeServices}
+                  setActiveServices={setActiveServices}
+                  activeNews={activeNews}
+                  setActiveNews={setActiveNews}
+                  services={activeServices}
+                  onUpdateServices={setActiveServices}
+                  news={activeNews}
+                  onUpdateNews={setActiveNews}
                   onSelectService={handleSelectService}
-                  news={news}
-                  onUpdateNews={setNews}
                   onLogout={() => {
                     setIsAdminLoggedIn(false);
                     setSelectedService(null);
@@ -165,16 +169,16 @@ export default function App() {
                       />
 
                       {/* Horizontal Categories Filters */}
-                      <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                      <div className="flex gap-2.5 overflow-x-auto pb-2 no-scrollbar">
                         {categories.map((cat) => (
                           <button
                             key={cat.id}
                             id={`category-tab-${cat.id}`}
                             onClick={() => setSelectedCategory(cat.id)}
-                            className={`py-1.5 px-3.5 rounded-xl text-xs font-bold shrink-0 border transition-all ${
+                            className={`py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold shrink-0 transition-all cursor-pointer active:scale-95 ${
                               selectedCategory === cat.id
-                                ? 'bg-slate-900 text-white border-slate-900 shadow-2xs'
-                                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                                ? 'bg-slate-900 text-white shadow-md border-0 ring-2 ring-slate-900'
+                                : 'bg-slate-200 hover:bg-slate-300 text-slate-900 border-0 shadow-xs'
                             }`}
                           >
                             {cat.label}
@@ -183,7 +187,7 @@ export default function App() {
                       </div>
 
                       {/* Responsive Grid of Services Cards */}
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 pb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-4">
                         {filteredServices.map((service) => (
                           <ServiceCard
                             key={service.id}
@@ -205,7 +209,7 @@ export default function App() {
                   )}
 
                   {/* TAB 2: NOTICIAS */}
-                  {currentTab === 'noticias' && <NewsTab newsList={news} />}
+                  {currentTab === 'noticias' && <NewsTab newsList={activeNews} />}
 
                   {/* TAB 3: ASISTENTE */}
                   {currentTab === 'asistente' && <AsistenteTab user={user} />}
