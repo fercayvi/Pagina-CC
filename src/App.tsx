@@ -1,42 +1,22 @@
 import React, { useState, useMemo } from 'react';
 import { Info } from 'lucide-react';
-import { Service, UserProfile, Aviso } from './types';
-import { servicesData, userProfileData, avisosData } from './data';
+import { Service, UserProfile } from './types';
+import { servicesData, userProfileData } from './data';
 import BottomNav from './components/BottomNav';
 import TopBar from './components/TopBar';
 import ServiceCard from './components/ServiceCard';
 import ServiceDetail from './components/ServiceDetail';
 import NewsTab from './components/NewsTab';
-import AvisosTab from './components/AvisosTab';
-import PerfilTab from './components/PerfilTab';
 import AsistenteTab from './components/AsistenteTab';
 
 export default function App() {
-  const [currentTab, setCurrentTab] = useState<'inicio' | 'noticias' | 'avisos' | 'perfil' | 'asistente'>('inicio');
+  const [currentTab, setCurrentTab] = useState<'inicio' | 'noticias' | 'asistente'>('inicio');
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'bienestar' | 'logistica' | 'soporte' | 'servicios_personal'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'nomina_pagos' | 'tarjetas_creditos' | 'control_asistencia'>('all');
   
-  // State for notices to allow dynamic "Mark as read"
-  const [avisos, setAvisos] = useState<Aviso[]>(avisosData);
-
-  // Dynamic user profile info
+  // Public user context
   const user: UserProfile = userProfileData;
-
-  // Count unread notifications
-  const unreadAvisosCount = useMemo(() => {
-    return avisos.filter(a => !a.read).length;
-  }, [avisos]);
-
-  // Handle marking single notice as read
-  const handleMarkAsRead = (id: string) => {
-    setAvisos(prev => prev.map(a => a.id === id ? { ...a, read: true } : a));
-  };
-
-  // Handle marking all notices as read
-  const handleMarkAllAsRead = () => {
-    setAvisos(prev => prev.map(a => ({ ...a, read: true })));
-  };
 
   // Filter services based on search text and category selection
   const filteredServices = useMemo(() => {
@@ -53,11 +33,10 @@ export default function App() {
 
   // Categories helper
   const categories = [
-    { id: 'all', label: 'Todos' },
-    { id: 'bienestar', label: 'Bienestar' },
-    { id: 'logistica', label: 'Logística' },
-    { id: 'servicios_personal', label: 'Servicios al Personal' },
-    { id: 'soporte', label: 'Soporte' },
+    { id: 'all', label: 'Todos los trámites' },
+    { id: 'nomina_pagos', label: 'Nómina y Pagos' },
+    { id: 'tarjetas_creditos', label: 'Tarjetas y Créditos' },
+    { id: 'control_asistencia', label: 'Control y Asistencia' },
   ] as const;
 
   return (
@@ -84,12 +63,10 @@ export default function App() {
                 ) : (
                   <div className="space-y-4 animate-fadeIn">
                     
-                    {/* TopBar with Title, Search, and Profile */}
+                    {/* TopBar with Title & Search */}
                     <TopBar 
                       searchQuery={searchQuery} 
                       setSearchQuery={setSearchQuery} 
-                      user={user} 
-                      onOpenProfile={() => setCurrentTab('perfil')}
                     />
 
                     {/* Horizontal Categories Filters */}
@@ -124,7 +101,7 @@ export default function App() {
                     {filteredServices.length === 0 && (
                       <div className="text-center py-10 bg-white border border-slate-200 rounded-2xl p-6">
                         <Info className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                        <p className="text-xs font-bold text-slate-700">No se encontraron servicios</p>
+                        <p className="text-xs font-bold text-slate-700">No se encontraron trámites</p>
                         <p className="text-[11px] text-slate-400 mt-1">Prueba buscando con otros términos o seleccionando otra categoría.</p>
                       </div>
                     )}
@@ -137,19 +114,7 @@ export default function App() {
             {/* TAB 2: NOTICIAS */}
             {currentTab === 'noticias' && <NewsTab />}
 
-            {/* TAB 3: AVISOS */}
-            {currentTab === 'avisos' && (
-              <AvisosTab 
-                avisos={avisos} 
-                onMarkAsRead={handleMarkAsRead} 
-                onMarkAllAsRead={handleMarkAllAsRead} 
-              />
-            )}
-
-            {/* TAB 4: PERFIL */}
-            {currentTab === 'perfil' && <PerfilTab user={user} />}
-
-            {/* TAB 5: ASISTENTE */}
+            {/* TAB 3: ASISTENTE */}
             {currentTab === 'asistente' && <AsistenteTab user={user} />}
 
             </div>
@@ -163,7 +128,6 @@ export default function App() {
               // Reset service detail view when switching tabs
               setSelectedService(null);
             }} 
-            unreadAvisosCount={unreadAvisosCount}
           />
 
         </div>

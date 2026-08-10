@@ -21,7 +21,7 @@ export interface Service {
   title: string;
   iconName: string;
   shortDesc: string;
-  category: 'dinero' | 'bienestar' | 'logistica' | 'soporte' | 'servicios_personal';
+  category: 'nomina_pagos' | 'tarjetas_creditos' | 'control_asistencia';
 }
 
 export interface FAQ {

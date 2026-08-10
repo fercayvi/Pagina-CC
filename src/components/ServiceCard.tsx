@@ -12,37 +12,30 @@ export default function ServiceCard({ service, onClick }: ServiceCardProps) {
   // Dynamically resolve icon from lucide-react Icons collection safely
   const IconComponent = (Icons as any)[service.iconName] || Icons.HelpCircle;
 
-  // Modern corporate color pairs
+  // Modern corporate color pairs for the 3 official pillars
   const getCategoryStyles = (category: string) => {
     switch (category) {
-      case 'bienestar':
+      case 'nomina_pagos':
         return {
-          cardBg: 'bg-white border-slate-200 hover:border-rose-300 hover:shadow-sm',
-          iconBg: 'bg-rose-50 text-rose-600 border border-rose-100',
-          badge: 'bg-rose-50 text-rose-700 border border-rose-200/60',
-          tag: 'Bienestar'
+          cardBg: 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-xs',
+          iconBg: 'bg-blue-50 text-blue-600 border border-blue-100',
+          badge: 'bg-blue-50 text-blue-800 border border-blue-200/60',
+          tag: 'Nómina y Pagos'
         };
-      case 'logistica':
+      case 'tarjetas_creditos':
         return {
-          cardBg: 'bg-white border-slate-200 hover:border-amber-300 hover:shadow-sm',
-          iconBg: 'bg-amber-50 text-amber-600 border border-amber-100',
-          badge: 'bg-amber-50 text-amber-800 border border-amber-200/60',
-          tag: 'Logística'
-        };
-      case 'servicios_personal':
-        return {
-          cardBg: 'bg-white border-slate-200 hover:border-purple-300 hover:shadow-sm',
+          cardBg: 'bg-white border-slate-200 hover:border-purple-300 hover:shadow-xs',
           iconBg: 'bg-purple-50 text-purple-600 border border-purple-100',
           badge: 'bg-purple-50 text-purple-800 border border-purple-200/60',
-          tag: 'Servicios al Personal'
+          tag: 'Tarjetas y Créditos'
         };
-      case 'soporte':
+      case 'control_asistencia':
       default:
         return {
-          cardBg: 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-sm',
-          iconBg: 'bg-blue-50 text-blue-600 border border-blue-100',
-          badge: 'bg-blue-50 text-blue-700 border border-blue-200/60',
-          tag: 'Soporte'
+          cardBg: 'bg-white border-slate-200 hover:border-emerald-300 hover:shadow-xs',
+          iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
+          badge: 'bg-emerald-50 text-emerald-800 border border-emerald-200/60',
+          tag: 'Control y Asistencia'
         };
     }
   };

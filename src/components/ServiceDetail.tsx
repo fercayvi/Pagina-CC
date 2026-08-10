@@ -59,7 +59,7 @@ function FAQAccordion({ items }: { items: FAQ[] }) {
 
 interface ServiceDetailProps {
   service: Service;
-  user: UserProfile;
+  user?: UserProfile;
   onBack: () => void;
 }
 
@@ -73,7 +73,7 @@ export default function ServiceDetail({ service, user, onBack }: ServiceDetailPr
       case ServiceId.Nomina:
         return {
           steps: [
-            { num: 1, title: 'Presentarse en Ventanilla', desc: 'Acude a la oficina de Recursos Humanos (Planta Baja, junto a Comedor) portando tu gafete oficial y número de empleado (OP-4820).' },
+            { num: 1, title: 'Presentarse en Ventanilla', desc: 'Acude a la oficina de Recursos Humanos (Planta Baja, junto a Comedor) portando tu gafete oficial de empleado.' },
             { num: 2, title: 'Verificación de Identidad', desc: 'Muestra tu credencial del INE vigente para la validación de cuenta o solicitud de estado de cuenta bancario.' },
             { num: 3, title: 'Firma de Documentos', desc: 'En caso de cambio de cuenta CLABE o apertura de cuenta nómina (BBVA / Santander), firma el formato de domiciliación bancaria.' },
             { num: 4, title: 'Activación del Depósito', desc: 'El cambio quedará activo para el siguiente ciclo de nómina semanal (depósito los viernes).' }
@@ -138,8 +138,8 @@ export default function ServiceDetail({ service, user, onBack }: ServiceDetailPr
       case ServiceId.Vacaciones:
         return {
           steps: [
-            { num: 1, title: 'Verificación de Días Disponibles', desc: `Actualmente cuentas con ${user.vacationDaysAvailable} días disponibles acumulados correspondientes a tu antigüedad.` },
-            { num: 2, title: 'Acuerdo de Fechas con Supervisor', desc: 'Presenta tu propuesta de fechas al Ing. Héctor Ramírez con al menos 15 días de anticipación.' },
+            { num: 1, title: 'Verificación de Días Disponibles', desc: 'Los días de vacaciones se determinan según tu antigüedad conforme a la Ley Federal del Trabajo (12 días en el primer año).' },
+            { num: 2, title: 'Acuerdo de Fechas con Supervisor', desc: 'Presenta tu propuesta de fechas al supervisor de tu línea con al menos 15 días de anticipación.' },
             { num: 3, title: 'Firma de Papeleta Oficial', desc: 'Acude a Recursos Humanos a imprimir y firmar la Papeleta Oficial de Vacaciones.' },
             { num: 4, title: 'Goce de Descanso', desc: 'Una vez autorizada, las fechas quedan programadas en el sistema de asistencia sin afectación a bonos.' }
           ],

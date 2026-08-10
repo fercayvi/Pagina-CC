@@ -16,7 +16,7 @@ export default function ChatBot({ user }: ChatBotProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: 'bot',
-      text: `¡Hola Juan Carlos! Soy Sofía, tu asistente virtual de Recursos Humanos. 🙋‍♀️ Estoy aquí para resolver tus dudas rápido (menos de 10 segundos). ¿Sobre qué tema te gustaría consultar hoy?`,
+      text: `¡Hola! Soy Sofía, tu asistente virtual de Recursos Humanos de la planta. 🙋‍♀️ Estoy aquí para orientarte de manera libre sobre trámites, nómina, transporte, reglamentos y servicios. ¿En qué puedo ayudarte hoy?`,
       time: '11:00 AM'
     }
   ]);

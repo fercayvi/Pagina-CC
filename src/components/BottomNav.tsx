@@ -1,26 +1,22 @@
 import React from 'react';
-import { Home, FileText, Bell, User, MessageSquare } from 'lucide-react';
+import { Home, FileText, MessageSquare } from 'lucide-react';
 
 interface BottomNavProps {
-  currentTab: 'inicio' | 'noticias' | 'avisos' | 'perfil' | 'asistente';
-  setCurrentTab: (tab: 'inicio' | 'noticias' | 'avisos' | 'perfil' | 'asistente') => void;
-  unreadAvisosCount: number;
+  currentTab: 'inicio' | 'noticias' | 'asistente';
+  setCurrentTab: (tab: 'inicio' | 'noticias' | 'asistente') => void;
 }
 
-export default function BottomNav({ currentTab, setCurrentTab, unreadAvisosCount }: BottomNavProps) {
+export default function BottomNav({ currentTab, setCurrentTab }: BottomNavProps) {
   interface TabItem {
-    id: 'inicio' | 'noticias' | 'avisos' | 'perfil' | 'asistente';
+    id: 'inicio' | 'noticias' | 'asistente';
     label: string;
     icon: React.ComponentType<any>;
-    badge?: number;
   }
 
   const tabs: TabItem[] = [
     { id: 'inicio', label: 'Inicio', icon: Home },
     { id: 'noticias', label: 'Noticias', icon: FileText },
-    { id: 'avisos', label: 'Avisos', icon: Bell, badge: unreadAvisosCount },
     { id: 'asistente', label: 'Asistente', icon: MessageSquare },
-    { id: 'perfil', label: 'Perfil', icon: User },
   ];
 
   return (
@@ -47,16 +43,6 @@ export default function BottomNav({ currentTab, setCurrentTab, unreadAvisosCount
               <span className={`text-[10px] mt-1 tracking-tight transition-colors ${isActive ? 'text-slate-900 font-bold' : 'text-slate-500 font-medium'}`}>
                 {tab.label}
               </span>
-              
-              {/* Badge for notifications */}
-              {tab.badge !== undefined && tab.badge > 0 && (
-                <span 
-                  id="nav-badge"
-                  className="absolute top-1.5 right-1/2 translate-x-3.5 bg-rose-600 text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full border-2 border-white"
-                >
-                  {tab.badge}
-                </span>
-              )}
             </button>
           );
         })}

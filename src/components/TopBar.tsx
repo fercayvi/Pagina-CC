@@ -1,38 +1,27 @@
 import React from 'react';
-import { Search, X } from 'lucide-react';
-import { UserProfile } from '../types';
+import { Search, X, Building2 } from 'lucide-react';
 
 interface TopBarProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  user: UserProfile;
-  onOpenProfile: () => void;
 }
 
-export default function TopBar({ searchQuery, setSearchQuery, user, onOpenProfile }: TopBarProps) {
-  const initials = user.name.split(' ').map(n => n[0]).slice(0, 2).join('');
-
+export default function TopBar({ searchQuery, setSearchQuery }: TopBarProps) {
   return (
     <header id="app-top-header" className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs mb-4">
-      {/* Header Title & Profile Bar */}
+      {/* Header Title Bar */}
       <div className="flex items-center justify-between gap-3 mb-3">
         <div>
           <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-md mb-1">
-            Planta Manufactura
+            Planta Manufactura • Portal Libre y Público
           </span>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight font-display">
-            Centro de Servicios
+            Guía de Trámites y Servicios RH
           </h1>
         </div>
-        <button
-          id="user-avatar-btn"
-          onClick={onOpenProfile}
-          className="w-10 h-10 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl flex items-center justify-center transition-transform active:scale-95 shrink-0 border border-slate-800 shadow-xs"
-          title={`Ver perfil de ${user.name}`}
-          aria-label="Ver perfil"
-        >
-          {initials}
-        </button>
+        <div className="w-10 h-10 bg-slate-100 text-slate-700 font-bold rounded-xl flex items-center justify-center shrink-0 border border-slate-200 shadow-2xs">
+          <Building2 className="w-5 h-5 text-slate-600" />
+        </div>
       </div>
 
       {/* Search Input */}

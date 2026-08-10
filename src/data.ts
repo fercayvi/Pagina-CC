@@ -2,95 +2,95 @@ import { ServiceId, Service, FAQ, NewsItem, Aviso, UserProfile } from './types';
 
 export const servicesData: Service[] = [
   {
-    id: ServiceId.TarjetaDespensa,
-    title: 'Tarjeta Vale de Despensa',
-    iconName: 'CreditCard',
-    shortDesc: 'Solicitud, reposición y consulta de saldo de tu tarjeta de vale de despensa.',
-    category: 'servicios_personal'
-  },
-  {
     id: ServiceId.Nomina,
-    title: 'Tarjeta Nómina',
+    title: 'Tarjeta Nómina y Pago',
     iconName: 'CreditCard',
-    shortDesc: 'Solicitud, reposición y activación de tu tarjeta de nómina.',
-    category: 'servicios_personal'
-  },
-  {
-    id: ServiceId.RelojChecador,
-    title: 'Aclaraciones Reloj Checador',
-    iconName: 'Clock',
-    shortDesc: 'Reporta fallas o inconsistencias en tus registros de entrada y salida.',
-    category: 'servicios_personal'
+    shortDesc: 'Información sobre depósitos semanales, cuentas nómina y comprobantes.',
+    category: 'nomina_pagos'
   },
   {
     id: ServiceId.AclaracionPago,
     title: 'Aclaraciones de Pago Nómina',
     iconName: 'FileText',
-    shortDesc: 'Dudas sobre asistencia, tiempo extra, bonos y premios en tu recibo.',
-    category: 'servicios_personal'
+    shortDesc: 'Guía para solicitar aclaraciones sobre asistencia, horas extra y bonos.',
+    category: 'nomina_pagos'
   },
   {
     id: ServiceId.CajaAhorro,
     title: 'Caja de Ahorro',
     iconName: 'PiggyBank',
-    shortDesc: 'Consulta tu saldo, aportaciones y retiro de caja de ahorro.',
-    category: 'servicios_personal'
-  },
-  {
-    id: ServiceId.Vacaciones,
-    title: 'Vacaciones',
-    iconName: 'CalendarDays',
-    shortDesc: 'Días que te corresponden por ley, cómo pedirlos y simulador.',
-    category: 'servicios_personal'
-  },
-  {
-    id: ServiceId.Infonavit,
-    title: 'Infonavit',
-    iconName: 'Home',
-    shortDesc: 'Consulta tu crédito, descuentos y trámites ante Infonavit.',
-    category: 'servicios_personal'
-  },
-  {
-    id: ServiceId.Incapacidades,
-    title: 'Incapacidades',
-    iconName: 'ShieldAlert',
-    shortDesc: 'Cómo reportar y dar seguimiento a tus incapacidades del IMSS.',
-    category: 'servicios_personal'
+    shortDesc: 'Requisitos, porcentajes de descuento y periodos de retiro de caja de ahorro.',
+    category: 'nomina_pagos'
   },
   {
     id: ServiceId.Prestamos,
-    title: 'Préstamos',
+    title: 'Préstamos de Empresa',
     iconName: 'Coins',
-    shortDesc: 'Solicitud, saldo y condiciones de préstamos de la empresa.',
-    category: 'servicios_personal'
+    shortDesc: 'Requisitos, montos permitidos y deducciones para préstamos a colaboradores.',
+    category: 'nomina_pagos'
+  },
+  {
+    id: ServiceId.TarjetaDespensa,
+    title: 'Tarjeta Vale de Despensa',
+    iconName: 'CreditCard',
+    shortDesc: 'Fechas de dispersión, reposición por extravío y atención Toka Despensa.',
+    category: 'tarjetas_creditos'
+  },
+  {
+    id: ServiceId.Infonavit,
+    title: 'Infonavit y Retenciones',
+    iconName: 'Home',
+    shortDesc: 'Entrega de aviso de retención, cálculo de aportaciones y trámites de crédito.',
+    category: 'tarjetas_creditos'
+  },
+  {
+    id: ServiceId.RelojChecador,
+    title: 'Control Reloj Checador',
+    iconName: 'Clock',
+    shortDesc: 'Procedimiento para corrección de omisión de marcaje y checadas tardías.',
+    category: 'control_asistencia'
+  },
+  {
+    id: ServiceId.Vacaciones,
+    title: 'Vacaciones y Descansos',
+    iconName: 'CalendarDays',
+    shortDesc: 'Tabla de días por antigüedad LFT, programación y formatos de solicitud.',
+    category: 'control_asistencia'
+  },
+  {
+    id: ServiceId.Incapacidades,
+    title: 'Incapacidades IMSS',
+    iconName: 'ShieldAlert',
+    shortDesc: 'Reporte oportuno, entrega de certificados e ingresos por enfermedad general.',
+    category: 'control_asistencia'
   },
   {
     id: ServiceId.Transporte,
     title: 'Transporte de Personal',
     iconName: 'Bus',
-    shortDesc: 'Rutas, horarios de los camiones y paradas autorizadas.',
-    category: 'logistica'
+    shortDesc: 'Rutas de camiones, horarios por turno y paradas oficiales autorizadas.',
+    category: 'control_asistencia'
   },
   {
     id: ServiceId.Uniformes,
     title: 'Uniformes y Botas',
     iconName: 'Shirt',
-    shortDesc: 'Tallas de camisas y pantalones, calzado de seguridad y reposición.',
-    category: 'logistica'
+    shortDesc: 'Fechas de renovación semestral, calzado de seguridad y reposición por daño.',
+    category: 'control_asistencia'
   },
   {
     id: ServiceId.Seguridad,
-    title: 'Seguridad (EPP)',
+    title: 'Seguridad Industrial (EPP)',
     iconName: 'ShieldAlert',
-    shortDesc: 'Reglas de seguridad en planta, reporte de riesgos y tu equipo.',
-    category: 'bienestar'
+    shortDesc: 'Equipo de protección personal obligatorio, prevención de riesgos e higiene.',
+    category: 'control_asistencia'
   },
   {
     id: ServiceId.PreguntasFrecuentes,
     title: 'Preguntas Frecuentes',
     iconName: 'HelpCircle',
-    shortDesc: 'Respuestas rápidas sobre permisos, incapacidades y reglamento.',
-    category: 'soporte'
+    shortDesc: 'Respuestas rápidas sobre trámites, horarios de ventanilla y reglamentos.',
+    category: 'control_asistencia'
   }
 ];
 
