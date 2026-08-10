@@ -462,7 +462,18 @@ export default function AdminPanel({
                   </button>
 
                   <button
-                    onClick={() => handleDeleteService(service.id)}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (window.confirm("¿Eliminar trámite?")) {
+                        if (onDeleteService) {
+                          onDeleteService(service.id);
+                        } else {
+                          handleDeleteService(service.id);
+                        }
+                      }
+                    }}
                     className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 active:scale-95 cursor-pointer"
                     title="Eliminar trámite"
                     aria-label="Eliminar trámite"
@@ -539,7 +550,18 @@ export default function AdminPanel({
                   </button>
 
                   <button
-                    onClick={() => handleDeleteNews(newsItem.id)}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (window.confirm("¿Eliminar noticia?")) {
+                        if (onDeleteNews) {
+                          onDeleteNews(newsItem.id);
+                        } else {
+                          handleDeleteNews(newsItem.id);
+                        }
+                      }
+                    }}
                     className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 active:scale-95 cursor-pointer"
                     title="Eliminar comunicado"
                     aria-label="Eliminar comunicado"
