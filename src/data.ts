@@ -1,14 +1,19 @@
 import { ServiceId, Service, FAQ, NewsItem, Aviso, UserProfile, MonthlyRecognition } from './types';
 
-export const recognitionData: MonthlyRecognition = {
-  badgeTitle: 'Reconocimiento Mensual',
-  name: 'Mateo Rodríguez',
-  initials: 'MR',
-  position: 'Línea 2 - Montacargas • ¡Cero Retardos y 5S Perfecto!',
-  message: 'Mateo mantuvo su área de almacén 100% limpia y ordenada, asegurando que los materiales llegaran a tiempo a la línea de ensamble. ¡Gracias por tu esfuerzo, Mateo!'
-};
+export const initialRecognitions: MonthlyRecognition[] = [
+  {
+    id: 'rec-1',
+    badgeTitle: 'Reconocimiento Mensual',
+    name: 'Mateo Rodríguez',
+    initials: 'MR',
+    position: 'Línea 2 - Montacargas • ¡Cero Retardos y 5S Perfecto!',
+    message: 'Mateo mantuvo su área de almacén 100% limpia y ordenada, asegurando que los materiales llegaran a tiempo a la línea de ensamble. ¡Gracias por tu esfuerzo, Mateo!'
+  }
+];
 
-export const servicesData: Service[] = [
+export const recognitionData: MonthlyRecognition = initialRecognitions[0];
+
+export const initialServices: Service[] = [
   // 1. Módulo "Nómina y Pagos"
   {
     id: ServiceId.PoliticasPago,
@@ -79,6 +84,8 @@ export const servicesData: Service[] = [
   }
 ];
 
+export const servicesData = initialServices;
+
 export const userProfileData: UserProfile = {
   name: 'Colaborador Planta',
   employeeId: 'OP-4820',
@@ -94,44 +101,8 @@ export const userProfileData: UserProfile = {
   despensaBalance: 650.00
 };
 
-export const newsData: NewsItem[] = [
-  {
-    id: 'n4',
-    title: 'Nueva edición de Hecho en Planta ya disponible',
-    summary: 'Consulta la revista interna con las últimas noticias, logros y reconocimientos de la planta.',
-    content: 'Ya se encuentra en circulación el nuevo número de nuestra revista interna "Hecho en Planta". En esta edición celebramos la certificación ISO de la línea 2, compartimos la galería de fotos del torneo de fútbol inter-plantas y un reportaje especial sobre los procesos de soldadura robótica de última generación. Puedes pedir tu ejemplar impreso con tu supervisor de turno o solicitarlo en Recursos Humanos de forma completamente gratuita.',
-    date: 'Hoy',
-    imageName: 'revista_planta',
-    category: 'comunicado'
-  },
-  {
-    id: 'n1',
-    title: '¡Bienvenidos Nuevos Colaboradores!',
-    summary: 'Hoy damos la bienvenida a la generación de julio en la planta de manufactura.',
-    content: 'Estamos muy emocionados de recibir a los nuevos operarios en las líneas de ensamble y empaque. Recuerden que su supervisor asignado los acompañará durante las primeras dos semanas para su entrenamiento práctico de seguridad y operación.',
-    date: 'Hace 2 días',
-    imageName: 'welcome_team',
-    category: 'evento'
-  },
-  {
-    id: 'n2',
-    title: 'Nueva Campaña de Salud en Planta',
-    summary: 'Exámenes médicos de vista y dental gratuitos para todo el personal.',
-    content: 'La próxima semana se instalará la unidad médica móvil en el estacionamiento principal. Podrás acudir en tu tiempo de comida o agendar con tu supervisor una salida de 15 minutos. Los lentes graduados tienen un subsidio especial.',
-    date: 'Hace 5 días',
-    imageName: 'health_campaign',
-    category: 'comunicado'
-  },
-  {
-    id: 'n3',
-    title: 'Rompe Récord Línea 3 de Ensamble',
-    summary: '¡Felicidades al equipo del primer turno por lograr cero defectos esta semana!',
-    content: 'Queremos reconocer el excelente trabajo de la Línea 3 liderada por el equipo de manufactura. Lograron armar 1,200 piezas sin una sola alerta de calidad. Todo el equipo recibirá un reconocimiento especial.',
-    date: 'Hace 1 semana',
-    imageName: 'production_record',
-    category: 'logro'
-  }
-];
+export const initialNews: NewsItem[] = [];
+export const newsData = initialNews;
 
 export const avisosData: Aviso[] = [];
 

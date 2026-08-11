@@ -87,12 +87,14 @@ export interface Aviso {
 }
 
 export interface MonthlyRecognition {
+  id: string;
   badgeTitle?: string;
   name: string;
   initials?: string;
   position: string;
   message: string;
   photoUrl?: string;
+  date?: string;
 }
 
 export interface UserProfile {

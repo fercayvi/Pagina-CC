@@ -33,6 +33,8 @@ interface AdminPanelProps {
   onUpdateNews: (news: NewsItem[]) => void;
   recognition?: MonthlyRecognition;
   onUpdateRecognition?: (recognition: MonthlyRecognition) => void;
+  recognitions?: MonthlyRecognition[];
+  onUpdateRecognitions?: (recognitions: MonthlyRecognition[]) => void;
   onLogout: () => void;
 }
 
@@ -44,6 +46,8 @@ export default function AdminPanel({
   onUpdateNews,
   recognition,
   onUpdateRecognition,
+  recognitions,
+  onUpdateRecognitions,
   onLogout
 }: AdminPanelProps) {
   const [activeTab, setActiveTab] = useState<'tramites' | 'noticias'>('tramites');
@@ -60,13 +64,14 @@ export default function AdminPanel({
   const [isNewsModalOpen, setIsNewsModalOpen] = useState<boolean>(false);
   const [isNewNews, setIsNewNews] = useState<boolean>(false);
 
-  // Recognition Edit Modal state
+  // Recognition Edit / Create Modal state
   const [editingRecognition, setEditingRecognition] = useState<MonthlyRecognition | null>(null);
   const [isRecognitionModalOpen, setIsRecognitionModalOpen] = useState<boolean>(false);
+  const [isNewRecognition, setIsNewRecognition] = useState<boolean>(false);
 
   // Delete Confirmation Modal state
   const [deleteConfirmTarget, setDeleteConfirmTarget] = useState<{
-    type: 'service' | 'news';
+    type: 'service' | 'news' | 'recognition';
     id: string;
     title: string;
   } | null>(null);
@@ -270,10 +275,19 @@ export default function AdminPanel({
       const updated = services.filter(s => s.id !== deleteConfirmTarget.id);
       onUpdateServices(updated);
       showToast('Trámite eliminado con éxito.');
-    } else {
+    } else if (deleteConfirmTarget.type === 'news') {
       const updated = news.filter(n => n.id !== deleteConfirmTarget.id);
       onUpdateNews(updated);
       showToast('Noticia eliminada correctamente.');
+    } else if (deleteConfirmTarget.type === 'recognition') {
+      const currentList = recognitions || (recognition ? [recognition] : []);
+      const updated = currentList.filter(r => r.id !== deleteConfirmTarget.id);
+      if (onUpdateRecognitions) {
+        onUpdateRecognitions(updated);
+      } else if (onUpdateRecognition && updated.length > 0) {
+        onUpdateRecognition(updated[0]);
+      }
+      showToast('Reconocimiento eliminado correctamente.');
     }
     setDeleteConfirmTarget(null);
   };
@@ -314,22 +328,58 @@ export default function AdminPanel({
   };
 
   // --- RECOGNITION HANDLERS ---
-  const currentRecognition = recognition || recognitionData;
+  const recognitionsList = recognitions || (recognition ? [recognition] : []);
 
-  const handleOpenEditRecognitionModal = () => {
-    setEditingRecognition({ ...currentRecognition });
+  const handleOpenAddRecognitionModal = () => {
+    setIsNewRecognition(true);
+    setEditingRecognition({
+      id: `rec_${Date.now()}`,
+      badgeTitle: 'Reconocimiento Mensual',
+      name: '',
+      initials: '',
+      position: '',
+      message: '',
+      photoUrl: ''
+    });
     setIsRecognitionModalOpen(true);
+  };
+
+  const handleOpenEditRecognitionModal = (rec: MonthlyRecognition) => {
+    setIsNewRecognition(false);
+    setEditingRecognition({ ...rec });
+    setIsRecognitionModalOpen(true);
+  };
+
+  const handlePromptDeleteRecognition = (rec: MonthlyRecognition) => {
+    setDeleteConfirmTarget({
+      type: 'recognition',
+      id: rec.id,
+      title: rec.name
+    });
   };
 
   const handleSaveRecognition = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingRecognition || !editingRecognition.name.trim()) return;
 
-    if (onUpdateRecognition) {
-      onUpdateRecognition(editingRecognition);
+    if (isNewRecognition) {
+      const updated = [editingRecognition, ...recognitionsList];
+      if (onUpdateRecognitions) {
+        onUpdateRecognitions(updated);
+      } else if (onUpdateRecognition) {
+        onUpdateRecognition(editingRecognition);
+      }
+      showToast('¡Nuevo reconocimiento publicado!');
+    } else {
+      const updated = recognitionsList.map(r => r.id === editingRecognition.id ? editingRecognition : r);
+      if (onUpdateRecognitions) {
+        onUpdateRecognitions(updated);
+      } else if (onUpdateRecognition) {
+        onUpdateRecognition(editingRecognition);
+      }
+      showToast('Reconocimiento actualizado correctamente.');
     }
     setIsRecognitionModalOpen(false);
-    showToast('Reconocimiento Mensual actualizado correctamente.');
   };
 
   return (
@@ -498,45 +548,94 @@ export default function AdminPanel({
       {activeTab === 'noticias' && (
         <div className="space-y-4">
           {/* Monthly Recognition Management Card */}
-          <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 rounded-2xl p-4 sm:p-5 text-white shadow-md border border-amber-400/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-2 flex-1 min-w-0">
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+            <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <span className="bg-white/20 text-amber-100 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-white/20">
-                  {currentRecognition.badgeTitle || 'Reconocimiento Mensual'}
-                </span>
-                <Award className="w-5 h-5 text-amber-200" />
-              </div>
-              <div className="flex items-center gap-3">
-                {currentRecognition.photoUrl ? (
-                  <img 
-                    src={currentRecognition.photoUrl} 
-                    alt={currentRecognition.name} 
-                    className="w-11 h-11 rounded-xl object-cover border-2 border-white shadow-xs shrink-0"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="w-11 h-11 rounded-xl bg-amber-100 border-2 border-white flex items-center justify-center font-black text-amber-800 text-base shadow-xs shrink-0">
-                    {currentRecognition.initials || (currentRecognition.name ? currentRecognition.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'RH')}
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <h4 className="text-base font-black truncate">{currentRecognition.name}</h4>
-                  <p className="text-xs text-amber-100 font-extrabold truncate">{currentRecognition.position}</p>
+                <Award className="w-5 h-5 text-amber-600" />
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 font-display">
+                    Reconocimientos Mensuales
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Agrega, edita o elimina los reconocimientos de colaboradores destacados.
+                  </p>
                 </div>
               </div>
-              <p className="text-xs text-amber-50/95 line-clamp-2 italic bg-amber-800/30 p-2.5 rounded-xl border border-amber-400/20">
-                "{currentRecognition.message}"
-              </p>
+              <button
+                id="btn-add-recognition"
+                onClick={handleOpenAddRecognitionModal}
+                className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Agregar Reconocimiento</span>
+              </button>
             </div>
 
-            <button
-              id="btn-edit-recognition"
-              onClick={handleOpenEditRecognitionModal}
-              className="px-4 py-2.5 bg-white text-amber-900 hover:bg-amber-50 text-xs font-black rounded-xl transition-all shadow-md flex items-center justify-center gap-2 shrink-0 active:scale-95 cursor-pointer"
-            >
-              <Edit3 className="w-4 h-4 text-amber-700" />
-              <span>Editar Reconocimiento</span>
-            </button>
+            {recognitionsList.length === 0 ? (
+              <div className="text-center py-6 bg-amber-50/50 border border-amber-200/60 rounded-xl p-4">
+                <Award className="w-8 h-8 text-amber-400 mx-auto mb-1.5" />
+                <p className="text-xs font-bold text-amber-900">No hay reconocimientos vigentes</p>
+                <p className="text-[11px] text-amber-700 mt-0.5">Haz clic en "+ Agregar Reconocimiento" para publicar un colaborador destacado.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recognitionsList.map((rec) => {
+                  const initials = rec.initials || (rec.name ? rec.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'RH');
+
+                  return (
+                    <div key={rec.id || rec.name} className="bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 rounded-2xl p-4 text-white shadow-sm border border-amber-400/50 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="space-y-1.5 flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="bg-white/20 text-amber-100 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-white/20">
+                            {rec.badgeTitle || 'Reconocimiento Mensual'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {rec.photoUrl ? (
+                            <img 
+                              src={rec.photoUrl} 
+                              alt={rec.name} 
+                              className="w-10 h-10 rounded-xl object-cover border-2 border-white shadow-xs shrink-0"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-xl bg-amber-100 border-2 border-white flex items-center justify-center font-black text-amber-800 text-sm shadow-xs shrink-0">
+                              {initials}
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-sm font-black truncate">{rec.name}</h4>
+                            <p className="text-[11px] text-amber-100 font-extrabold truncate">{rec.position}</p>
+                          </div>
+                        </div>
+                        <p className="text-xs text-amber-50/95 line-clamp-2 italic bg-amber-800/30 p-2 rounded-xl border border-amber-400/20">
+                          "{rec.message}"
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+                        <button
+                          id={`btn-edit-recognition-${rec.id}`}
+                          onClick={() => handleOpenEditRecognitionModal(rec)}
+                          className="px-3 py-2 bg-white text-amber-900 hover:bg-amber-50 text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 active:scale-95 cursor-pointer"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-amber-700" />
+                          <span>Editar</span>
+                        </button>
+                        <button
+                          id={`btn-delete-recognition-${rec.id}`}
+                          onClick={() => handlePromptDeleteRecognition(rec)}
+                          className="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5 active:scale-95 cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Eliminar</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
@@ -1125,7 +1224,7 @@ export default function AdminPanel({
         </div>
       )}
 
-      {/* --- MODAL EDITAR RECONOCIMIENTO MENSUAL --- */}
+      {/* --- MODAL CREAR / EDITAR RECONOCIMIENTO MENSUAL --- */}
       {isRecognitionModalOpen && editingRecognition && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
           <div className="bg-white rounded-2xl max-w-lg w-full border border-slate-200 shadow-2xl overflow-hidden flex flex-col">
@@ -1133,7 +1232,7 @@ export default function AdminPanel({
               <div className="flex items-center gap-2">
                 <Award className="w-5 h-5 text-amber-200" />
                 <h3 className="text-sm font-bold font-display">
-                  Editar Reconocimiento Mensual
+                  {isNewRecognition ? 'Agregar Nuevo Reconocimiento' : 'Editar Reconocimiento Mensual'}
                 </h3>
               </div>
               <button

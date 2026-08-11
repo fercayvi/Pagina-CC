@@ -6,48 +6,57 @@ import { newsData, recognitionData } from '../data';
 interface NewsTabProps {
   newsList?: NewsItem[];
   recognition?: MonthlyRecognition;
+  recognitionsList?: MonthlyRecognition[];
 }
 
-export default function NewsTab({ newsList, recognition }: NewsTabProps) {
+export default function NewsTab({ newsList, recognition, recognitionsList }: NewsTabProps) {
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const displayNews = newsList || newsData;
-  const currentRecognition = recognition || recognitionData;
-
-  const initials = currentRecognition.initials || 
-    (currentRecognition.name ? currentRecognition.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'RH');
+  const listToRender = recognitionsList || (recognition ? [recognition] : []);
 
   return (
     <div id="news-tab-container" className="space-y-5">
-      {/* Employee of Month Feature Card (Bento Grid Style) */}
-      <div className="bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 rounded-2xl p-5 text-white shadow-md border-2 border-amber-400/50">
-        <div className="flex justify-between items-start mb-2">
-          <span className="bg-white/20 text-amber-100 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">
-            {currentRecognition.badgeTitle || 'Reconocimiento Mensual'}
-          </span>
-          <Award className="w-6 h-6 text-amber-200 animate-bounce" />
+      {/* Employee of Month Feature Cards (Bento Grid Style) */}
+      {listToRender.length > 0 && (
+        <div className="space-y-3.5">
+          {listToRender.map((rec) => {
+            const initials = rec.initials || 
+              (rec.name ? rec.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'RH');
+
+            return (
+              <div key={rec.id || rec.name} className="bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 rounded-2xl p-5 text-white shadow-md border-2 border-amber-400/50">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="bg-white/20 text-amber-100 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">
+                    {rec.badgeTitle || 'Reconocimiento Mensual'}
+                  </span>
+                  <Award className="w-6 h-6 text-amber-200 animate-bounce" />
+                </div>
+                <div className="flex items-center gap-3.5 mt-2">
+                  {rec.photoUrl ? (
+                    <img 
+                      src={rec.photoUrl} 
+                      alt={rec.name} 
+                      className="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-xs shrink-0"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-2xl bg-amber-100 border-2 border-white flex items-center justify-center font-black text-amber-800 text-xl shadow-xs shrink-0">
+                      {initials}
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black tracking-wide">{rec.name}</h3>
+                    <p className="text-xs sm:text-sm text-amber-100 font-extrabold">{rec.position}</p>
+                  </div>
+                </div>
+                <p className="text-xs sm:text-sm text-amber-50/95 mt-3 leading-relaxed font-semibold bg-amber-800/20 p-3 rounded-xl border border-amber-400/30">
+                  "{rec.message}"
+                </p>
+              </div>
+            );
+          })}
         </div>
-        <div className="flex items-center gap-3.5 mt-2">
-          {currentRecognition.photoUrl ? (
-            <img 
-              src={currentRecognition.photoUrl} 
-              alt={currentRecognition.name} 
-              className="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-xs shrink-0"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="w-14 h-14 rounded-2xl bg-amber-100 border-2 border-white flex items-center justify-center font-black text-amber-800 text-xl shadow-xs shrink-0">
-              {initials}
-            </div>
-          )}
-          <div>
-            <h3 className="text-base sm:text-lg font-black tracking-wide">{currentRecognition.name}</h3>
-            <p className="text-xs sm:text-sm text-amber-100 font-extrabold">{currentRecognition.position}</p>
-          </div>
-        </div>
-        <p className="text-xs sm:text-sm text-amber-50/95 mt-3 leading-relaxed font-semibold bg-amber-800/20 p-3 rounded-xl border border-amber-400/30">
-          "{currentRecognition.message}"
-        </p>
-      </div>
+      )}
 
       {/* Main News List */}
       <div className="space-y-3.5">

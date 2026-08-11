@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Info } from 'lucide-react';
 import { Service, NewsItem, UserProfile, MonthlyRecognition } from './types';
-import { servicesData, newsData, userProfileData, recognitionData } from './data';
+import { initialServices, initialNews, initialRecognitions, userProfileData } from './data';
 import BottomNav from './components/BottomNav';
 import TopBar from './components/TopBar';
 import ServiceCard from './components/ServiceCard';
@@ -22,10 +22,51 @@ export default function App() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
 
-  // Dynamic content states
-  const [services, setServices] = useState<(Service & { hidden?: boolean })[]>(servicesData);
-  const [news, setNews] = useState<NewsItem[]>(newsData);
-  const [recognition, setRecognition] = useState<MonthlyRecognition>(recognitionData);
+  // Dynamic content states with LocalStorage persistence
+  const [services, setServices] = useState<(Service & { hidden?: boolean })[]>(() => {
+    const saved = localStorage.getItem('cc-services');
+    return saved ? JSON.parse(saved) : initialServices;
+  });
+  const [news, setNews] = useState<NewsItem[]>(() => {
+    const saved = localStorage.getItem('cc-news');
+    return saved ? JSON.parse(saved) : initialNews;
+  });
+  const [recognitions, setRecognitions] = useState<MonthlyRecognition[]>(() => {
+    const saved = localStorage.getItem('cc-recognitions');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    const oldSaved = localStorage.getItem('cc-recognition');
+    if (oldSaved) {
+      try {
+        const parsed = JSON.parse(oldSaved);
+        if (parsed && typeof parsed === 'object') {
+          return [{ id: 'rec-1', ...parsed }];
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return initialRecognitions;
+  });
+
+  // LocalStorage Sync Effects
+  useEffect(() => {
+    localStorage.setItem('cc-services', JSON.stringify(services));
+  }, [services]);
+
+  useEffect(() => {
+    localStorage.setItem('cc-news', JSON.stringify(news));
+  }, [news]);
+
+  useEffect(() => {
+    localStorage.setItem('cc-recognitions', JSON.stringify(recognitions));
+  }, [recognitions]);
 
   // Public user context
   const user: UserProfile = userProfileData;
@@ -147,8 +188,8 @@ export default function App() {
                   onSelectService={handleSelectService}
                   news={news}
                   onUpdateNews={setNews}
-                  recognition={recognition}
-                  onUpdateRecognition={setRecognition}
+                  recognitions={recognitions}
+                  onUpdateRecognitions={setRecognitions}
                   onLogout={() => {
                     setIsAdminLoggedIn(false);
                     setSelectedService(null);
@@ -208,7 +249,7 @@ export default function App() {
                   )}
 
                   {/* TAB 2: NOTICIAS */}
-                  {currentTab === 'noticias' && <NewsTab newsList={news} recognition={recognition} />}
+                  {currentTab === 'noticias' && <NewsTab newsList={news} recognitionsList={recognitions} />}
 
                   {/* TAB 3: ASISTENTE */}
                   {currentTab === 'asistente' && <AsistenteTab user={user} />}
