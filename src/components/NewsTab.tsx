@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
 import { Award, ChevronRight, X } from 'lucide-react';
-import { NewsItem } from '../types';
-import { newsData } from '../data';
+import { NewsItem, MonthlyRecognition } from '../types';
+import { newsData, recognitionData } from '../data';
 
 interface NewsTabProps {
   newsList?: NewsItem[];
+  recognition?: MonthlyRecognition;
 }
 
-export default function NewsTab({ newsList }: NewsTabProps) {
+export default function NewsTab({ newsList, recognition }: NewsTabProps) {
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const displayNews = newsList || newsData;
+  const currentRecognition = recognition || recognitionData;
+
+  const initials = currentRecognition.initials || 
+    (currentRecognition.name ? currentRecognition.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'RH');
 
   return (
     <div id="news-tab-container" className="space-y-5">
@@ -17,21 +22,30 @@ export default function NewsTab({ newsList }: NewsTabProps) {
       <div className="bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 rounded-2xl p-5 text-white shadow-md border-2 border-amber-400/50">
         <div className="flex justify-between items-start mb-2">
           <span className="bg-white/20 text-amber-100 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">
-            Reconocimiento Mensual
+            {currentRecognition.badgeTitle || 'Reconocimiento Mensual'}
           </span>
           <Award className="w-6 h-6 text-amber-200 animate-bounce" />
         </div>
         <div className="flex items-center gap-3.5 mt-2">
-          <div className="w-14 h-14 rounded-2xl bg-amber-100 border-2 border-white flex items-center justify-center font-black text-amber-800 text-xl shadow-xs">
-            MR
-          </div>
+          {currentRecognition.photoUrl ? (
+            <img 
+              src={currentRecognition.photoUrl} 
+              alt={currentRecognition.name} 
+              className="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-xs shrink-0"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-2xl bg-amber-100 border-2 border-white flex items-center justify-center font-black text-amber-800 text-xl shadow-xs shrink-0">
+              {initials}
+            </div>
+          )}
           <div>
-            <h3 className="text-base sm:text-lg font-black tracking-wide">Mateo Rodríguez</h3>
-            <p className="text-xs sm:text-sm text-amber-100 font-extrabold">Línea 2 - Montacargas • ¡Cero Retardos y 5S Perfecto!</p>
+            <h3 className="text-base sm:text-lg font-black tracking-wide">{currentRecognition.name}</h3>
+            <p className="text-xs sm:text-sm text-amber-100 font-extrabold">{currentRecognition.position}</p>
           </div>
         </div>
         <p className="text-xs sm:text-sm text-amber-50/95 mt-3 leading-relaxed font-semibold bg-amber-800/20 p-3 rounded-xl border border-amber-400/30">
-          "Mateo mantuvo su área de almacén 100% limpia y ordenada, asegurando que los materiales llegaran a tiempo a la línea de ensamble. ¡Gracias por tu esfuerzo, Mateo!"
+          "{currentRecognition.message}"
         </p>
       </div>
 

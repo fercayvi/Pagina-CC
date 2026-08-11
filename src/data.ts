@@ -1,4 +1,12 @@
-import { ServiceId, Service, FAQ, NewsItem, Aviso, UserProfile } from './types';
+import { ServiceId, Service, FAQ, NewsItem, Aviso, UserProfile, MonthlyRecognition } from './types';
+
+export const recognitionData: MonthlyRecognition = {
+  badgeTitle: 'Reconocimiento Mensual',
+  name: 'Mateo Rodríguez',
+  initials: 'MR',
+  position: 'Línea 2 - Montacargas • ¡Cero Retardos y 5S Perfecto!',
+  message: 'Mateo mantuvo su área de almacén 100% limpia y ordenada, asegurando que los materiales llegaran a tiempo a la línea de ensamble. ¡Gracias por tu esfuerzo, Mateo!'
+};
 
 export const servicesData: Service[] = [
   // 1. Módulo "Nómina y Pagos"

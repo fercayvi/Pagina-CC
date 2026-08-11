@@ -51,24 +51,18 @@ export default function ServiceCard({ service, onClick }: ServiceCardProps) {
       case 'Nómina y Pagos':
         return {
           cardBg: 'bg-white border-2 border-slate-300 hover:border-blue-600 shadow-md hover:shadow-xl',
-          iconBg: 'bg-blue-100 text-blue-800 border-2 border-blue-200',
-          badge: 'bg-blue-100 text-blue-900 border border-blue-300 font-black',
-          tag: 'Nómina y Pagos'
+          iconBg: 'bg-blue-100 text-blue-800 border-2 border-blue-200'
         };
       case 'Tarjetas y Créditos':
         return {
           cardBg: 'bg-white border-2 border-slate-300 hover:border-purple-600 shadow-md hover:shadow-xl',
-          iconBg: 'bg-purple-100 text-purple-800 border-2 border-purple-200',
-          badge: 'bg-purple-100 text-purple-900 border border-purple-300 font-black',
-          tag: 'Tarjetas y Créditos'
+          iconBg: 'bg-purple-100 text-purple-800 border-2 border-purple-200'
         };
       case 'Control y Asistencia':
       default:
         return {
           cardBg: 'bg-white border-2 border-slate-300 hover:border-emerald-600 shadow-md hover:shadow-xl',
-          iconBg: 'bg-emerald-100 text-emerald-800 border-2 border-emerald-200',
-          badge: 'bg-emerald-100 text-emerald-900 border border-emerald-300 font-black',
-          tag: 'Control y Asistencia'
+          iconBg: 'bg-emerald-100 text-emerald-800 border-2 border-emerald-200'
         };
     }
   };
@@ -79,23 +73,20 @@ export default function ServiceCard({ service, onClick }: ServiceCardProps) {
     <button
       id={`service-card-${service.id}`}
       onClick={onClick}
-      className={`group border rounded-2xl p-5 sm:p-6 h-full flex flex-col justify-between text-left transition-all active:scale-[0.97] cursor-pointer focus:outline-none focus:ring-4 focus:ring-blue-500/30 ${styles.cardBg}`}
-      style={{ minHeight: '180px' }}
+      className={`group border rounded-2xl p-3.5 sm:p-4 h-full flex flex-col justify-between text-left transition-all active:scale-[0.97] cursor-pointer focus:outline-none focus:ring-4 focus:ring-blue-500/30 ${styles.cardBg}`}
+      style={{ minHeight: '135px' }}
     >
-      <div className="flex justify-between items-start w-full gap-2">
-        <div className={`p-3 rounded-2xl ${styles.iconBg} transition-transform group-hover:scale-110 shrink-0 flex items-center justify-center shadow-xs`}>
-          <IconComponent className="w-6 h-6" strokeWidth={2.5} />
+      <div className="flex items-center justify-between w-full">
+        <div className={`p-2 sm:p-2.5 rounded-xl ${styles.iconBg} transition-transform group-hover:scale-110 shrink-0 flex items-center justify-center shadow-xs`}>
+          <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.5} />
         </div>
-        <span className={`text-xs font-black px-2.5 py-1 rounded-lg ${styles.badge} tracking-tight shrink-0 shadow-2xs`}>
-          {styles.tag}
-        </span>
       </div>
 
-      <div className="mt-4 flex-grow flex flex-col justify-between">
-        <h3 className="text-base font-extrabold text-slate-900 tracking-tight leading-snug group-hover:text-blue-700 transition-colors mb-1.5">
+      <div className="mt-2 flex-grow flex flex-col justify-between">
+        <h3 className="text-sm font-extrabold text-slate-900 tracking-tight leading-snug group-hover:text-blue-700 transition-colors mb-1">
           {service.title}
         </h3>
-        <p className="text-xs sm:text-sm text-slate-700 font-medium line-clamp-3 leading-relaxed flex-grow">
+        <p className="text-xs text-slate-600 font-medium line-clamp-2 leading-relaxed">
           {service.shortDesc}
         </p>
       </div>

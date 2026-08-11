@@ -86,6 +86,15 @@ export interface Aviso {
   sender: string;
 }
 
+export interface MonthlyRecognition {
+  badgeTitle?: string;
+  name: string;
+  initials?: string;
+  position: string;
+  message: string;
+  photoUrl?: string;
+}
+
 export interface UserProfile {
   name: string;
   employeeId: string;

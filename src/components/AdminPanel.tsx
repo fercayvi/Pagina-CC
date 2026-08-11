@@ -18,10 +18,11 @@ import {
   Phone,
   HelpCircle,
   ListOrdered,
-  Info
+  Info,
+  Award
 } from 'lucide-react';
-import { Service, NewsItem, ServiceId, StepItem, ServiceFAQ } from '../types';
-import { getDefaultServiceDetails } from '../data';
+import { Service, NewsItem, ServiceId, StepItem, ServiceFAQ, MonthlyRecognition } from '../types';
+import { getDefaultServiceDetails, recognitionData } from '../data';
 import { SERVICE_ICON_MAP } from './ServiceCard';
 
 interface AdminPanelProps {
@@ -30,6 +31,8 @@ interface AdminPanelProps {
   onSelectService?: (service: Service & { hidden?: boolean }, startInEditMode?: boolean) => void;
   news: NewsItem[];
   onUpdateNews: (news: NewsItem[]) => void;
+  recognition?: MonthlyRecognition;
+  onUpdateRecognition?: (recognition: MonthlyRecognition) => void;
   onLogout: () => void;
 }
 
@@ -39,6 +42,8 @@ export default function AdminPanel({
   onSelectService,
   news,
   onUpdateNews,
+  recognition,
+  onUpdateRecognition,
   onLogout
 }: AdminPanelProps) {
   const [activeTab, setActiveTab] = useState<'tramites' | 'noticias'>('tramites');
@@ -54,6 +59,10 @@ export default function AdminPanel({
   const [editingNews, setEditingNews] = useState<NewsItem | null>(null);
   const [isNewsModalOpen, setIsNewsModalOpen] = useState<boolean>(false);
   const [isNewNews, setIsNewNews] = useState<boolean>(false);
+
+  // Recognition Edit Modal state
+  const [editingRecognition, setEditingRecognition] = useState<MonthlyRecognition | null>(null);
+  const [isRecognitionModalOpen, setIsRecognitionModalOpen] = useState<boolean>(false);
 
   // Delete Confirmation Modal state
   const [deleteConfirmTarget, setDeleteConfirmTarget] = useState<{
@@ -304,6 +313,25 @@ export default function AdminPanel({
     setIsNewsModalOpen(false);
   };
 
+  // --- RECOGNITION HANDLERS ---
+  const currentRecognition = recognition || recognitionData;
+
+  const handleOpenEditRecognitionModal = () => {
+    setEditingRecognition({ ...currentRecognition });
+    setIsRecognitionModalOpen(true);
+  };
+
+  const handleSaveRecognition = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRecognition || !editingRecognition.name.trim()) return;
+
+    if (onUpdateRecognition) {
+      onUpdateRecognition(editingRecognition);
+    }
+    setIsRecognitionModalOpen(false);
+    showToast('Reconocimiento Mensual actualizado correctamente.');
+  };
+
   return (
     <div id="admin-panel-container" className="space-y-4 animate-fadeIn pb-12">
       {/* Toast Alert */}
@@ -324,6 +352,9 @@ export default function AdminPanel({
             <div className="flex items-center gap-2 mb-0.5">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-300 bg-blue-950/80 px-2.5 py-0.5 rounded-md border border-blue-800/60">
                 Panel Administrador
+              </span>
+              <span className="text-[10px] font-medium text-slate-400">
+                Lic. Patricia Morales (RH)
               </span>
             </div>
             <h2 className="text-xl font-bold tracking-tight font-display">
@@ -413,15 +444,6 @@ export default function AdminPanel({
                       <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100">
                         {service.category}
                       </span>
-                      {service.hidden ? (
-                        <span className="text-[10px] font-bold text-slate-500 bg-slate-200 px-2 py-0.5 rounded-md">
-                          Oculto
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">
-                          Visible
-                        </span>
-                      )}
                     </div>
                     <h4 className="text-sm font-bold text-slate-900 truncate">
                       {service.title}
@@ -475,6 +497,48 @@ export default function AdminPanel({
       {/* VIEW B: GESTIONAR NOTICIAS */}
       {activeTab === 'noticias' && (
         <div className="space-y-4">
+          {/* Monthly Recognition Management Card */}
+          <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 rounded-2xl p-4 sm:p-5 text-white shadow-md border border-amber-400/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-2 flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="bg-white/20 text-amber-100 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-white/20">
+                  {currentRecognition.badgeTitle || 'Reconocimiento Mensual'}
+                </span>
+                <Award className="w-5 h-5 text-amber-200" />
+              </div>
+              <div className="flex items-center gap-3">
+                {currentRecognition.photoUrl ? (
+                  <img 
+                    src={currentRecognition.photoUrl} 
+                    alt={currentRecognition.name} 
+                    className="w-11 h-11 rounded-xl object-cover border-2 border-white shadow-xs shrink-0"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-11 h-11 rounded-xl bg-amber-100 border-2 border-white flex items-center justify-center font-black text-amber-800 text-base shadow-xs shrink-0">
+                    {currentRecognition.initials || (currentRecognition.name ? currentRecognition.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'RH')}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-base font-black truncate">{currentRecognition.name}</h4>
+                  <p className="text-xs text-amber-100 font-extrabold truncate">{currentRecognition.position}</p>
+                </div>
+              </div>
+              <p className="text-xs text-amber-50/95 line-clamp-2 italic bg-amber-800/30 p-2.5 rounded-xl border border-amber-400/20">
+                "{currentRecognition.message}"
+              </p>
+            </div>
+
+            <button
+              id="btn-edit-recognition"
+              onClick={handleOpenEditRecognitionModal}
+              className="px-4 py-2.5 bg-white text-amber-900 hover:bg-amber-50 text-xs font-black rounded-xl transition-all shadow-md flex items-center justify-center gap-2 shrink-0 active:scale-95 cursor-pointer"
+            >
+              <Edit3 className="w-4 h-4 text-amber-700" />
+              <span>Editar Reconocimiento</span>
+            </button>
+          </div>
+
           <div className="flex items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
             <div>
               <h3 className="text-sm font-bold text-slate-900 font-display">
@@ -1054,6 +1118,141 @@ export default function AdminPanel({
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>Publicar Noticia</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL EDITAR RECONOCIMIENTO MENSUAL --- */}
+      {isRecognitionModalOpen && editingRecognition && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-lg w-full border border-slate-200 shadow-2xl overflow-hidden flex flex-col">
+            <div className="p-4 bg-amber-600 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Award className="w-5 h-5 text-amber-200" />
+                <h3 className="text-sm font-bold font-display">
+                  Editar Reconocimiento Mensual
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsRecognitionModalOpen(false)}
+                className="p-1 hover:bg-amber-700 rounded-lg text-amber-100 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveRecognition} className="p-4 sm:p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Distinción / Etiqueta *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editingRecognition.badgeTitle || ''}
+                  onChange={(e) => setEditingRecognition({ ...editingRecognition, badgeTitle: e.target.value })}
+                  placeholder="Ej. Reconocimiento Mensual"
+                  className="w-full px-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 focus:bg-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Nombre del Colaborador *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingRecognition.name}
+                    onChange={(e) => {
+                      const newName = e.target.value;
+                      const calculatedInitials = newName.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                      setEditingRecognition({ 
+                        ...editingRecognition, 
+                        name: newName,
+                        initials: editingRecognition.initials || calculatedInitials 
+                      });
+                    }}
+                    placeholder="Ej. Mateo Rodríguez"
+                    className="w-full px-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Iniciales
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={3}
+                    value={editingRecognition.initials || ''}
+                    onChange={(e) => setEditingRecognition({ ...editingRecognition, initials: e.target.value.toUpperCase() })}
+                    placeholder="Ej. MR"
+                    className="w-full px-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 focus:bg-white uppercase text-center"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Puesto / Área / Logro Destacado *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editingRecognition.position}
+                  onChange={(e) => setEditingRecognition({ ...editingRecognition, position: e.target.value })}
+                  placeholder="Ej. Línea 2 - Montacargas • ¡Cero Retardos y 5S Perfecto!"
+                  className="w-full px-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Mensaje o Cita de Reconocimiento *
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  value={editingRecognition.message}
+                  onChange={(e) => setEditingRecognition({ ...editingRecognition, message: e.target.value })}
+                  placeholder="Escribe la razón del reconocimiento al colaborador..."
+                  className="w-full px-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  URL de Fotografía (Opcional)
+                </label>
+                <input
+                  type="url"
+                  value={editingRecognition.photoUrl || ''}
+                  onChange={(e) => setEditingRecognition({ ...editingRecognition, photoUrl: e.target.value })}
+                  placeholder="https://ejemplo.com/foto.jpg"
+                  className="w-full px-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 focus:bg-white"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsRecognitionModalOpen(false)}
+                  className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl flex items-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Guardar Reconocimiento</span>
                 </button>
               </div>
             </form>

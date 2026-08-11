@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Info } from 'lucide-react';
-import { Service, NewsItem, UserProfile } from './types';
-import { servicesData, newsData, userProfileData } from './data';
+import { Service, NewsItem, UserProfile, MonthlyRecognition } from './types';
+import { servicesData, newsData, userProfileData, recognitionData } from './data';
 import BottomNav from './components/BottomNav';
 import TopBar from './components/TopBar';
 import ServiceCard from './components/ServiceCard';
@@ -25,6 +25,7 @@ export default function App() {
   // Dynamic content states
   const [services, setServices] = useState<(Service & { hidden?: boolean })[]>(servicesData);
   const [news, setNews] = useState<NewsItem[]>(newsData);
+  const [recognition, setRecognition] = useState<MonthlyRecognition>(recognitionData);
 
   // Public user context
   const user: UserProfile = userProfileData;
@@ -105,8 +106,8 @@ export default function App() {
         <div id="phone-screen-container" className="w-full flex-1 overflow-hidden flex flex-col relative">
 
           {/* TAB CONTENT SCROLLABLE CANVAS */}
-          <div id="phone-main-scrollable-content" className={`flex-1 overflow-y-auto pt-4 relative ${isAdminLoggedIn ? 'pb-8' : 'pb-24'}`}>
-            <div className="max-w-4xl mx-auto w-full px-4 md:px-6">
+          <div id="phone-main-scrollable-content" className={`flex-1 overflow-y-auto pt-2 sm:pt-3 relative ${isAdminLoggedIn ? 'pb-8' : 'pb-32'}`}>
+            <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10">
             
             {/* RENDER SELECTED SERVICE DETAIL (Public or Admin) WITH LIGHT FULLSCREEN BACKDROP */}
             {selectedService ? (
@@ -146,6 +147,8 @@ export default function App() {
                   onSelectService={handleSelectService}
                   news={news}
                   onUpdateNews={setNews}
+                  recognition={recognition}
+                  onUpdateRecognition={setRecognition}
                   onLogout={() => {
                     setIsAdminLoggedIn(false);
                     setSelectedService(null);
@@ -155,7 +158,7 @@ export default function App() {
                 <>
                   {/* TAB 1: INICIO */}
                   {currentTab === 'inicio' && (
-                    <div className="space-y-4 animate-fadeIn">
+                    <div className="space-y-2 sm:space-y-2.5 animate-fadeIn">
                       
                       {/* TopBar with Title, Search & Admin Lock */}
                       <TopBar 
@@ -165,13 +168,13 @@ export default function App() {
                       />
 
                       {/* Horizontal Categories Filters */}
-                      <div className="flex gap-2.5 overflow-x-auto pb-2 no-scrollbar">
+                      <div className="flex gap-2 overflow-x-auto pb-0.5 no-scrollbar">
                         {categories.map((cat) => (
                           <button
                             key={cat.id}
                             id={`category-tab-${cat.id}`}
                             onClick={() => setSelectedCategory(cat.id)}
-                            className={`py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold shrink-0 transition-all cursor-pointer active:scale-95 ${
+                            className={`py-1.5 px-3 rounded-xl text-xs font-extrabold shrink-0 transition-all cursor-pointer active:scale-95 ${
                               selectedCategory === cat.id
                                 ? 'bg-slate-900 text-white shadow-md border-0 ring-2 ring-slate-900'
                                 : 'bg-slate-200 hover:bg-slate-300 text-slate-900 border-0 shadow-xs'
@@ -183,7 +186,7 @@ export default function App() {
                       </div>
 
                       {/* Responsive Grid of Services Cards */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 pb-4">
                         {filteredServices.map((service) => (
                           <ServiceCard
                             key={service.id}
@@ -205,7 +208,7 @@ export default function App() {
                   )}
 
                   {/* TAB 2: NOTICIAS */}
-                  {currentTab === 'noticias' && <NewsTab newsList={news} />}
+                  {currentTab === 'noticias' && <NewsTab newsList={news} recognition={recognition} />}
 
                   {/* TAB 3: ASISTENTE */}
                   {currentTab === 'asistente' && <AsistenteTab user={user} />}
