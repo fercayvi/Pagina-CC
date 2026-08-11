@@ -1,5 +1,5 @@
 import React from 'react';
-import { ExternalLink, Building2, MapPin, Clock, Phone, MessageSquare } from 'lucide-react';
+import { ExternalLink, MapPin, Clock, Phone, MessageSquare } from 'lucide-react';
 import { UserProfile, ContactInfo } from '../types';
 import { initialContact } from '../data';
 
@@ -22,24 +22,6 @@ export default function AsistenteTab({ user, contactInfo }: AsistenteTabProps) {
 
   return (
     <div id="contacto-rh-tab-view" className="space-y-5 animate-fadeIn">
-      {/* Title block */}
-      <div className="bg-white border-2 border-slate-300 rounded-2xl p-5 sm:p-6 shadow-md">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-2xl bg-blue-700 text-white flex items-center justify-center shrink-0 shadow-sm">
-            <Building2 className="w-6 h-6" />
-          </div>
-          <div>
-            <span className="text-xs font-black text-blue-800 bg-blue-100 px-3 py-1 rounded-lg uppercase tracking-wider">
-              Atención Directa en Planta
-            </span>
-            <h2 className="text-xl font-black text-slate-900 font-display mt-0.5">OFICINA DE RECURSOS HUMANOS</h2>
-          </div>
-        </div>
-        <p className="text-xs sm:text-sm text-slate-800 font-semibold leading-relaxed mt-2">
-          Canales oficiales de atención para consultas directas, trámites urgentes, dudas de nómina y aclaraciones sobre el personal de planta.
-        </p>
-      </div>
-
       {/* Direct Contact Buttons - Solid High Contrast Kiosk Buttons */}
       <div className="bg-white border-2 border-slate-300 rounded-2xl p-5 sm:p-6 shadow-md space-y-4" id="rh-contact-buttons-panel">
         <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">

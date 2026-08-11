@@ -410,30 +410,17 @@ export default function AdminPanel({
       )}
 
       {/* Top Header Dashboard Bar */}
-      <div className="bg-slate-900 text-white rounded-2xl p-5 shadow-sm border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
-            <ShieldCheck className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-300 bg-blue-950/80 px-2.5 py-0.5 rounded-md border border-blue-800/60">
-                Panel Administrador
-              </span>
-              <span className="text-[10px] font-medium text-slate-400">
-                Lic. Patricia Morales (RH)
-              </span>
-            </div>
-            <h2 className="text-xl font-bold tracking-tight font-display">
-              Gestión de Contenidos y Trámites
-            </h2>
-          </div>
+      <div className="bg-slate-900 text-white rounded-2xl p-4 shadow-sm border border-slate-800 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-300 bg-blue-950/80 px-2.5 py-1 rounded-md border border-blue-800/60">
+            Panel Administrador
+          </span>
         </div>
 
         <button
           id="btn-admin-logout"
           onClick={onLogout}
-          className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl text-xs font-bold transition-all border border-slate-700 flex items-center gap-2 self-start md:self-auto active:scale-95 shadow-2xs"
+          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl text-xs font-bold transition-all border border-slate-700 flex items-center gap-2 active:scale-95 shadow-2xs cursor-pointer"
         >
           <LogOut className="w-4 h-4 text-rose-400" />
           <span>Cerrar Sesión</span>
