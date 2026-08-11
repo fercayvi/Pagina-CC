@@ -19,10 +19,13 @@ import {
   HelpCircle,
   ListOrdered,
   Info,
-  Award
+  Award,
+  MessageSquare,
+  Building2,
+  PhoneCall
 } from 'lucide-react';
-import { Service, NewsItem, ServiceId, StepItem, ServiceFAQ, MonthlyRecognition } from '../types';
-import { getDefaultServiceDetails, recognitionData } from '../data';
+import { Service, NewsItem, ServiceId, StepItem, ServiceFAQ, MonthlyRecognition, ContactInfo } from '../types';
+import { getDefaultServiceDetails, recognitionData, initialContact } from '../data';
 import { SERVICE_ICON_MAP } from './ServiceCard';
 
 interface AdminPanelProps {
@@ -35,6 +38,8 @@ interface AdminPanelProps {
   onUpdateRecognition?: (recognition: MonthlyRecognition) => void;
   recognitions?: MonthlyRecognition[];
   onUpdateRecognitions?: (recognitions: MonthlyRecognition[]) => void;
+  contactInfo?: ContactInfo;
+  onUpdateContact?: (contact: ContactInfo) => void;
   onLogout: () => void;
 }
 
@@ -48,10 +53,22 @@ export default function AdminPanel({
   onUpdateRecognition,
   recognitions,
   onUpdateRecognitions,
+  contactInfo,
+  onUpdateContact,
   onLogout
 }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'tramites' | 'noticias'>('tramites');
+  const [activeTab, setActiveTab] = useState<'tramites' | 'noticias' | 'contacto'>('tramites');
   const [successMessage, setSuccessMessage] = useState<string>('');
+
+  // Contact Form State
+  const [contactForm, setContactForm] = useState<ContactInfo>(() => contactInfo || initialContact);
+
+  // Sync contactForm if props change
+  React.useEffect(() => {
+    if (contactInfo) {
+      setContactForm(contactInfo);
+    }
+  }, [contactInfo]);
 
   // Service Edit / Create Modal state
   const [editingService, setEditingService] = useState<(Service & { hidden?: boolean }) | null>(null);
@@ -450,6 +467,19 @@ export default function AdminPanel({
           <Newspaper className="w-4 h-4" />
           <span>Gestionar Noticias ({news.length})</span>
         </button>
+
+        <button
+          id="admin-tab-contacto"
+          onClick={() => setActiveTab('contacto')}
+          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+            activeTab === 'contacto'
+              ? 'bg-slate-900 text-white shadow-2xs'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          }`}
+        >
+          <Building2 className="w-4 h-4" />
+          <span>Gestionar Contacto</span>
+        </button>
       </div>
 
       {/* VIEW A: GESTIONAR TRÁMITES */}
@@ -709,6 +739,120 @@ export default function AdminPanel({
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* VIEW C: GESTIONAR CONTACTO */}
+      {activeTab === 'contacto' && (
+        <div className="space-y-4 animate-fadeIn">
+          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-5">
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold shrink-0 border border-blue-100">
+                <Building2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 font-display">
+                  Información Oficial de Contacto de RH
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Edita la información de canales directos, extensión, ubicación física y horarios mostrados en la aplicación.
+                </p>
+              </div>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (onUpdateContact) {
+                  onUpdateContact(contactForm);
+                }
+                showToast('✅ Cambios guardados correctamente');
+              }}
+              className="space-y-4"
+            >
+              {/* WhatsApp Input */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <MessageSquare className="w-4 h-4 text-emerald-600" />
+                  <span>WhatsApp Oficial (Número o Enlace)</span>
+                </label>
+                <input
+                  type="text"
+                  value={contactForm.whatsapp}
+                  onChange={(e) => setContactForm({ ...contactForm, whatsapp: e.target.value })}
+                  placeholder="Ej. https://wa.me/525512345678 o 5512345678"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-slate-900"
+                  required
+                />
+                <p className="text-[11px] text-slate-400">
+                  Aparecerá en el botón de WhatsApp directo en la pestaña de Contacto RH.
+                </p>
+              </div>
+
+              {/* Conmutador / Telefono Input */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <PhoneCall className="w-4 h-4 text-blue-600" />
+                  <span>Extensión / Teléfono Interno</span>
+                </label>
+                <input
+                  type="text"
+                  value={contactForm.telefono}
+                  onChange={(e) => setContactForm({ ...contactForm, telefono: e.target.value })}
+                  placeholder="Ej. Ext. 202 (5512345678)"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-slate-900"
+                  required
+                />
+                <p className="text-[11px] text-slate-400">
+                  Teléfono de urgencias y permisos de incapacidad para personal de planta.
+                </p>
+              </div>
+
+              {/* Ubicacion Input */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-amber-600" />
+                  <span>Ubicación Física de la Ventanilla</span>
+                </label>
+                <input
+                  type="text"
+                  value={contactForm.ubicacion}
+                  onChange={(e) => setContactForm({ ...contactForm, ubicacion: e.target.value })}
+                  placeholder="Ej. Planta Baja • Edificio Administrativo (junto al Comedor General)"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-slate-900"
+                  required
+                />
+              </div>
+
+              {/* Horario Input */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-purple-600" />
+                  <span>Horario de Atención Presencial</span>
+                </label>
+                <input
+                  type="text"
+                  value={contactForm.horario}
+                  onChange={(e) => setContactForm({ ...contactForm, horario: e.target.value })}
+                  placeholder="Ej. Lunes a Viernes de 8:00 AM a 5:00 PM • Sábados de 8:00 AM a 1:00 PM"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-slate-900"
+                  required
+                />
+              </div>
+
+              {/* Save Button */}
+              <div className="pt-3 border-t border-slate-100 flex justify-end">
+                <button
+                  type="submit"
+                  id="btn-save-contact-info"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-md transition-all active:scale-95 cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Guardar Cambios</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

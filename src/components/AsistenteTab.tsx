@@ -1,12 +1,25 @@
 import React from 'react';
 import { ExternalLink, Building2, MapPin, Clock, Phone, MessageSquare } from 'lucide-react';
-import { UserProfile } from '../types';
+import { UserProfile, ContactInfo } from '../types';
+import { initialContact } from '../data';
 
 interface AsistenteTabProps {
   user?: UserProfile;
+  contactInfo?: ContactInfo;
 }
 
-export default function AsistenteTab({ user }: AsistenteTabProps) {
+export default function AsistenteTab({ user, contactInfo }: AsistenteTabProps) {
+  const info = contactInfo || initialContact;
+
+  // Format whatsapp URL
+  const whatsappUrl = info.whatsapp.startsWith('http') 
+    ? info.whatsapp 
+    : `https://wa.me/${info.whatsapp.replace(/[^0-9]/g, '')}`;
+
+  // Format tel URL
+  const phoneDigits = info.telefono.replace(/[^0-9]/g, '');
+  const telUrl = phoneDigits ? `tel:${phoneDigits}` : '#';
+
   return (
     <div id="contacto-rh-tab-view" className="space-y-5 animate-fadeIn">
       {/* Title block */}
@@ -36,7 +49,7 @@ export default function AsistenteTab({ user }: AsistenteTabProps) {
 
         {/* Button 1: WhatsApp (Solid Emerald Kiosk Button) */}
         <a 
-          href="https://wa.me/525512345678" 
+          href={whatsappUrl} 
           target="_blank" 
           rel="noreferrer"
           id="btn-contact-whatsapp"
@@ -48,7 +61,7 @@ export default function AsistenteTab({ user }: AsistenteTabProps) {
             </div>
             <div>
               <h4 className="text-sm sm:text-base font-black text-white tracking-wide">WhatsApp Oficial de RH</h4>
-              <p className="text-xs sm:text-sm text-emerald-100 font-bold mt-0.5">Respuesta humana de Lunes a Viernes</p>
+              <p className="text-xs sm:text-sm text-emerald-100 font-bold mt-0.5">{info.whatsapp}</p>
             </div>
           </div>
           <ExternalLink className="w-6 h-6 text-white group-hover:translate-x-1 transition-transform shrink-0" strokeWidth={2.5} />
@@ -56,7 +69,7 @@ export default function AsistenteTab({ user }: AsistenteTabProps) {
 
         {/* Button 2: Conmutador (Solid Blue Kiosk Button) */}
         <a 
-          href="tel:5512345678" 
+          href={telUrl} 
           id="btn-contact-conmutador"
           className="flex items-center justify-between p-5 sm:p-6 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 border-2 border-blue-500 rounded-2xl transition-all active:scale-[0.98] group shadow-lg cursor-pointer text-white"
         >
@@ -65,11 +78,11 @@ export default function AsistenteTab({ user }: AsistenteTabProps) {
               Tel
             </div>
             <div>
-              <h4 className="text-sm sm:text-base font-black text-white tracking-wide">Conmutador Interno (Ext. 202)</h4>
-              <p className="text-xs sm:text-sm text-blue-100 font-bold mt-0.5">Urgencias y permisos de incapacidad</p>
+              <h4 className="text-sm sm:text-base font-black text-white tracking-wide">Conmutador Interno / Teléfono</h4>
+              <p className="text-xs sm:text-sm text-blue-100 font-bold mt-0.5">{info.telefono}</p>
             </div>
           </div>
-          <ExternalLink className="w-6 h-6 text-white group-hover:translate-x-1 transition-transform shrink-0" strokeWidth={2.5} />
+          <Phone className="w-6 h-6 text-white group-hover:translate-x-1 transition-transform shrink-0" strokeWidth={2.5} />
         </a>
       </div>
 
@@ -85,7 +98,7 @@ export default function AsistenteTab({ user }: AsistenteTabProps) {
             <MapPin className="w-5 h-5 text-slate-700 shrink-0 mt-0.5" strokeWidth={2.5} />
             <div>
               <span className="font-extrabold text-slate-900 block text-sm">Ubicación física:</span>
-              <span className="text-xs sm:text-sm text-slate-800 font-semibold block mt-1">Planta Baja • Edificio Administrativo (junto al Comedor General)</span>
+              <span className="text-xs sm:text-sm text-slate-800 font-semibold block mt-1">{info.ubicacion}</span>
             </div>
           </div>
 
@@ -93,7 +106,7 @@ export default function AsistenteTab({ user }: AsistenteTabProps) {
             <Clock className="w-5 h-5 text-slate-700 shrink-0 mt-0.5" strokeWidth={2.5} />
             <div>
               <span className="font-extrabold text-slate-900 block text-sm">Horario de atención:</span>
-              <span className="text-xs sm:text-sm text-slate-800 font-semibold block mt-1">Lunes a Viernes de 8:00 AM a 5:00 PM • Sábados de 8:00 AM a 1:00 PM</span>
+              <span className="text-xs sm:text-sm text-slate-800 font-semibold block mt-1">{info.horario}</span>
             </div>
           </div>
         </div>

@@ -111,3 +111,10 @@ export interface UserProfile {
   fondoAhorroBalance: number;
   despensaBalance: number;
 }
+
+export interface ContactInfo {
+  whatsapp: string;
+  telefono: string;
+  ubicacion: string;
+  horario: string;
+}

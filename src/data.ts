@@ -1,4 +1,11 @@
-import { ServiceId, Service, FAQ, NewsItem, Aviso, UserProfile, MonthlyRecognition } from './types';
+import { ServiceId, Service, FAQ, NewsItem, Aviso, UserProfile, MonthlyRecognition, ContactInfo } from './types';
+
+export const initialContact: ContactInfo = {
+  whatsapp: 'https://wa.me/525512345678',
+  telefono: 'Ext. 202 (5512345678)',
+  ubicacion: 'Planta Baja • Edificio Administrativo (junto al Comedor General)',
+  horario: 'Lunes a Viernes de 8:00 AM a 5:00 PM • Sábados de 8:00 AM a 1:00 PM'
+};
 
 export const initialRecognitions: MonthlyRecognition[] = [
   {

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Info } from 'lucide-react';
-import { Service, NewsItem, UserProfile, MonthlyRecognition } from './types';
-import { initialServices, initialNews, initialRecognitions, userProfileData } from './data';
+import { Service, NewsItem, UserProfile, MonthlyRecognition, ContactInfo } from './types';
+import { initialServices, initialNews, initialRecognitions, userProfileData, initialContact } from './data';
 import BottomNav from './components/BottomNav';
 import TopBar from './components/TopBar';
 import ServiceCard from './components/ServiceCard';
@@ -54,6 +54,10 @@ export default function App() {
     }
     return initialRecognitions;
   });
+  const [contactInfo, setContactInfo] = useState<ContactInfo>(() => {
+    const saved = localStorage.getItem('cc-contact');
+    return saved ? JSON.parse(saved) : initialContact;
+  });
 
   // LocalStorage Sync Effects
   useEffect(() => {
@@ -68,10 +72,14 @@ export default function App() {
     localStorage.setItem('cc-recognitions', JSON.stringify(recognitions));
   }, [recognitions]);
 
+  useEffect(() => {
+    localStorage.setItem('cc-contact', JSON.stringify(contactInfo));
+  }, [contactInfo]);
+
   // Public user context
   const user: UserProfile = userProfileData;
 
-  // Global Kiosk Inactivity Reset Timer (60 seconds)
+  // Global Kiosk Inactivity Reset Timer (90 seconds)
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
 
@@ -86,7 +94,7 @@ export default function App() {
         setIsLoginModalOpen(false);
         setSearchQuery('');
         setSelectedCategory('all');
-      }, 60000); // 60 seconds
+      }, 90000); // 90 seconds
     };
 
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'touchend', 'click'];
@@ -190,6 +198,8 @@ export default function App() {
                   onUpdateNews={setNews}
                   recognitions={recognitions}
                   onUpdateRecognitions={setRecognitions}
+                  contactInfo={contactInfo}
+                  onUpdateContact={setContactInfo}
                   onLogout={() => {
                     setIsAdminLoggedIn(false);
                     setSelectedService(null);
@@ -252,7 +262,7 @@ export default function App() {
                   {currentTab === 'noticias' && <NewsTab newsList={news} recognitionsList={recognitions} />}
 
                   {/* TAB 3: ASISTENTE */}
-                  {currentTab === 'asistente' && <AsistenteTab user={user} />}
+                  {currentTab === 'asistente' && <AsistenteTab user={user} contactInfo={contactInfo} />}
                 </>
               )
             )}
