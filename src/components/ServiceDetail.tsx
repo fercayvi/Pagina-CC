@@ -171,13 +171,10 @@ function LivePreviewPanel({
       <div className="flex items-center justify-between pb-2 border-b border-slate-800">
         <div className="flex items-center gap-2">
           <Eye className="w-4 h-4 text-blue-400" />
-          <span className="text-xs font-extrabold uppercase tracking-wider text-slate-200">
-            Vista Previa en Vivo
+          <span className="text-xs font-bold text-slate-200">
+            Vista previa
           </span>
         </div>
-        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-800/80 animate-pulse">
-          ● En línea
-        </span>
       </div>
 
       {/* Preview Card Mockup */}
@@ -192,7 +189,7 @@ function LivePreviewPanel({
           >
             <AlertTriangle className="w-4 h-4 shrink-0 text-slate-950 mt-0.5" />
             <div>
-              <span className="text-[9px] uppercase font-extrabold block text-slate-900">Aviso Destacado</span>
+              <span className="text-[9px] uppercase font-extrabold block text-slate-900">Aviso destacado</span>
               <p className="text-[11px] font-semibold leading-tight">{draft.alertNotice}</p>
             </div>
           </div>
@@ -205,10 +202,9 @@ function LivePreviewPanel({
           title="Haz clic para editar información general"
         >
           <div className="flex items-center justify-between gap-1.5">
-            <span className="text-[9px] font-extrabold text-blue-400 uppercase tracking-wider bg-blue-950 px-2 py-0.5 rounded border border-blue-800/50">
+            <span className="text-[9px] font-bold text-blue-400 bg-blue-950 px-2 py-0.5 rounded border border-blue-800/50">
               {draft.category || 'Categoría'}
             </span>
-            <span className="text-[9px] text-slate-500 font-mono">ID: {draft.id}</span>
           </div>
           <h3 className="text-sm font-bold text-white font-display mt-1">{draft.title || 'Título sin definir'}</h3>
           <p className="text-[11px] text-slate-400 line-clamp-2">{draft.shortDesc || draft.fullDescription}</p>
@@ -226,7 +222,7 @@ function LivePreviewPanel({
             )}
             {videoInfo && !draft.imageUrl && (
               <div className="w-full h-24 bg-slate-900 rounded-lg flex items-center justify-center text-xs text-purple-400 font-bold border border-purple-900/50">
-                ▶ Video Adjunto
+                Video adjunto
               </div>
             )}
           </div>
@@ -238,12 +234,16 @@ function LivePreviewPanel({
             onClick={() => onSelectTab('multimedia')}
             className="p-2 rounded-lg hover:bg-slate-900 cursor-pointer border border-transparent hover:border-purple-500/30 transition-all space-y-1"
           >
-            <span className="text-[10px] font-bold uppercase text-purple-400 block">
-              📄 Adjuntos PDF ({draft.attachments.length})
-            </span>
+            <div className="flex items-center gap-1.5 text-purple-400">
+              <FileDown className="w-3.5 h-3.5" />
+              <span className="text-xs font-bold text-purple-400">
+                Adjuntos PDF
+              </span>
+            </div>
             {draft.attachments.map((att, i) => (
-              <div key={i} className="text-[11px] font-semibold text-slate-300 truncate bg-slate-900/80 px-2 py-1 rounded border border-slate-800">
-                {att.name || 'Documento sin título'}
+              <div key={i} className="text-[11px] font-semibold text-slate-300 truncate bg-slate-900/80 px-2 py-1 rounded border border-slate-800 flex items-center gap-1.5">
+                <FileText className="w-3 h-3 text-purple-400 shrink-0" />
+                <span className="truncate">{att.name || 'Documento sin título'}</span>
               </div>
             ))}
           </div>
@@ -256,9 +256,12 @@ function LivePreviewPanel({
             className="p-2 rounded-lg hover:bg-slate-900 cursor-pointer border border-transparent hover:border-blue-500/30 transition-all space-y-1.5"
             title="Haz clic para editar pasos"
           >
-            <span className="text-[10px] font-bold uppercase text-blue-400 block">
-              📋 Pasos ({draft.steps?.length || 0})
-            </span>
+            <div className="flex items-center gap-1.5 text-blue-400">
+              <ListOrdered className="w-3.5 h-3.5" />
+              <span className="text-xs font-bold text-blue-400">
+                Pasos
+              </span>
+            </div>
             <div className="space-y-1">
               {draft.steps?.slice(0, 3).map((st, i) => (
                 <div key={i} className="flex items-start gap-1.5 text-[11px] text-slate-300">
@@ -284,9 +287,12 @@ function LivePreviewPanel({
             className="p-2 rounded-lg hover:bg-slate-900 cursor-pointer border border-transparent hover:border-emerald-500/30 transition-all space-y-1.5"
             title="Haz clic para editar requisitos"
           >
-            <span className="text-[10px] font-bold uppercase text-emerald-400 block">
-              ✅ Requisitos ({draft.requirements?.length || 0})
-            </span>
+            <div className="flex items-center gap-1.5 text-emerald-400">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span className="text-xs font-bold text-emerald-400">
+                Requisitos
+              </span>
+            </div>
             <div className="space-y-1">
               {draft.requirements?.slice(0, 2).map((req, i) => (
                 <div key={i} className="flex items-center gap-1.5 text-[11px] text-slate-300">
@@ -305,9 +311,12 @@ function LivePreviewPanel({
             className="p-2 rounded-lg hover:bg-slate-900 cursor-pointer border border-transparent hover:border-amber-500/30 transition-all space-y-1"
             title="Haz clic para editar FAQs"
           >
-            <span className="text-[10px] font-bold uppercase text-amber-400 block">
-              ❓ Preguntas Frecuentes ({draft.faqs?.length || 0})
-            </span>
+            <div className="flex items-center gap-1.5 text-amber-400">
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span className="text-xs font-bold text-amber-400">
+                Preguntas frecuentes
+              </span>
+            </div>
             {draft.faqs?.slice(0, 2).map((faq, i) => (
               <p key={i} className="text-[10px] text-slate-400 truncate italic">
                 • {faq.question}
@@ -569,20 +578,15 @@ export default function ServiceDetail({
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-blue-950 text-blue-300 border border-blue-800/60">
-                  {isEditing ? 'Editor Contextual Split-View' : 'Modo Administrador'}
-                </span>
-                {isEditing && isModified && (
-                  <span className="text-[10px] font-bold text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded-md border border-amber-800/80">
-                    ● Cambios sin guardar
-                  </span>
-                )}
-              </div>
-              <h2 className="text-sm sm:text-base font-bold text-white truncate font-display mt-0.5">
-                {draft.title || 'Edición de Trámite'}
+            <div className="min-w-0 flex items-center gap-2.5">
+              <h2 className="text-sm sm:text-base font-bold text-white truncate font-display">
+                {service.title ? 'Editar Trámite' : 'Nuevo Trámite'}
               </h2>
+              {isEditing && isModified && (
+                <span className="text-[10px] font-bold text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded-md border border-amber-800/80 shrink-0">
+                  ● Cambios sin guardar
+                </span>
+              )}
             </div>
           </div>
 
@@ -641,10 +645,6 @@ export default function ServiceDetail({
             <div className={`lg:col-span-3 space-y-1.5 bg-white border border-slate-200/90 rounded-2xl p-2.5 shadow-2xs ${
               mobileViewMode === 'preview' ? 'hidden lg:block' : 'block'
             }`}>
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-2 py-1 block">
-                Secciones del Editor
-              </span>
-
               {[
                 { id: 'general', label: 'General', icon: Info, desc: 'Título, categoría e ícono' },
                 { id: 'contenido', label: 'Contenido', icon: ListOrdered, desc: 'Pasos, requisitos y contacto' },
@@ -688,15 +688,15 @@ export default function ServiceDetail({
               {editorTab === 'general' && (
                 <div className="space-y-3.5">
                   <div className="border-b border-slate-100 pb-2">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                    <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                       <Info className="w-4 h-4 text-blue-600" />
-                      Información General
+                      Información general
                     </h3>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Categoría:</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Categoría</label>
                       <select
                         value={draft.category}
                         onChange={(e) => setDraft({ ...draft, category: e.target.value as any })}
@@ -709,7 +709,7 @@ export default function ServiceDetail({
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Ícono de Tarjeta:</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Ícono de tarjeta</label>
                       <select
                         value={draft.iconName || draft.icon || 'FileText'}
                         onChange={(e) => setDraft({ ...draft, iconName: e.target.value, icon: e.target.value })}
@@ -730,7 +730,7 @@ export default function ServiceDetail({
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Título del Trámite:</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Título del trámite</label>
                     <input
                       type="text"
                       value={draft.title}
@@ -741,7 +741,7 @@ export default function ServiceDetail({
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Descripción Corta (Catálogo):</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Descripción corta</label>
                     <input
                       type="text"
                       value={draft.shortDesc}
@@ -752,7 +752,7 @@ export default function ServiceDetail({
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Descripción Completa (Detalle):</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Descripción completa</label>
                     <textarea
                       rows={4}
                       value={draft.fullDescription || ''}
@@ -918,7 +918,7 @@ export default function ServiceDetail({
                     </h3>
                     <div className="space-y-2 text-xs">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Ubicación:</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Ubicación</label>
                         <input
                           type="text"
                           value={draft.location || ''}
@@ -928,7 +928,7 @@ export default function ServiceDetail({
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Horario:</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Horario</label>
                         <input
                           type="text"
                           value={draft.schedule || ''}
@@ -938,7 +938,7 @@ export default function ServiceDetail({
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Contacto / Extensión:</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Contacto / Extensión</label>
                         <input
                           type="text"
                           value={draft.contact || ''}
@@ -1011,7 +1011,7 @@ export default function ServiceDetail({
                           </div>
 
                           <div>
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Pregunta:</label>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Pregunta</label>
                             <input
                               type="text"
                               value={faq.question}
@@ -1022,7 +1022,7 @@ export default function ServiceDetail({
                           </div>
 
                           <div>
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Respuesta:</label>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Respuesta</label>
                             <textarea
                               rows={2}
                               value={faq.answer}
@@ -1051,7 +1051,7 @@ export default function ServiceDetail({
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase">URL de Imagen Banner:</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">URL de imagen banner</label>
                     <input
                       type="url"
                       value={draft.imageUrl || ''}
@@ -1062,7 +1062,7 @@ export default function ServiceDetail({
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase">URL de Video (YouTube / Vimeo / MP4):</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">URL de video (YouTube / Vimeo / MP4)</label>
                     <input
                       type="url"
                       value={draft.videoUrl || ''}
@@ -1074,7 +1074,7 @@ export default function ServiceDetail({
 
                   <div className="pt-2 space-y-2 border-t border-slate-100">
                     <div className="flex items-center justify-between">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Documentos Descargables (PDF):</label>
+                      <label className="text-xs font-bold text-slate-700">Documentos descargables (PDF)</label>
                       <button
                         type="button"
                         onClick={handleAddAttachment}
@@ -1158,7 +1158,7 @@ export default function ServiceDetail({
                     <div className="pt-3 border-t border-amber-200/80 bg-amber-50 p-3.5 rounded-2xl border space-y-2 animate-fadeIn">
                       <div className="flex items-center gap-1.5 text-amber-900">
                         <AlertTriangle className="w-4 h-4 text-amber-600" />
-                        <label className="text-xs font-extrabold uppercase tracking-wide">Mensaje del Aviso Importante:</label>
+                        <label className="text-xs font-bold text-slate-900">Mensaje del aviso importante</label>
                       </div>
                       <textarea
                         rows={3}

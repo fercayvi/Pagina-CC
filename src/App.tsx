@@ -15,7 +15,6 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState<'inicio' | 'noticias' | 'asistente'>('inicio');
   const [selectedService, setSelectedService] = useState<(Service & { hidden?: boolean }) | null>(null);
   const [serviceEditMode, setServiceEditMode] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'Nómina y Pagos' | 'Tarjetas y Créditos' | 'Control y Asistencia'>('all');
   
   // Admin State
@@ -92,7 +91,6 @@ export default function App() {
         setServiceEditMode(false);
         setIsAdminLoggedIn(false);
         setIsLoginModalOpen(false);
-        setSearchQuery('');
         setSelectedCategory('all');
       }, 90000); // 90 seconds
     };
@@ -124,20 +122,14 @@ export default function App() {
     setServiceEditMode(startEditing);
   };
 
-  // Filter services based on search text, category selection, and non-hidden status in public view
+  // Filter services based on category selection and non-hidden status in public view
   const filteredServices = useMemo(() => {
     return services.filter((service) => {
       if (service.hidden) return false;
-
-      const matchesSearch = 
-        service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        service.shortDesc.toLowerCase().includes(searchQuery.toLowerCase());
-      
       const matchesCategory = selectedCategory === 'all' || service.category === selectedCategory;
-      
-      return matchesSearch && matchesCategory;
+      return matchesCategory;
     });
-  }, [services, searchQuery, selectedCategory]);
+  }, [services, selectedCategory]);
 
   // Categories helper
   const categories = [
@@ -211,11 +203,9 @@ export default function App() {
                   {currentTab === 'inicio' && (
                     <div className="space-y-2 sm:space-y-2.5 animate-fadeIn">
                       
-                      {/* TopBar with Title, Search & Admin Lock */}
+                      {/* TopBar with Title & Admin Lock Button */}
                       <TopBar 
-                        searchQuery={searchQuery} 
-                        setSearchQuery={setSearchQuery} 
-                        onOpenAdminLogin={() => setIsLoginModalOpen(true)}
+                        setShowAdminLogin={setIsLoginModalOpen}
                       />
 
                       {/* Horizontal Categories Filters */}
@@ -251,7 +241,7 @@ export default function App() {
                         <div className="text-center py-10 bg-white border border-slate-200 rounded-2xl p-6">
                           <Info className="w-8 h-8 text-slate-300 mx-auto mb-2" />
                           <p className="text-xs font-bold text-slate-700">No se encontraron trámites</p>
-                          <p className="text-[11px] text-slate-400 mt-1">Prueba buscando con otros términos o seleccionando otra categoría.</p>
+                          <p className="text-[11px] text-slate-400 mt-1">Prueba seleccionando otra categoría.</p>
                         </div>
                       )}
 

@@ -22,7 +22,8 @@ import {
   Award,
   MessageSquare,
   Building2,
-  PhoneCall
+  PhoneCall,
+  LayoutDashboard
 } from 'lucide-react';
 import { Service, NewsItem, ServiceId, StepItem, ServiceFAQ, MonthlyRecognition, ContactInfo } from '../types';
 import { getDefaultServiceDetails, recognitionData, initialContact } from '../data';
@@ -412,9 +413,10 @@ export default function AdminPanel({
       {/* Top Header Dashboard Bar */}
       <div className="bg-slate-900 text-white rounded-2xl p-4 shadow-sm border border-slate-800 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-300 bg-blue-950/80 px-2.5 py-1 rounded-md border border-blue-800/60">
-            Panel Administrador
-          </span>
+          <h1 className="text-lg font-semibold text-white flex items-center gap-2">
+            <LayoutDashboard className="w-5 h-5 text-blue-400" />
+            <span>Panel de Administración</span>
+          </h1>
         </div>
 
         <button
@@ -439,7 +441,7 @@ export default function AdminPanel({
           }`}
         >
           <Layers className="w-4 h-4" />
-          <span>Gestionar Trámites ({services.length})</span>
+          <span>Trámites</span>
         </button>
 
         <button
@@ -452,7 +454,7 @@ export default function AdminPanel({
           }`}
         >
           <Newspaper className="w-4 h-4" />
-          <span>Gestionar Noticias ({news.length})</span>
+          <span>Noticias</span>
         </button>
 
         <button
@@ -465,7 +467,7 @@ export default function AdminPanel({
           }`}
         >
           <Building2 className="w-4 h-4" />
-          <span>Gestionar Contacto</span>
+          <span>Contacto</span>
         </button>
       </div>
 
@@ -475,19 +477,16 @@ export default function AdminPanel({
           <div className="flex items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
             <div>
               <h3 className="text-sm font-bold text-slate-900 font-display">
-                Catálogo Oficial de Trámites
+                Trámites
               </h3>
-              <p className="text-xs text-slate-500">
-                Edita, agrega u oculta los servicios disponibles para los colaboradores de la planta.
-              </p>
             </div>
             <button
               id="btn-add-service"
               onClick={handleOpenNewServiceModal}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-2xs flex items-center gap-1.5 shrink-0 active:scale-95"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-2xs flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>Agregar Nuevo Trámite</span>
+              <span>Nuevo Trámite</span>
             </button>
           </div>
 
@@ -507,11 +506,6 @@ export default function AdminPanel({
                     })}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100">
-                        {service.category}
-                      </span>
-                    </div>
                     <h4 className="text-sm font-bold text-slate-900 truncate">
                       {service.title}
                     </h4>
@@ -525,7 +519,7 @@ export default function AdminPanel({
                 <div className="flex items-center gap-1.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
                   <button
                     onClick={() => handleToggleHideService(service.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 border ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 border cursor-pointer ${
                       service.hidden 
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' 
                         : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 hover:text-slate-900'
@@ -538,10 +532,10 @@ export default function AdminPanel({
 
                   <button
                     onClick={() => handleOpenEditServiceModal(service)}
-                    className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1"
+                    className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
-                    <span>Editar Contenido</span>
+                    <span>Editar</span>
                   </button>
 
                   <button
@@ -686,14 +680,13 @@ export default function AdminPanel({
                     <Newspaper className="w-5 h-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
-                        {item.category}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-medium">
-                        {item.date}
-                      </span>
-                    </div>
+                    {item.date && (
+                      <div className="mb-1">
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          {item.date}
+                        </span>
+                      </div>
+                    )}
                     <h4 className="text-sm font-bold text-slate-900 truncate">
                       {item.title}
                     </h4>
@@ -707,10 +700,10 @@ export default function AdminPanel({
                 <div className="flex items-center gap-1.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
                   <button
                     onClick={() => handleOpenEditNewsModal(item)}
-                    className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1"
+                    className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
-                    <span>Editar Textos</span>
+                    <span>Editar</span>
                   </button>
 
                   <button
