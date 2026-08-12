@@ -9,10 +9,19 @@ export default function TopBar({ setShowAdminLogin }: TopBarProps) {
   return (
     <header id="app-top-header" className="bg-white rounded-2xl border border-slate-200/80 p-2.5 sm:p-3 shadow-xs">
       <div className="flex items-center justify-between gap-2.5 sm:gap-4">
-        {/* Header Title */}
-        <div>
+        {/* Header Title with Logo */}
+        <div className="flex items-center gap-3 sm:gap-4">
+          <img 
+            src="/logo.png" 
+            alt="Logo de la Empresa" 
+            className="h-9 sm:h-10 w-auto object-contain shrink-0"
+            onError={(e) => {
+              // Hide image if logo is missing or failing
+              e.currentTarget.style.display = 'none';
+            }}
+          />
           <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight font-display">
-            Guía de Trámites y Servicios RH
+            Servicios al Personal
           </h1>
         </div>
 

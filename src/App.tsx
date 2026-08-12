@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Info } from 'lucide-react';
+import { Info, MapPin } from 'lucide-react';
 import { Service, NewsItem, UserProfile, MonthlyRecognition, ContactInfo } from './types';
 import { initialServices, initialNews, initialRecognitions, userProfileData, initialContact } from './data';
 import BottomNav from './components/BottomNav';
@@ -207,6 +207,14 @@ export default function App() {
                       <TopBar 
                         setShowAdminLogin={setIsLoginModalOpen}
                       />
+
+                      {/* Banner Informativo (Recordatorio de Módulo) */}
+                      <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-start sm:items-center gap-3 shadow-xs my-2">
+                        <MapPin className="text-blue-600 shrink-0 mt-0.5 sm:mt-0" size={20} />
+                        <p className="text-sm text-blue-800 font-medium">
+                          ¿Necesitas ayuda extra? Recuerda que puedes acudir a nuestro módulo de <span className="font-bold">Servicios al Personal</span>, ubicado a un lado de Ropería.
+                        </p>
+                      </div>
 
                       {/* Horizontal Categories Filters */}
                       <div className="flex gap-2 overflow-x-auto pb-0.5 no-scrollbar">

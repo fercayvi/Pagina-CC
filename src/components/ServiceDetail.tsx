@@ -3,7 +3,8 @@ import {
   ChevronLeft, FileText, CheckCircle2, Clock, MapPin, Phone, 
   HelpCircle, Edit3, Save, Plus, Trash2, X, AlertCircle, Check,
   Image as ImageIcon, Video, FileDown, Eye, EyeOff, AlertTriangle,
-  ExternalLink, Download, Layers, Sparkles, GripVertical, ChevronUp, ChevronDown, Sliders, Info, ListOrdered
+  ExternalLink, Download, Layers, Sparkles, GripVertical, ChevronUp, ChevronDown, Sliders, Info, ListOrdered,
+  Maximize2, Minimize2
 } from 'lucide-react';
 import { Service, UserProfile, FAQ, StepItem, ServiceFAQ, ServiceAttachment } from '../types';
 import { getDefaultServiceDetails } from '../data';
@@ -164,169 +165,482 @@ function LivePreviewPanel({
   draft: Service & { hidden?: boolean };
   onSelectTab: (tab: 'general' | 'contenido' | 'faqs' | 'multimedia' | 'visibilidad') => void;
 }) {
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const videoInfo = getEmbedVideoInfo(draft.videoUrl);
 
   return (
-    <div className="bg-slate-900 rounded-2xl p-3.5 sm:p-4 text-white space-y-3.5 shadow-xl border border-slate-800">
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-        <div className="flex items-center gap-2">
-          <Eye className="w-4 h-4 text-blue-400" />
-          <span className="text-xs font-bold text-slate-200">
-            Vista previa
-          </span>
-        </div>
-      </div>
-
-      {/* Preview Card Mockup */}
-      <div className="bg-slate-950 rounded-xl p-3 border border-slate-800 space-y-3 text-slate-100 max-h-[600px] overflow-y-auto custom-scrollbar">
-        
-        {/* Banner Alert Notice */}
-        {draft.showAlertNotice && draft.alertNotice && (
-          <div 
-            onClick={() => onSelectTab('visibilidad')}
-            className="bg-amber-500 text-slate-950 p-2.5 rounded-lg text-xs font-bold flex items-start gap-2 cursor-pointer hover:opacity-90 transition-opacity"
-            title="Haz clic para editar el aviso"
+    <>
+      <div className="bg-white rounded-2xl p-3.5 sm:p-4 text-slate-900 shadow-sm border border-slate-200/90 space-y-3">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+          <button 
+            type="button"
+            onClick={() => setIsFullscreen(true)}
+            className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity text-left group"
+            title="Haz clic para ver la vista previa a pantalla completa"
           >
-            <AlertTriangle className="w-4 h-4 shrink-0 text-slate-950 mt-0.5" />
-            <div>
-              <span className="text-[9px] uppercase font-extrabold block text-slate-900">Aviso destacado</span>
-              <p className="text-[11px] font-semibold leading-tight">{draft.alertNotice}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Title & Header */}
-        <div 
-          onClick={() => onSelectTab('general')}
-          className="p-2.5 rounded-lg hover:bg-slate-900/80 cursor-pointer border border-transparent hover:border-blue-500/30 transition-all space-y-1"
-          title="Haz clic para editar información general"
-        >
-          <div className="flex items-center justify-between gap-1.5">
-            <span className="text-[9px] font-bold text-blue-400 bg-blue-950 px-2 py-0.5 rounded border border-blue-800/50">
-              {draft.category || 'Categoría'}
+            <Eye className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-bold text-slate-800 group-hover:text-blue-700">
+              Vista previa
             </span>
-          </div>
-          <h3 className="text-sm font-bold text-white font-display mt-1">{draft.title || 'Título sin definir'}</h3>
-          <p className="text-[11px] text-slate-400 line-clamp-2">{draft.shortDesc || draft.fullDescription}</p>
+            <span className="text-[10px] font-extrabold text-blue-700 bg-blue-50 border border-blue-200/80 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
+              <Maximize2 className="w-2.5 h-2.5 text-blue-600" />
+              Ampliar
+            </span>
+          </button>
         </div>
 
-        {/* Multimedia Preview */}
-        {(draft.imageUrl || videoInfo) && (
-          <div 
-            onClick={() => onSelectTab('multimedia')}
-            className="p-1 rounded-lg hover:bg-slate-900 cursor-pointer border border-transparent hover:border-purple-500/30 transition-all"
-            title="Haz clic para editar multimedia"
-          >
-            {draft.imageUrl && (
-              <img src={draft.imageUrl} alt="Banner" className="w-full h-24 object-cover rounded-lg" />
-            )}
-            {videoInfo && !draft.imageUrl && (
-              <div className="w-full h-24 bg-slate-900 rounded-lg flex items-center justify-center text-xs text-purple-400 font-bold border border-purple-900/50">
-                Video adjunto
+        {/* Preview Container Mockup */}
+        <div 
+          className="bg-slate-50 rounded-xl p-3 border border-slate-200 text-slate-900 max-h-[650px] overflow-y-auto custom-scrollbar relative group/preview"
+        >
+          {/* Banner Alert Notice */}
+          {draft.showAlertNotice && draft.alertNotice && (
+            <div 
+              onClick={() => onSelectTab('visibilidad')}
+              className="bg-amber-500 text-white rounded-xl p-3.5 shadow-sm flex items-start gap-2.5 cursor-pointer hover:opacity-95 transition-opacity mb-4"
+              title="Haz clic para editar el aviso"
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0 text-amber-100 mt-0.5" />
+              <div className="min-w-0 flex-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-100 block">Aviso Importante</span>
+                <p className="text-xs font-medium leading-relaxed">{draft.alertNotice}</p>
               </div>
-            )}
-          </div>
-        )}
+            </div>
+          )}
 
-        {/* Attachments Preview */}
-        {draft.attachments && draft.attachments.length > 0 && (
+          {/* Header Card (Información General) */}
           <div 
-            onClick={() => onSelectTab('multimedia')}
-            className="p-2 rounded-lg hover:bg-slate-900 cursor-pointer border border-transparent hover:border-purple-500/30 transition-all space-y-1"
+            onClick={() => onSelectTab('general')}
+            className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4 cursor-pointer hover:border-blue-300 transition-all flex flex-col gap-2"
+            title="Haz clic para editar información general"
           >
-            <div className="flex items-center gap-1.5 text-purple-400">
-              <FileDown className="w-3.5 h-3.5" />
-              <span className="text-xs font-bold text-purple-400">
-                Adjuntos PDF
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[10px] font-extrabold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md uppercase tracking-wider border border-blue-200/60">
+                {draft.category || 'Categoría'}
               </span>
             </div>
-            {draft.attachments.map((att, i) => (
-              <div key={i} className="text-[11px] font-semibold text-slate-300 truncate bg-slate-900/80 px-2 py-1 rounded border border-slate-800 flex items-center gap-1.5">
-                <FileText className="w-3 h-3 text-purple-400 shrink-0" />
-                <span className="truncate">{att.name || 'Documento sin título'}</span>
-              </div>
-            ))}
-          </div>
-        )}
 
-        {/* Steps Preview */}
-        {draft.showSteps !== false && (
-          <div 
-            onClick={() => onSelectTab('contenido')}
-            className="p-2 rounded-lg hover:bg-slate-900 cursor-pointer border border-transparent hover:border-blue-500/30 transition-all space-y-1.5"
-            title="Haz clic para editar pasos"
-          >
-            <div className="flex items-center gap-1.5 text-blue-400">
-              <ListOrdered className="w-3.5 h-3.5" />
-              <span className="text-xs font-bold text-blue-400">
-                Pasos
-              </span>
+            <div className="flex items-center gap-3 pt-1">
+              <div className="bg-blue-50 text-blue-600 rounded-lg p-2 shrink-0 flex items-center justify-center border border-blue-100">
+                {React.createElement(SERVICE_ICON_MAP[draft.iconName || draft.icon || 'FileText'] || FileText, {
+                  className: "w-5 h-5"
+                })}
+              </div>
+              <h3 className="text-sm font-bold text-slate-900 font-display line-clamp-2">{draft.title || 'Título sin definir'}</h3>
             </div>
-            <div className="space-y-1">
-              {draft.steps?.slice(0, 3).map((st, i) => (
-                <div key={i} className="flex items-start gap-1.5 text-[11px] text-slate-300">
-                  <span className="w-4 h-4 rounded-full bg-blue-600 text-white font-extrabold text-[9px] flex items-center justify-center shrink-0">
-                    {i + 1}
-                  </span>
-                  <span className="truncate">{st.title || st.desc}</span>
+
+            <p className="text-xs text-slate-600 font-medium leading-relaxed line-clamp-3 pt-1 border-t border-slate-100 mt-1">
+              {draft.shortDesc || draft.fullDescription}
+            </p>
+          </div>
+
+          {/* Multimedia Preview */}
+          {(draft.imageUrl || videoInfo) && (
+            <div 
+              onClick={() => onSelectTab('multimedia')}
+              className="bg-white rounded-xl border border-slate-200 shadow-sm p-3 mb-4 cursor-pointer hover:border-purple-300 transition-all space-y-2"
+              title="Haz clic para editar multimedia"
+            >
+              {draft.imageUrl && (
+                <img src={draft.imageUrl} alt="Banner" className="w-full h-32 object-cover rounded-lg border border-slate-100" />
+              )}
+              {videoInfo && !draft.imageUrl && (
+                <div className="w-full h-28 bg-slate-900 rounded-lg flex items-center justify-center text-xs text-purple-300 font-bold border border-purple-900/50">
+                  Video adjunto
                 </div>
-              ))}
-              {(draft.steps?.length || 0) > 3 && (
-                <span className="text-[10px] text-slate-500 block italic">
-                  +{(draft.steps?.length || 0) - 3} pasos más...
-                </span>
               )}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Requirements Preview */}
-        {draft.showRequirements !== false && (
-          <div 
-            onClick={() => onSelectTab('contenido')}
-            className="p-2 rounded-lg hover:bg-slate-900 cursor-pointer border border-transparent hover:border-emerald-500/30 transition-all space-y-1.5"
-            title="Haz clic para editar requisitos"
-          >
-            <div className="flex items-center gap-1.5 text-emerald-400">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span className="text-xs font-bold text-emerald-400">
-                Requisitos
-              </span>
+          {/* Attachments Preview */}
+          {draft.attachments && draft.attachments.length > 0 && (
+            <div 
+              onClick={() => onSelectTab('multimedia')}
+              className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4 cursor-pointer hover:border-purple-300 transition-all space-y-2.5"
+              title="Haz clic para editar adjuntos"
+            >
+              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                <FileDown className="w-4 h-4 text-emerald-600" />
+                Adjuntos PDF
+              </h4>
+              <div className="space-y-1.5">
+                {draft.attachments.map((att, i) => (
+                  <div key={i} className="p-2 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1 flex items-center gap-2">
+                      <FileText className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                      <span className="text-xs font-bold text-slate-800 truncate">{att.name || 'Documento PDF'}</span>
+                    </div>
+                    <Download className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="space-y-1">
-              {draft.requirements?.slice(0, 2).map((req, i) => (
-                <div key={i} className="flex items-center gap-1.5 text-[11px] text-slate-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
-                  <span className="truncate">{req}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* FAQs Preview */}
-        {draft.showFaqs !== false && (
-          <div 
-            onClick={() => onSelectTab('faqs')}
-            className="p-2 rounded-lg hover:bg-slate-900 cursor-pointer border border-transparent hover:border-amber-500/30 transition-all space-y-1"
-            title="Haz clic para editar FAQs"
-          >
-            <div className="flex items-center gap-1.5 text-amber-400">
-              <HelpCircle className="w-3.5 h-3.5" />
-              <span className="text-xs font-bold text-amber-400">
-                Preguntas frecuentes
-              </span>
+          {/* Procedure Steps Preview */}
+          {draft.showSteps !== false && draft.steps && draft.steps.length > 0 && (
+            <div 
+              onClick={() => onSelectTab('contenido')}
+              className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4 cursor-pointer hover:border-blue-300 transition-all space-y-3"
+              title="Haz clic para editar pasos"
+            >
+              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                <ListOrdered className="w-4 h-4 text-blue-600" />
+                Pasos del Procedimiento
+              </h4>
+              <div className="space-y-2.5">
+                {draft.steps.slice(0, 3).map((st, i) => (
+                  <div key={i} className="flex items-start gap-3 bg-slate-50 p-2.5 rounded-lg border border-slate-200/80">
+                    <span className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                      {st.num || i + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      {st.title && <h5 className="text-xs font-bold text-slate-900 leading-tight">{st.title}</h5>}
+                      <p className="text-xs text-slate-600 font-medium leading-relaxed mt-0.5 line-clamp-2">{st.desc}</p>
+                    </div>
+                  </div>
+                ))}
+                {draft.steps.length > 3 && (
+                  <span className="text-[11px] text-blue-600 font-semibold block text-center pt-1">
+                    +{draft.steps.length - 3} pasos más...
+                  </span>
+                )}
+              </div>
             </div>
-            {draft.faqs?.slice(0, 2).map((faq, i) => (
-              <p key={i} className="text-[10px] text-slate-400 truncate italic">
-                • {faq.question}
-              </p>
-            ))}
-          </div>
-        )}
+          )}
 
+          {/* Requirements Preview */}
+          {draft.showRequirements !== false && draft.requirements && draft.requirements.length > 0 && (
+            <div 
+              onClick={() => onSelectTab('contenido')}
+              className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4 cursor-pointer hover:border-emerald-300 transition-all space-y-2.5"
+              title="Haz clic para editar requisitos"
+            >
+              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                Requisitos Necesarios
+              </h4>
+              <ul className="space-y-2">
+                {draft.requirements.slice(0, 4).map((req, i) => (
+                  <li key={i} className="flex items-start gap-2 text-xs text-slate-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0"></span>
+                    <span className="line-clamp-2">{req}</span>
+                  </li>
+                ))}
+                {draft.requirements.length > 4 && (
+                  <span className="text-[11px] text-emerald-600 font-semibold block text-center pt-1">
+                    +{draft.requirements.length - 4} requisitos más...
+                  </span>
+                )}
+              </ul>
+            </div>
+          )}
+
+          {/* Location and Contact Preview */}
+          {draft.showContact !== false && (draft.location || draft.schedule || draft.contact) && (
+            <div 
+              onClick={() => onSelectTab('contenido')}
+              className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4 cursor-pointer hover:border-blue-300 transition-all space-y-2.5"
+              title="Haz clic para editar datos de contacto"
+            >
+              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-blue-600" />
+                Atención y Ubicación
+              </h4>
+              <div className="space-y-2 text-xs text-slate-700">
+                {draft.location && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span className="line-clamp-1">{draft.location}</span>
+                  </div>
+                )}
+                {draft.schedule && (
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span className="line-clamp-1">{draft.schedule}</span>
+                  </div>
+                )}
+                {draft.contact && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span className="font-semibold text-blue-700 line-clamp-1">{draft.contact}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* FAQs Preview */}
+          {draft.showFaqs !== false && draft.faqs && draft.faqs.length > 0 && (
+            <div 
+              onClick={() => onSelectTab('faqs')}
+              className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4 cursor-pointer hover:border-amber-300 transition-all space-y-3"
+              title="Haz clic para editar FAQs"
+            >
+              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                <HelpCircle className="w-4 h-4 text-blue-600" />
+                Preguntas Frecuentes
+              </h4>
+              <div className="space-y-2">
+                {draft.faqs.slice(0, 3).map((faq, i) => (
+                  <div key={i} className="p-2.5 rounded-lg border border-slate-200 bg-slate-50 flex flex-col gap-1.5">
+                    <div className="flex items-start gap-2">
+                      <span className="bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded shrink-0">FAQ</span>
+                      <span className="text-xs font-bold text-slate-800 leading-snug mt-0.5 line-clamp-2">{faq.question}</span>
+                    </div>
+                    {faq.answer && (
+                      <p className="text-xs text-slate-600 leading-relaxed pl-1 pt-1 border-t border-slate-200/60 line-clamp-2">{faq.answer}</p>
+                    )}
+                  </div>
+                ))}
+                {draft.faqs.length > 3 && (
+                  <span className="text-[11px] text-amber-600 font-semibold block text-center pt-1">
+                    +{draft.faqs.length - 3} preguntas más...
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+        </div>
       </div>
-    </div>
+
+      {/* FULLSCREEN PREVIEW MODAL OVERLAY */}
+      {isFullscreen && (
+        <div 
+          className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fadeIn"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsFullscreen(false);
+          }}
+        >
+          <div className="bg-slate-100 rounded-2xl border border-slate-200 shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-scaleUp">
+            
+            {/* Modal Header */}
+            <div className="bg-slate-900 text-white p-4 sm:px-6 flex items-center justify-between border-b border-slate-800 shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2.5 rounded-xl bg-blue-600 text-white shrink-0">
+                  <Eye className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm sm:text-base font-bold text-white font-display truncate">
+                      Vista Previa en Pantalla Completa
+                    </h3>
+                    <span className="text-[10px] font-extrabold text-blue-300 bg-blue-950 px-2 py-0.5 rounded-md border border-blue-800 shrink-0">
+                      Así se verá publicado
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 truncate hidden sm:block">
+                    Vista previa exacta interactiva del trámite para los empleados.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsFullscreen(false)}
+                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5 border border-slate-700 cursor-pointer shrink-0 active:scale-95"
+                title="Cerrar vista previa ampliada"
+              >
+                <Minimize2 className="w-4 h-4" />
+                <span>Cerrar</span>
+              </button>
+            </div>
+
+            {/* Modal Body: Full Trámite Render */}
+            <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+              
+              {/* Alert Notice */}
+              {draft.showAlertNotice && draft.alertNotice && (
+                <div className="bg-amber-500 text-white rounded-2xl p-4 shadow-md flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 shrink-0 text-amber-100 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-100 mb-0.5">Aviso Importante</h4>
+                    <p className="text-xs font-medium leading-relaxed">{draft.alertNotice}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Header Card */}
+              <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-extrabold text-blue-700 bg-blue-50 px-3 py-1 rounded-md uppercase tracking-wider border border-blue-200/60">
+                    {draft.category || 'Categoría'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3 pt-1">
+                  <div className="bg-blue-50 text-blue-600 rounded-xl p-2.5 shrink-0 border border-blue-100">
+                    {React.createElement(SERVICE_ICON_MAP[draft.iconName || draft.icon || 'FileText'] || FileText, {
+                      className: "w-7 h-7 text-blue-600"
+                    })}
+                  </div>
+                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900 font-display">{draft.title || 'Título sin definir'}</h1>
+                </div>
+
+                <p className="text-sm text-slate-600 font-medium leading-relaxed pt-2 border-t border-slate-100">
+                  {draft.fullDescription || draft.shortDesc}
+                </p>
+              </div>
+
+              {/* Multimedia: Banner and/or Video */}
+              {(draft.imageUrl || videoInfo) && (
+                <div className={`grid grid-cols-1 ${draft.imageUrl && videoInfo ? 'md:grid-cols-2' : ''} gap-4`}>
+                  {draft.imageUrl && (
+                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
+                      <img src={draft.imageUrl} alt={draft.title} className="w-full h-56 object-cover" />
+                    </div>
+                  )}
+                  {videoInfo && (
+                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs p-2">
+                      <div className="aspect-video w-full rounded-xl overflow-hidden bg-black">
+                        {videoInfo.type === 'direct' ? (
+                          <video src={videoInfo.embedUrl} controls className="w-full h-full" />
+                        ) : (
+                          <iframe 
+                            src={videoInfo.embedUrl} 
+                            title="Video explicativo" 
+                            className="w-full h-full border-0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowFullScreen
+                          />
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Downloadable PDF Formats */}
+              {draft.attachments && draft.attachments.length > 0 && (
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3">
+                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                    <FileDown className="w-4 h-4 text-emerald-600" />
+                    Formatos y Documentos Descargables
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {draft.attachments.map((att, idx) => (
+                      <a
+                        key={idx}
+                        href={att.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50/50 hover:border-emerald-300 transition-all flex items-center justify-between gap-2 group"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold text-slate-800 group-hover:text-emerald-800 truncate">{att.name || 'Documento PDF'}</p>
+                          <p className="text-[10px] text-slate-400 uppercase">Documento Oficial PDF</p>
+                        </div>
+                        <Download className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 shrink-0" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Procedure Steps */}
+              {draft.showSteps !== false && draft.steps && draft.steps.length > 0 && (
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3">
+                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                    <ListOrdered className="w-4 h-4 text-blue-600" />
+                    Paso a Paso del Trámite
+                  </h3>
+                  <div className="space-y-3">
+                    {draft.steps.map((st, idx) => (
+                      <div key={idx} className="flex items-start gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                        <span className="w-7 h-7 rounded-full bg-blue-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0">
+                          {st.num || idx + 1}
+                        </span>
+                        <div>
+                          {st.title && <h4 className="text-xs font-bold text-slate-900">{st.title}</h4>}
+                          <p className="text-xs text-slate-600 font-medium leading-relaxed mt-0.5">{st.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Requirements & Location */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {draft.showRequirements !== false && draft.requirements && draft.requirements.length > 0 && (
+                  <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3">
+                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      Requisitos Necesarios
+                    </h3>
+                    <ul className="space-y-2">
+                      {draft.requirements.map((req, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-xs text-slate-700">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0"></span>
+                          <span>{req}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {draft.showContact !== false && (draft.location || draft.schedule || draft.contact) && (
+                  <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3">
+                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-blue-600" />
+                      Atención y Ubicación
+                    </h3>
+                    <div className="space-y-2.5 text-xs text-slate-700">
+                      {draft.location && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+                          <span>{draft.location}</span>
+                        </div>
+                      )}
+                      {draft.schedule && (
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-slate-400 shrink-0" />
+                          <span>{draft.schedule}</span>
+                        </div>
+                      )}
+                      {draft.contact && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="w-4 h-4 text-slate-400 shrink-0" />
+                          <span className="font-semibold text-blue-700">{draft.contact}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* FAQs Accordion */}
+              {draft.showFaqs !== false && draft.faqs && draft.faqs.length > 0 && (
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3">
+                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                    <HelpCircle className="w-4 h-4 text-blue-600" />
+                    Preguntas Frecuentes
+                  </h3>
+                  <FAQAccordion items={draft.faqs} />
+                </div>
+              )}
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-slate-900 text-white p-3.5 sm:px-6 flex items-center justify-between border-t border-slate-800 shrink-0">
+              <span className="text-xs text-slate-400 hidden sm:inline">
+                Vista previa completa en tiempo real.
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsFullscreen(false)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer ml-auto active:scale-95"
+              >
+                Volver a la Edición
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

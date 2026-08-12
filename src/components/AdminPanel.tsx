@@ -23,11 +23,135 @@ import {
   MessageSquare,
   Building2,
   PhoneCall,
-  LayoutDashboard
+  LayoutDashboard,
+  GripVertical
 } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Service, NewsItem, ServiceId, StepItem, ServiceFAQ, MonthlyRecognition, ContactInfo } from '../types';
 import { getDefaultServiceDetails, recognitionData, initialContact } from '../data';
 import { SERVICE_ICON_MAP } from './ServiceCard';
+
+interface SortableServiceItemProps {
+  key?: React.Key;
+  service: Service & { hidden?: boolean };
+  onToggleHide: (id: string) => void;
+  onEdit: (service: Service & { hidden?: boolean }) => void;
+  onDelete: (id: string, title?: string) => void;
+}
+
+function SortableServiceItem({ service, onToggleHide, onEdit, onDelete }: SortableServiceItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: service.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const IconComponent = SERVICE_ICON_MAP[service.iconName || service.icon || 'FileText'] || FileText;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`bg-white border rounded-2xl p-4 shadow-2xs flex flex-col justify-between text-left transition-all ${
+        isDragging
+          ? 'z-50 shadow-2xl scale-105 border-blue-400 rotate-1 bg-white opacity-95 transition-all'
+          : `transition-transform duration-200 ${
+              service.hidden ? 'opacity-60 border-slate-200 bg-slate-50' : 'border-slate-200/90 hover:border-slate-300'
+            }`
+      }`}
+    >
+      {/* Top Header: Icon Left, Drag Handle Right */}
+      <div>
+        <div className="flex items-center justify-between w-full mb-3">
+          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 font-bold flex items-center justify-center shrink-0 border border-slate-200">
+            <IconComponent className="w-5 h-5 text-slate-600" />
+          </div>
+
+          <button
+            type="button"
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md p-2 transition-colors touch-none border-none bg-transparent"
+            title="Arrastrar para reordenar"
+          >
+            <GripVertical className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Card Content */}
+        <div className="space-y-1">
+          <h4 className="text-sm font-bold text-slate-900 line-clamp-1" title={service.title}>
+            {service.title}
+          </h4>
+          <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+            {service.shortDesc}
+          </p>
+        </div>
+      </div>
+
+      {/* Footer Actions */}
+      <div className="border-t border-slate-100 mt-4 pt-4 flex items-center justify-between gap-1.5">
+        <button
+          onClick={() => onToggleHide(service.id)}
+          className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 border cursor-pointer ${
+            service.hidden 
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' 
+              : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 hover:text-slate-900'
+          }`}
+          title={service.hidden ? 'Hacer visible' : 'Ocultar trámite'}
+        >
+          {service.hidden ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+          <span>{service.hidden ? 'Mostrar' : 'Ocultar'}</span>
+        </button>
+
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => onEdit(service)}
+            className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            <span>Editar</span>
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(service.id, service.title);
+            }}
+            className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl transition-colors cursor-pointer"
+            title="Eliminar trámite"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface AdminPanelProps {
   services: (Service & { hidden?: boolean })[];
@@ -93,6 +217,33 @@ export default function AdminPanel({
     id: string;
     title: string;
   } | null>(null);
+
+  // Configure dnd-kit sensors with pointer activation constraints
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = services.findIndex((item) => item.id === active.id);
+      const newIndex = services.findIndex((item) => item.id === over.id);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const updatedServices = arrayMove(services, oldIndex, newIndex);
+        onUpdateServices(updatedServices);
+        showToast('Orden de trámites actualizado.');
+      }
+    }
+  };
 
   // Helper for notification toast
   const showToast = (msg: string) => {
@@ -491,67 +642,28 @@ export default function AdminPanel({
           </div>
 
           {/* Services List */}
-          <div className="space-y-2.5">
-            {services.map((service) => (
-              <div
-                key={service.id}
-                className={`bg-white border rounded-2xl p-4 shadow-2xs transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                  service.hidden ? 'opacity-60 border-slate-200 bg-slate-50' : 'border-slate-200/90 hover:border-slate-300'
-                }`}
-              >
-                <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 font-bold flex items-center justify-center shrink-0 border border-slate-200 mt-0.5">
-                    {React.createElement(SERVICE_ICON_MAP[service.iconName || service.icon || 'FileText'] || FileText, {
-                      className: "w-5 h-5 text-slate-600"
-                    })}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h4 className="text-sm font-bold text-slate-900 truncate">
-                      {service.title}
-                    </h4>
-                    <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
-                      {service.shortDesc}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-1.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
-                  <button
-                    onClick={() => handleToggleHideService(service.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 border cursor-pointer ${
-                      service.hidden 
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' 
-                        : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 hover:text-slate-900'
-                    }`}
-                    title={service.hidden ? 'Hacer visible' : 'Ocultar trámite'}
-                  >
-                    {service.hidden ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                    <span>{service.hidden ? 'Mostrar' : 'Ocultar'}</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleOpenEditServiceModal(service)}
-                    className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    <span>Editar</span>
-                  </button>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteService(service.id, service.title);
-                    }}
-                    className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl transition-colors cursor-pointer"
-                    title="Eliminar trámite"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={services.map((s) => s.id)}
+              strategy={rectSortingStrategy}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {services.map((service) => (
+                  <SortableServiceItem
+                    key={service.id}
+                    service={service}
+                    onToggleHide={handleToggleHideService}
+                    onEdit={handleOpenEditServiceModal}
+                    onDelete={handleDeleteService}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
         </div>
       )}
 
