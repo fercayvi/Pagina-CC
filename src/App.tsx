@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Info, MapPin } from 'lucide-react';
-import { Service, NewsItem, UserProfile, MonthlyRecognition, ContactInfo } from './types';
-import { initialServices, initialNews, initialRecognitions, userProfileData, initialContact } from './data';
+import { Service, NewsItem, UserProfile, ContactInfo } from './types';
+import { initialServices, initialNews, userProfileData, initialContact } from './data';
 import BottomNav from './components/BottomNav';
 import TopBar from './components/TopBar';
 import ServiceCard from './components/ServiceCard';
@@ -30,29 +30,6 @@ export default function App() {
     const saved = localStorage.getItem('cc-news');
     return saved ? JSON.parse(saved) : initialNews;
   });
-  const [recognitions, setRecognitions] = useState<MonthlyRecognition[]>(() => {
-    const saved = localStorage.getItem('cc-recognitions');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    const oldSaved = localStorage.getItem('cc-recognition');
-    if (oldSaved) {
-      try {
-        const parsed = JSON.parse(oldSaved);
-        if (parsed && typeof parsed === 'object') {
-          return [{ id: 'rec-1', ...parsed }];
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    return initialRecognitions;
-  });
   const [contactInfo, setContactInfo] = useState<ContactInfo>(() => {
     const saved = localStorage.getItem('cc-contact');
     return saved ? JSON.parse(saved) : initialContact;
@@ -66,10 +43,6 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('cc-news', JSON.stringify(news));
   }, [news]);
-
-  useEffect(() => {
-    localStorage.setItem('cc-recognitions', JSON.stringify(recognitions));
-  }, [recognitions]);
 
   useEffect(() => {
     localStorage.setItem('cc-contact', JSON.stringify(contactInfo));
@@ -188,8 +161,6 @@ export default function App() {
                   onSelectService={handleSelectService}
                   news={news}
                   onUpdateNews={setNews}
-                  recognitions={recognitions}
-                  onUpdateRecognitions={setRecognitions}
                   contactInfo={contactInfo}
                   onUpdateContact={setContactInfo}
                   onLogout={() => {
@@ -257,7 +228,7 @@ export default function App() {
                   )}
 
                   {/* TAB 2: NOTICIAS */}
-                  {currentTab === 'noticias' && <NewsTab newsList={news} recognitionsList={recognitions} />}
+                  {currentTab === 'noticias' && <NewsTab newsList={news} />}
 
                   {/* TAB 3: ASISTENTE */}
                   {currentTab === 'asistente' && <AsistenteTab user={user} contactInfo={contactInfo} />}
