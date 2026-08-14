@@ -32,7 +32,7 @@ export const initialServices: Service[] = [
   {
     id: ServiceId.RecibosCIF,
     title: 'Mis Recibos de Nómina',
-    iconName: 'FileCheck',
+    iconName: 'ReceiptText',
     shortDesc: 'Guía paso a paso para solicitar recibos impresos o digitales y consultar el Timbrado CIF.',
     category: 'Nómina y Pagos'
   },
@@ -71,21 +71,21 @@ export const initialServices: Service[] = [
   {
     id: ServiceId.Vacaciones,
     title: 'Mis Vacaciones',
-    iconName: 'CalendarDays',
+    iconName: 'Palmtree',
     shortDesc: 'Políticas de días disponibles, reglas de uso, Home Week, Días Flex y tiempos de solicitud.',
     category: 'Control y Asistencia'
   },
   {
     id: ServiceId.Incapacidades,
     title: 'Incapacidades IMSS',
-    iconName: 'ShieldAlert',
+    iconName: 'Stethoscope',
     shortDesc: 'Tipos de incapacidad, documentación requerida del IMSS y proceso para reportarla.',
     category: 'Control y Asistencia'
   },
   {
     id: ServiceId.RelojChecador,
     title: 'Checador y Asistencia',
-    iconName: 'Clock',
+    iconName: 'Fingerprint',
     shortDesc: 'Guía de uso de lectores en planta, política sobre omisión de marcas y aclaraciones de asistencia.',
     category: 'Control y Asistencia'
   }

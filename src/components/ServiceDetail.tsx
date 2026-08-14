@@ -1028,16 +1028,19 @@ export default function ServiceDetail({
                         onChange={(e) => setDraft({ ...draft, iconName: e.target.value, icon: e.target.value })}
                         className="w-full text-xs font-bold text-slate-800 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
                       >
-                        <option value="Banknote">💵 Billete</option>
-                        <option value="FileText">📄 Documento</option>
-                        <option value="FileCheck">✅ Documento Verificado</option>
-                        <option value="HelpCircle">❓ Duda / Ayuda</option>
-                        <option value="CreditCard">💳 Tarjeta</option>
-                        <option value="PiggyBank">🐷 Ahorro</option>
-                        <option value="Home">🏠 Casa</option>
-                        <option value="Calendar">📅 Calendario</option>
-                        <option value="Shield">🛡️ Seguridad</option>
-                        <option value="Clock">⏰ Reloj</option>
+                        <option value="Banknote">💵 Billete / Pagos (Banknote)</option>
+                        <option value="ReceiptText">🧾 Recibo de Nómina (ReceiptText)</option>
+                        <option value="HelpCircle">❓ Dudas / Aclaración (HelpCircle)</option>
+                        <option value="CreditCard">💳 Tarjeta / Vales (CreditCard)</option>
+                        <option value="PiggyBank">🐷 Ahorro / Préstamos (PiggyBank)</option>
+                        <option value="Home">🏠 Vivienda / Infonavit (Home)</option>
+                        <option value="Palmtree">🌴 Vacaciones (Palmtree)</option>
+                        <option value="Stethoscope">🩺 Incapacidad IMSS (Stethoscope)</option>
+                        <option value="Fingerprint">👆 Checador / Huella (Fingerprint)</option>
+                        <option value="FileText">📄 Documento (FileText)</option>
+                        <option value="FileCheck">✅ Trámite Verificado (FileCheck)</option>
+                        <option value="Clock">⏰ Reloj (Clock)</option>
+                        <option value="Shield">🛡️ Seguridad (Shield)</option>
                       </select>
                     </div>
                   </div>

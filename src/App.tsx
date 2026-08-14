@@ -28,7 +28,7 @@ export default function App() {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          // Map legacy titles to direct kiosk titles
+          // Map legacy titles & icons to direct kiosk format
           const titleMap: Record<string, string> = {
             'Políticas de Pago': 'Días y Fechas de Pago',
             'Recibos de Nómina & CIF': 'Mis Recibos de Nómina',
@@ -39,11 +39,28 @@ export default function App() {
             'Incapacidades': 'Incapacidades IMSS',
             'Reloj Checador': 'Checador y Asistencia'
           };
+          const iconMigrationMap: Record<string, string> = {
+            'politicas-pago': 'Banknote',
+            'recibos-cif': 'ReceiptText',
+            'aclaracion-pago': 'HelpCircle',
+            'vales-tarjeta-nomina': 'CreditCard',
+            'caja-ahorro': 'PiggyBank',
+            'infonavit': 'Home',
+            'vacaciones': 'Palmtree',
+            'incapacidades': 'Stethoscope',
+            'reloj-checador': 'Fingerprint'
+          };
           return parsed.map((svc: Service & { hidden?: boolean }) => {
-            if (titleMap[svc.title]) {
-              return { ...svc, title: titleMap[svc.title] };
-            }
-            return svc;
+            const newTitle = titleMap[svc.title] || svc.title;
+            const updatedIcon = (!svc.iconName || svc.iconName === 'FileText' || svc.iconName === 'FileCheck' || svc.iconName === 'HelpCircle' || svc.iconName === 'CalendarDays' || svc.iconName === 'ShieldAlert' || svc.iconName === 'Clock') && iconMigrationMap[svc.id]
+              ? iconMigrationMap[svc.id]
+              : (svc.iconName || iconMigrationMap[svc.id] || 'FileText');
+            return {
+              ...svc,
+              title: newTitle,
+              iconName: updatedIcon,
+              icon: updatedIcon
+            };
           });
         }
       } catch (e) {
