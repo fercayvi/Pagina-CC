@@ -24,21 +24,21 @@ export const initialServices: Service[] = [
   // 1. Módulo "Nómina y Pagos"
   {
     id: ServiceId.PoliticasPago,
-    title: 'Políticas de Pago',
+    title: 'Días y Fechas de Pago',
     iconName: 'Banknote',
     shortDesc: 'Explicación de fechas de pago, periodicidad, conceptos aplicables y consultas frecuentes.',
     category: 'Nómina y Pagos'
   },
   {
     id: ServiceId.RecibosCIF,
-    title: 'Recibos de Nómina & CIF',
+    title: 'Mis Recibos de Nómina',
     iconName: 'FileCheck',
     shortDesc: 'Guía paso a paso para solicitar recibos impresos o digitales y consultar el Timbrado CIF.',
     category: 'Nómina y Pagos'
   },
   {
     id: ServiceId.AclaracionPago,
-    title: 'Aclaraciones de Nómina',
+    title: 'Dudas con Mi Pago',
     iconName: 'HelpCircle',
     shortDesc: 'Contactos de Talento y Cultura, horarios de atención y FAQs sobre dudas de pago.',
     category: 'Nómina y Pagos'
@@ -47,14 +47,14 @@ export const initialServices: Service[] = [
   // 2. Módulo "Tarjetas y Créditos"
   {
     id: ServiceId.ValesTarjetaNomina,
-    title: 'Vales y Tarjeta Nómina',
+    title: 'Mi Tarjeta y Vales',
     iconName: 'CreditCard',
     shortDesc: 'Información sobre solicitud, uso, reposición por robo o extravío y FAQs.',
     category: 'Tarjetas y Créditos'
   },
   {
     id: ServiceId.CajaAhorro,
-    title: 'Caja de Ahorro y Préstamos',
+    title: 'Préstamos y Ahorro',
     iconName: 'PiggyBank',
     shortDesc: 'Reglas de acceso a la caja de ahorro, tipos de préstamos y procedimiento de solicitud informativa.',
     category: 'Tarjetas y Créditos'
@@ -70,21 +70,21 @@ export const initialServices: Service[] = [
   // 3. Módulo "Control y Asistencia"
   {
     id: ServiceId.Vacaciones,
-    title: 'Vacaciones, Flex & Home Week',
+    title: 'Mis Vacaciones',
     iconName: 'CalendarDays',
     shortDesc: 'Políticas de días disponibles, reglas de uso, Home Week, Días Flex y tiempos de solicitud.',
     category: 'Control y Asistencia'
   },
   {
     id: ServiceId.Incapacidades,
-    title: 'Incapacidades',
+    title: 'Incapacidades IMSS',
     iconName: 'ShieldAlert',
     shortDesc: 'Tipos de incapacidad, documentación requerida del IMSS y proceso para reportarla.',
     category: 'Control y Asistencia'
   },
   {
     id: ServiceId.RelojChecador,
-    title: 'Reloj Checador',
+    title: 'Checador y Asistencia',
     iconName: 'Clock',
     shortDesc: 'Guía de uso de lectores en planta, política sobre omisión de marcas y aclaraciones de asistencia.',
     category: 'Control y Asistencia'

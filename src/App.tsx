@@ -24,7 +24,33 @@ export default function App() {
   // Dynamic content states with LocalStorage persistence
   const [services, setServices] = useState<(Service & { hidden?: boolean })[]>(() => {
     const saved = localStorage.getItem('cc-services');
-    return saved ? JSON.parse(saved) : initialServices;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // Map legacy titles to direct kiosk titles
+          const titleMap: Record<string, string> = {
+            'Políticas de Pago': 'Días y Fechas de Pago',
+            'Recibos de Nómina & CIF': 'Mis Recibos de Nómina',
+            'Aclaraciones de Nómina': 'Dudas con Mi Pago',
+            'Vales y Tarjeta Nómina': 'Mi Tarjeta y Vales',
+            'Caja de Ahorro y Préstamos': 'Préstamos y Ahorro',
+            'Vacaciones, Flex & Home Week': 'Mis Vacaciones',
+            'Incapacidades': 'Incapacidades IMSS',
+            'Reloj Checador': 'Checador y Asistencia'
+          };
+          return parsed.map((svc: Service & { hidden?: boolean }) => {
+            if (titleMap[svc.title]) {
+              return { ...svc, title: titleMap[svc.title] };
+            }
+            return svc;
+          });
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return initialServices;
   });
   const [news, setNews] = useState<NewsItem[]>(() => {
     const saved = localStorage.getItem('cc-news');
@@ -120,7 +146,7 @@ export default function App() {
         <div id="phone-screen-container" className="w-full flex-1 overflow-hidden flex flex-col relative">
 
           {/* TAB CONTENT SCROLLABLE CANVAS */}
-          <div id="phone-main-scrollable-content" className={`flex-1 overflow-y-auto pt-2 sm:pt-3 relative ${isAdminLoggedIn ? 'pb-8' : 'pb-32'}`}>
+          <div id="phone-main-scrollable-content" className={`flex-1 overflow-y-auto pt-2 sm:pt-3 relative ${isAdminLoggedIn ? 'pb-8' : 'pb-28'}`}>
             <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10">
             
             {/* RENDER SELECTED SERVICE DETAIL (Public or Admin) WITH LIGHT FULLSCREEN BACKDROP */}
@@ -172,7 +198,7 @@ export default function App() {
                 <>
                   {/* TAB 1: INICIO */}
                   {currentTab === 'inicio' && (
-                    <div className="space-y-2 sm:space-y-2.5 animate-fadeIn">
+                    <div className="space-y-2 sm:space-y-2 animate-fadeIn">
                       
                       {/* TopBar with Title & Admin Lock Button */}
                       <TopBar 
@@ -180,15 +206,15 @@ export default function App() {
                       />
 
                       {/* Banner Informativo (Recordatorio de Módulo) */}
-                      <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-start sm:items-center gap-3 shadow-xs my-2">
-                        <MapPin className="text-blue-600 shrink-0 mt-0.5 sm:mt-0" size={20} />
-                        <p className="text-sm text-blue-800 font-medium">
+                      <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 sm:p-3.5 flex items-start sm:items-center gap-2.5 shadow-xs my-1">
+                        <MapPin className="text-blue-600 shrink-0 mt-0.5 sm:mt-0" size={18} />
+                        <p className="text-xs sm:text-sm text-blue-800 font-medium">
                           ¿Necesitas ayuda extra? Recuerda que puedes acudir a nuestro módulo de <span className="font-bold">Servicios al Personal</span>, ubicado a un lado de Ropería.
                         </p>
                       </div>
 
                       {/* Horizontal Categories Filters */}
-                      <div className="flex gap-2 overflow-x-auto pb-0.5 no-scrollbar">
+                      <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar my-1">
                         {categories.map((cat) => (
                           <button
                             key={cat.id}
@@ -206,7 +232,7 @@ export default function App() {
                       </div>
 
                       {/* Responsive Grid of Services Cards */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 pb-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2.5 sm:gap-3.5 pb-2">
                         {filteredServices.map((service) => (
                           <ServiceCard
                             key={service.id}

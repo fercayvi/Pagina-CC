@@ -163,7 +163,7 @@ function LivePreviewPanel({
   onSelectTab 
 }: { 
   draft: Service & { hidden?: boolean };
-  onSelectTab: (tab: 'general' | 'contenido' | 'faqs' | 'multimedia' | 'visibilidad') => void;
+  onSelectTab: (tab: 'general' | 'contenido' | 'faqs' | 'visibilidad') => void;
 }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const videoInfo = getEmbedVideoInfo(draft.videoUrl);
@@ -237,15 +237,15 @@ function LivePreviewPanel({
           {/* Multimedia Preview */}
           {(draft.imageUrl || videoInfo) && (
             <div 
-              onClick={() => onSelectTab('multimedia')}
-              className="bg-white rounded-xl border border-slate-200 shadow-sm p-3 mb-4 cursor-pointer hover:border-purple-300 transition-all space-y-2"
-              title="Haz clic para editar multimedia"
+              onClick={() => onSelectTab('general')}
+              className="bg-white rounded-xl border border-slate-200 shadow-sm p-3 mb-4 cursor-pointer hover:border-blue-300 transition-all space-y-2"
+              title="Haz clic para ver información general"
             >
               {draft.imageUrl && (
                 <img src={draft.imageUrl} alt="Banner" className="w-full h-32 object-cover rounded-lg border border-slate-100" />
               )}
               {videoInfo && !draft.imageUrl && (
-                <div className="w-full h-28 bg-slate-900 rounded-lg flex items-center justify-center text-xs text-purple-300 font-bold border border-purple-900/50">
+                <div className="w-full h-28 bg-slate-900 rounded-lg flex items-center justify-center text-xs text-blue-300 font-bold border border-blue-900/50">
                   Video adjunto
                 </div>
               )}
@@ -255,9 +255,9 @@ function LivePreviewPanel({
           {/* Attachments Preview */}
           {draft.attachments && draft.attachments.length > 0 && (
             <div 
-              onClick={() => onSelectTab('multimedia')}
-              className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4 cursor-pointer hover:border-purple-300 transition-all space-y-2.5"
-              title="Haz clic para editar adjuntos"
+              onClick={() => onSelectTab('contenido')}
+              className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4 cursor-pointer hover:border-blue-300 transition-all space-y-2.5"
+              title="Haz clic para ver contenido"
             >
               <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
                 <FileDown className="w-4 h-4 text-emerald-600" />
@@ -267,7 +267,7 @@ function LivePreviewPanel({
                 {draft.attachments.map((att, i) => (
                   <div key={i} className="p-2 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
                     <div className="min-w-0 flex-1 flex items-center gap-2">
-                      <FileText className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                      <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                       <span className="text-xs font-bold text-slate-800 truncate">{att.name || 'Documento PDF'}</span>
                     </div>
                     <Download className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -663,7 +663,7 @@ export default function ServiceDetail({
 }: ServiceDetailProps) {
   const [isEditing, setIsEditing] = useState<boolean>(initialEditMode);
   const [toastMsg, setToastMsg] = useState<string>('');
-  const [editorTab, setEditorTab] = useState<'general' | 'contenido' | 'faqs' | 'multimedia' | 'visibilidad'>('general');
+  const [editorTab, setEditorTab] = useState<'general' | 'contenido' | 'faqs' | 'visibilidad'>('general');
   const [mobileViewMode, setMobileViewMode] = useState<'editor' | 'preview'>('editor');
 
   // Hydrate draft with current service state or data defaults
@@ -960,11 +960,10 @@ export default function ServiceDetail({
               mobileViewMode === 'preview' ? 'hidden lg:block' : 'block'
             }`}>
               {[
-                { id: 'general', label: 'General', icon: Info, desc: 'Título, categoría e ícono' },
-                { id: 'contenido', label: 'Contenido', icon: ListOrdered, desc: 'Pasos, requisitos y contacto' },
-                { id: 'faqs', label: 'Preguntas Frecuentes', icon: HelpCircle, desc: 'FAQs reordenables' },
-                { id: 'multimedia', label: 'Multimedia', icon: ImageIcon, desc: 'Imágenes, video y PDFs' },
-                { id: 'visibilidad', label: 'Visibilidad', icon: Eye, desc: 'Toggles y aviso importante' },
+                { id: 'general', label: 'General', icon: Info, desc: 'Título, categoría, ícono y descripciones' },
+                { id: 'contenido', label: 'Contenido', icon: ListOrdered, desc: 'Pasos, requisitos, ubicación y contacto' },
+                { id: 'faqs', label: 'Preguntas Frecuentes', icon: HelpCircle, desc: 'Preguntas y respuestas (FAQs)' },
+                { id: 'visibilidad', label: 'Visibilidad', icon: Eye, desc: 'Aviso importante y controles de visibilidad' },
               ].map((tab) => {
                 const IconComponent = tab.icon;
                 const isActive = editorTab === tab.id;
@@ -1354,93 +1353,13 @@ export default function ServiceDetail({
                 </div>
               )}
 
-              {/* TAB 4: MULTIMEDIA */}
-              {editorTab === 'multimedia' && (
-                <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-2">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                      <ImageIcon className="w-4 h-4 text-purple-600" />
-                      Multimedia y Adjuntos
-                    </h3>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold text-slate-700 mb-1">URL de imagen banner</label>
-                    <input
-                      type="url"
-                      value={draft.imageUrl || ''}
-                      onChange={(e) => setDraft({ ...draft, imageUrl: e.target.value })}
-                      placeholder="Ej. https://images.unsplash.com/photo-..."
-                      className="w-full text-xs font-medium border border-slate-300 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white text-slate-900"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold text-slate-700 mb-1">URL de video (YouTube / Vimeo / MP4)</label>
-                    <input
-                      type="url"
-                      value={draft.videoUrl || ''}
-                      onChange={(e) => setDraft({ ...draft, videoUrl: e.target.value })}
-                      placeholder="Ej. https://www.youtube.com/watch?v=..."
-                      className="w-full text-xs font-medium border border-slate-300 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white text-slate-900"
-                    />
-                  </div>
-
-                  <div className="pt-2 space-y-2 border-t border-slate-100">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-700">Documentos descargables (PDF)</label>
-                      <button
-                        type="button"
-                        onClick={handleAddAttachment}
-                        className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded-lg text-[11px] font-bold border border-purple-200 cursor-pointer"
-                      >
-                        + Agregar PDF
-                      </button>
-                    </div>
-
-                    {draft.attachments && draft.attachments.length > 0 ? (
-                      draft.attachments.map((att, idx) => (
-                        <div key={idx} className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-1.5 py-0.5 rounded">PDF #{idx + 1}</span>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveAttachment(idx)}
-                              className="text-rose-500 hover:text-rose-700 cursor-pointer text-xs"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                          <input
-                            type="text"
-                            value={att.name}
-                            onChange={(e) => handleUpdateAttachment(idx, 'name', e.target.value)}
-                            placeholder="Nombre del documento"
-                            className="w-full text-xs font-bold border border-slate-300 rounded-lg px-2 py-1 bg-white"
-                          />
-                          <input
-                            type="url"
-                            value={att.url}
-                            onChange={(e) => handleUpdateAttachment(idx, 'url', e.target.value)}
-                            placeholder="Link de descarga PDF"
-                            className="w-full text-xs border border-slate-300 rounded-lg px-2 py-1 bg-white"
-                          />
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-xs text-slate-400 italic">No hay adjuntos agregados.</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 5: VISIBILIDAD & AVISO DESTACADO (CONDITIONAL RENDER FOR ALERT NOTICE!) */}
+              {/* TAB 4: VISIBILIDAD */}
               {editorTab === 'visibilidad' && (
                 <div className="space-y-4">
                   <div className="border-b border-slate-100 pb-2">
                     <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
                       <Eye className="w-4 h-4 text-blue-600" />
-                      Visibilidad de Secciones
+                      Visibilidad de Secciones y Aviso
                     </h3>
                   </div>
 
@@ -1454,38 +1373,39 @@ export default function ServiceDetail({
                     ].map((item) => {
                       const isChecked = Boolean((draft as any)[item.key] !== false);
                       return (
-                        <label key={item.key} className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
-                          <span className="text-xs font-bold text-slate-800">{item.label}</span>
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={(e) => setDraft({ ...draft, [item.key]: e.target.checked })}
-                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
-                          />
-                        </label>
+                        <div key={item.key} className="space-y-2">
+                          <label className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                            <span className="text-xs font-bold text-slate-800">{item.label}</span>
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => setDraft({ ...draft, [item.key]: e.target.checked })}
+                              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
+                            />
+                          </label>
+
+                          {item.key === 'showAlertNotice' && isChecked && (
+                            <div className="p-3 bg-amber-50/90 border border-amber-200 rounded-xl space-y-2 animate-fadeIn ml-1">
+                              <div className="flex items-center gap-1.5 text-amber-900">
+                                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                                <label className="text-xs font-bold text-slate-900">Texto del Aviso Importante</label>
+                              </div>
+                              <textarea
+                                rows={3}
+                                value={draft.alertNotice || ''}
+                                onChange={(e) => setDraft({ ...draft, alertNotice: e.target.value })}
+                                placeholder="Escribe aquí la alerta o aviso importante que aparecerá en la pantalla del trámite..."
+                                className="w-full text-xs font-medium text-slate-900 border border-amber-300 rounded-lg p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                              />
+                              <p className="text-[10px] text-amber-800 font-medium">
+                                Este aviso se resaltará en un recuadro de color ámbar en la parte superior del trámite.
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
-
-                  {/* CONDITIONAL TEXTAREA FOR ALERT NOTICE - ONLY RENDERED IF showAlertNotice IS TRUE */}
-                  {draft.showAlertNotice ? (
-                    <div className="pt-3 border-t border-amber-200/80 bg-amber-50 p-3.5 rounded-2xl border space-y-2 animate-fadeIn">
-                      <div className="flex items-center gap-1.5 text-amber-900">
-                        <AlertTriangle className="w-4 h-4 text-amber-600" />
-                        <label className="text-xs font-bold text-slate-900">Mensaje del aviso importante</label>
-                      </div>
-                      <textarea
-                        rows={3}
-                        value={draft.alertNotice || ''}
-                        onChange={(e) => setDraft({ ...draft, alertNotice: e.target.value })}
-                        placeholder="Ej. Atención: Fecha límite de entrega es el día 15 de cada mes. No habrá prórroga."
-                        className="w-full text-xs font-semibold text-slate-900 border border-amber-300 rounded-xl p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/30"
-                      />
-                      <p className="text-[10px] text-amber-800 font-medium">
-                        Este aviso se resaltará en un recuadro de color ambar en la parte superior del trámite.
-                      </p>
-                    </div>
-                  ) : null}
                 </div>
               )}
 
