@@ -20,48 +20,16 @@ export default function App() {
   // Admin State
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+  const [isImageZoomed, setIsImageZoomed] = useState<boolean>(false);
 
   // Dynamic content states with LocalStorage persistence
   const [services, setServices] = useState<(Service & { hidden?: boolean })[]>(() => {
-    const saved = localStorage.getItem('cc-services');
+    const saved = localStorage.getItem('cc-services-cms-v1');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          // Map legacy titles & icons to direct kiosk format
-          const titleMap: Record<string, string> = {
-            'Políticas de Pago': 'Días y Fechas de Pago',
-            'Recibos de Nómina & CIF': 'Mis Recibos de Nómina',
-            'Aclaraciones de Nómina': 'Dudas con Mi Pago',
-            'Vales y Tarjeta Nómina': 'Mi Tarjeta y Vales',
-            'Caja de Ahorro y Préstamos': 'Préstamos y Ahorro',
-            'Vacaciones, Flex & Home Week': 'Mis Vacaciones',
-            'Incapacidades': 'Incapacidades IMSS',
-            'Reloj Checador': 'Checador y Asistencia'
-          };
-          const iconMigrationMap: Record<string, string> = {
-            'politicas-pago': 'Banknote',
-            'recibos-cif': 'ReceiptText',
-            'aclaracion-pago': 'HelpCircle',
-            'vales-tarjeta-nomina': 'CreditCard',
-            'caja-ahorro': 'PiggyBank',
-            'infonavit': 'Home',
-            'vacaciones': 'Palmtree',
-            'incapacidades': 'Stethoscope',
-            'reloj-checador': 'Fingerprint'
-          };
-          return parsed.map((svc: Service & { hidden?: boolean }) => {
-            const newTitle = titleMap[svc.title] || svc.title;
-            const updatedIcon = (!svc.iconName || svc.iconName === 'FileText' || svc.iconName === 'FileCheck' || svc.iconName === 'HelpCircle' || svc.iconName === 'CalendarDays' || svc.iconName === 'ShieldAlert' || svc.iconName === 'Clock') && iconMigrationMap[svc.id]
-              ? iconMigrationMap[svc.id]
-              : (svc.iconName || iconMigrationMap[svc.id] || 'FileText');
-            return {
-              ...svc,
-              title: newTitle,
-              iconName: updatedIcon,
-              icon: updatedIcon
-            };
-          });
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
         }
       } catch (e) {
         console.error(e);
@@ -75,12 +43,27 @@ export default function App() {
   });
   const [contactInfo, setContactInfo] = useState<ContactInfo>(() => {
     const saved = localStorage.getItem('cc-contact');
-    return saved ? JSON.parse(saved) : initialContact;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // If old generic location or schedule exists, update to real module data
+        if (parsed.ubicacion && (parsed.ubicacion.includes('Edificio Administrativo') || parsed.ubicacion.includes('Comedor General'))) {
+          parsed.ubicacion = initialContact.ubicacion;
+        }
+        if (parsed.horario && parsed.horario.includes('8:00 AM a 5:00 PM')) {
+          parsed.horario = initialContact.horario;
+        }
+        return { ...initialContact, ...parsed };
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return initialContact;
   });
 
   // LocalStorage Sync Effects
   useEffect(() => {
-    localStorage.setItem('cc-services', JSON.stringify(services));
+    localStorage.setItem('cc-services-cms-v1', JSON.stringify(services));
   }, [services]);
 
   useEffect(() => {
@@ -188,10 +171,12 @@ export default function App() {
                     onBack={() => {
                       setSelectedService(null);
                       setServiceEditMode(false);
+                      setIsImageZoomed(false);
                     }} 
                     isAdminLoggedIn={isAdminLoggedIn}
                     onUpdateService={handleUpdateService}
                     initialEditMode={serviceEditMode}
+                    onLightboxToggle={setIsImageZoomed}
                   />
                 </div>
               </div>
@@ -226,7 +211,7 @@ export default function App() {
                       <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 sm:p-3.5 flex items-start sm:items-center gap-2.5 shadow-xs my-1">
                         <MapPin className="text-blue-600 shrink-0 mt-0.5 sm:mt-0" size={18} />
                         <p className="text-xs sm:text-sm text-blue-800 font-medium">
-                          ¿Necesitas ayuda extra? Recuerda que puedes acudir a nuestro módulo de <span className="font-bold">Servicios al Personal</span>, ubicado a un lado de Ropería.
+                          ¿Necesitas ayuda extra? Recuerda que puedes acudir a nuestro módulo de <span className="font-bold">Talento y Cultura</span>, ubicado a un lado de Ropería.
                         </p>
                       </div>
 
@@ -282,8 +267,8 @@ export default function App() {
             </div>
           </div>
 
-          {/* Bottom Fixed Navigation Bar (Hidden when in Admin Mode) */}
-          {!isAdminLoggedIn && (
+          {/* Bottom Fixed Navigation Bar (Hidden when in Admin Mode or when image is zoomed) */}
+          {!isAdminLoggedIn && !isImageZoomed && (
             <BottomNav 
               currentTab={currentTab} 
               setCurrentTab={(tab) => {

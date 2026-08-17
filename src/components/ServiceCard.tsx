@@ -167,11 +167,19 @@ export default function ServiceCard({ service, onClick }: ServiceCardProps) {
       onClick={onClick}
       className={`group relative bg-white border-2 ${styles.cardBorder} rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 active:scale-[0.98] cursor-pointer focus:outline-none focus:ring-4 focus:ring-blue-500/20 w-full`}
     >
-      <div className="mb-2.5">
-        {/* Large Vibrant Kiosk Icon Box */}
-        <div className={`w-16 h-16 rounded-2xl ${styles.iconBg} border-2 flex items-center justify-center transition-all duration-200 shadow-sm shrink-0 mx-auto`}>
-          <IconComponent size={36} strokeWidth={2.5} className="transition-transform duration-200 group-hover:scale-110" />
-        </div>
+      <div className="mb-2.5 flex items-center justify-center">
+        {service.cardImage && service.cardImage.trim().length > 0 ? (
+          <img 
+            src={service.cardImage} 
+            alt={service.title} 
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover shadow-sm border border-slate-100 transition-transform duration-200 group-hover:scale-105" 
+          />
+        ) : (
+          /* Large Vibrant Kiosk Icon Box */
+          <div className={`w-16 h-16 rounded-2xl ${styles.iconBg} border-2 flex items-center justify-center transition-all duration-200 shadow-sm shrink-0 mx-auto`}>
+            <IconComponent size={36} strokeWidth={2.5} className="transition-transform duration-200 group-hover:scale-110" />
+          </div>
+        )}
       </div>
 
       <div className="w-full">

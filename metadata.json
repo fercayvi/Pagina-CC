@@ -1,6 +1,6 @@
 {
-  "name": "Centro de Servicios",
-  "description": "Plataforma de autoservicio móvil para operarios de producción nuevos en la industria manufacturera.",
+  "name": "Portal Talento y Cultura",
+  "description": "Plataforma de autoservicio móvil y kiosco para operarios de producción y personal de planta.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

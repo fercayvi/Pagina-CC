@@ -4,16 +4,23 @@ import {
   HelpCircle, Edit3, Save, Plus, Trash2, X, AlertCircle, Check,
   Image as ImageIcon, Video, FileDown, Eye, EyeOff, AlertTriangle,
   ExternalLink, Download, Layers, Sparkles, GripVertical, ChevronUp, ChevronDown, Sliders, Info, ListOrdered,
-  Maximize2, Minimize2
+  Maximize2, Minimize2, ZoomIn
 } from 'lucide-react';
 import { Service, UserProfile, FAQ, StepItem, ServiceFAQ, ServiceAttachment } from '../types';
 import { getDefaultServiceDetails } from '../data';
 import { SERVICE_ICON_MAP } from './ServiceCard';
+import { MediaUploadField } from './MediaUploadField';
+import { ImageLightboxModal } from './ImageLightboxModal';
 
-// Helper to resolve video URLs (YouTube, Vimeo, direct MP4)
+// Helper to resolve video URLs (YouTube, Vimeo, direct MP4, or Base64 data URL)
 function getEmbedVideoInfo(url?: string): { type: 'youtube' | 'vimeo' | 'direct' | 'iframe'; embedUrl: string } | null {
   if (!url || !url.trim()) return null;
   const cleanUrl = url.trim();
+
+  // Base64 Data URL video or direct MP4/WebM/OGG file
+  if (cleanUrl.startsWith('data:video') || cleanUrl.match(/\.(mp4|webm|ogg)$/i)) {
+    return { type: 'direct', embedUrl: cleanUrl };
+  }
 
   // YouTube
   const ytRegExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -27,11 +34,6 @@ function getEmbedVideoInfo(url?: string): { type: 'youtube' | 'vimeo' | 'direct'
   const vimeoMatch = cleanUrl.match(vimeoRegExp);
   if (vimeoMatch && vimeoMatch[2]) {
     return { type: 'vimeo', embedUrl: `https://player.vimeo.com/video/${vimeoMatch[2]}` };
-  }
-
-  // Direct MP4 / WebM
-  if (cleanUrl.match(/\.(mp4|webm|ogg)$/i)) {
-    return { type: 'direct', embedUrl: cleanUrl };
   }
 
   return { type: 'iframe', embedUrl: cleanUrl };
@@ -160,10 +162,12 @@ function FAQAccordion({
 // Live Preview Component for Split View Admin Editor
 function LivePreviewPanel({ 
   draft, 
-  onSelectTab 
+  onSelectTab,
+  onOpenLightbox
 }: { 
   draft: Service & { hidden?: boolean };
-  onSelectTab: (tab: 'general' | 'contenido' | 'faqs' | 'visibilidad') => void;
+  onSelectTab: (tab: 'general' | 'contenido' | 'multimedia' | 'faqs' | 'aviso') => void;
+  onOpenLightbox?: (url: string, title?: string) => void;
 }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const videoInfo = getEmbedVideoInfo(draft.videoUrl);
@@ -194,11 +198,11 @@ function LivePreviewPanel({
           className="bg-slate-50 rounded-xl p-3 border border-slate-200 text-slate-900 max-h-[650px] overflow-y-auto custom-scrollbar relative group/preview"
         >
           {/* Banner Alert Notice */}
-          {draft.showAlertNotice && draft.alertNotice && (
+          {draft.alertNotice && draft.alertNotice.trim().length > 0 && (
             <div 
-              onClick={() => onSelectTab('visibilidad')}
+              onClick={() => onSelectTab('aviso')}
               className="bg-amber-500 text-white rounded-xl p-3.5 shadow-sm flex items-start gap-2.5 cursor-pointer hover:opacity-95 transition-opacity mb-4"
-              title="Haz clic para editar el aviso"
+              title="Haz clic para editar el aviso destacado"
             >
               <AlertTriangle className="w-4 h-4 shrink-0 text-amber-100 mt-0.5" />
               <div className="min-w-0 flex-1">
@@ -221,11 +225,19 @@ function LivePreviewPanel({
             </div>
 
             <div className="flex items-center gap-3 pt-1">
-              <div className="bg-blue-50 text-blue-600 rounded-lg p-2 shrink-0 flex items-center justify-center border border-blue-100">
-                {React.createElement(SERVICE_ICON_MAP[draft.iconName || draft.icon || 'FileText'] || FileText, {
-                  className: "w-5 h-5"
-                })}
-              </div>
+              {draft.cardImage && draft.cardImage.trim().length > 0 ? (
+                <img 
+                  src={draft.cardImage} 
+                  alt={draft.title || 'Foto'} 
+                  className="w-12 h-12 rounded-xl object-cover shadow-2xs border border-slate-200 shrink-0" 
+                />
+              ) : (
+                <div className="bg-blue-50 text-blue-600 rounded-lg p-2 shrink-0 flex items-center justify-center border border-blue-100">
+                  {React.createElement(SERVICE_ICON_MAP[draft.iconName || draft.icon || 'FileText'] || FileText, {
+                    className: "w-5 h-5"
+                  })}
+                </div>
+              )}
               <h3 className="text-sm font-bold text-slate-900 font-display line-clamp-2">{draft.title || 'Título sin definir'}</h3>
             </div>
 
@@ -236,35 +248,67 @@ function LivePreviewPanel({
 
           {/* Multimedia Preview */}
           {(draft.imageUrl || videoInfo) && (
-            <div 
-              onClick={() => onSelectTab('general')}
-              className="bg-white rounded-xl border border-slate-200 shadow-sm p-3 mb-4 cursor-pointer hover:border-blue-300 transition-all space-y-2"
-              title="Haz clic para ver información general"
-            >
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-3 mb-4 space-y-2">
               {draft.imageUrl && (
-                <img src={draft.imageUrl} alt="Banner" className="w-full h-32 object-cover rounded-lg border border-slate-100" />
+                <div 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onOpenLightbox) {
+                      onOpenLightbox(draft.imageUrl!, draft.title);
+                    } else {
+                      onSelectTab('multimedia');
+                    }
+                  }}
+                  className="relative group cursor-pointer"
+                  title="Haz clic para ver la infografía ampliada con zoom"
+                >
+                  <img 
+                    src={draft.imageUrl} 
+                    alt={draft.title || 'Infografía'} 
+                    className="w-full h-auto max-w-full rounded-xl object-contain shadow-sm border border-slate-100" 
+                  />
+                  <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-1.5 text-white text-xs font-bold pointer-events-none backdrop-blur-xs">
+                    <ZoomIn className="w-4 h-4" />
+                    <span>Ver Infografía (Zoom)</span>
+                  </div>
+                </div>
               )}
-              {videoInfo && !draft.imageUrl && (
-                <div className="w-full h-28 bg-slate-900 rounded-lg flex items-center justify-center text-xs text-blue-300 font-bold border border-blue-900/50">
-                  Video adjunto
+              {videoInfo && (
+                <div 
+                  onClick={() => onSelectTab('multimedia')}
+                  className="w-full h-24 bg-slate-900 rounded-lg flex items-center justify-center text-xs text-blue-300 font-bold border border-blue-900/50 cursor-pointer hover:border-blue-500 transition-colors"
+                  title="Haz clic para configurar video tutorial"
+                >
+                  Video Tutorial Adjunto
                 </div>
               )}
             </div>
           )}
 
-          {/* Attachments Preview */}
-          {draft.attachments && draft.attachments.length > 0 && (
+          {/* PDF Download Preview */}
+          {(draft.pdfUrl || (draft.attachments && draft.attachments.length > 0)) && (
             <div 
-              onClick={() => onSelectTab('contenido')}
-              className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4 cursor-pointer hover:border-blue-300 transition-all space-y-2.5"
-              title="Haz clic para ver contenido"
+              onClick={() => onSelectTab('multimedia')}
+              className="bg-white rounded-xl border border-slate-200 shadow-sm p-3.5 mb-4 cursor-pointer hover:border-blue-300 transition-all space-y-2"
+              title="Haz clic para ver multimedia y archivos"
             >
-              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
+              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
                 <FileDown className="w-4 h-4 text-emerald-600" />
-                Adjuntos PDF
+                Formatos Descargables
               </h4>
               <div className="space-y-1.5">
-                {draft.attachments.map((att, i) => (
+                {draft.pdfUrl && (
+                  <div className="p-2 rounded-lg border border-slate-200 bg-blue-50/60 flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1 flex items-center gap-2">
+                      <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                      <span className="text-xs font-bold text-slate-800 truncate">
+                        {draft.pdfTitle || 'Descargar Formato (PDF)'}
+                      </span>
+                    </div>
+                    <Download className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                  </div>
+                )}
+                {draft.attachments && draft.attachments.map((att, i) => (
                   <div key={i} className="p-2 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
                     <div className="min-w-0 flex-1 flex items-center gap-2">
                       <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
@@ -278,7 +322,7 @@ function LivePreviewPanel({
           )}
 
           {/* Procedure Steps Preview */}
-          {draft.showSteps !== false && draft.steps && draft.steps.length > 0 && (
+          {draft.steps && draft.steps.length > 0 && (
             <div 
               onClick={() => onSelectTab('contenido')}
               className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4 cursor-pointer hover:border-blue-300 transition-all space-y-3"
@@ -310,7 +354,7 @@ function LivePreviewPanel({
           )}
 
           {/* Requirements Preview */}
-          {draft.showRequirements !== false && draft.requirements && draft.requirements.length > 0 && (
+          {draft.requirements && draft.requirements.length > 0 && (
             <div 
               onClick={() => onSelectTab('contenido')}
               className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4 cursor-pointer hover:border-emerald-300 transition-all space-y-2.5"
@@ -337,7 +381,7 @@ function LivePreviewPanel({
           )}
 
           {/* Location and Contact Preview */}
-          {draft.showContact !== false && (draft.location || draft.schedule || draft.contact) && (
+          {(draft.location?.trim() || draft.schedule?.trim() || draft.contact?.trim()) && (
             <div 
               onClick={() => onSelectTab('contenido')}
               className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4 cursor-pointer hover:border-blue-300 transition-all space-y-2.5"
@@ -371,7 +415,7 @@ function LivePreviewPanel({
           )}
 
           {/* FAQs Preview */}
-          {draft.showFaqs !== false && draft.faqs && draft.faqs.length > 0 && (
+          {draft.faqs && draft.faqs.length > 0 && (
             <div 
               onClick={() => onSelectTab('faqs')}
               className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4 cursor-pointer hover:border-amber-300 transition-all space-y-3"
@@ -451,7 +495,7 @@ function LivePreviewPanel({
             <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
               
               {/* Alert Notice */}
-              {draft.showAlertNotice && draft.alertNotice && (
+              {draft.alertNotice && draft.alertNotice.trim().length > 0 && (
                 <div className="bg-amber-500 text-white rounded-2xl p-4 shadow-md flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 shrink-0 text-amber-100 mt-0.5" />
                   <div>
@@ -487,8 +531,26 @@ function LivePreviewPanel({
               {(draft.imageUrl || videoInfo) && (
                 <div className={`grid grid-cols-1 ${draft.imageUrl && videoInfo ? 'md:grid-cols-2' : ''} gap-4`}>
                   {draft.imageUrl && (
-                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
-                      <img src={draft.imageUrl} alt={draft.title} className="w-full h-56 object-cover" />
+                    <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs p-2.5">
+                      <div 
+                        onClick={() => {
+                          if (onOpenLightbox) {
+                            onOpenLightbox(draft.imageUrl!, draft.title);
+                          }
+                        }}
+                        className="relative group cursor-pointer overflow-hidden rounded-xl"
+                        title="Clic para ver infografía en pantalla completa con zoom"
+                      >
+                        <img 
+                          src={draft.imageUrl} 
+                          alt={draft.title || 'Infografía'} 
+                          className="w-full h-auto max-w-full rounded-xl object-contain shadow-sm border border-slate-100" 
+                        />
+                        <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-2 text-white text-xs font-bold pointer-events-none backdrop-blur-xs">
+                          <ZoomIn className="w-4 h-4" />
+                          <span>Ver Infografía Completa (Zoom)</span>
+                        </div>
+                      </div>
                     </div>
                   )}
                   {videoInfo && (
@@ -512,14 +574,31 @@ function LivePreviewPanel({
               )}
 
               {/* Downloadable PDF Formats */}
-              {draft.attachments && draft.attachments.length > 0 && (
+              {(draft.pdfUrl || (draft.attachments && draft.attachments.length > 0)) && (
                 <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
                     <FileDown className="w-4 h-4 text-emerald-600" />
                     Formatos y Documentos Descargables
                   </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {draft.attachments.map((att, idx) => (
+                  <div className="grid grid-cols-1 gap-2.5">
+                    {draft.pdfUrl && (
+                      <a
+                        href={draft.pdfUrl}
+                        download={draft.pdfUrl.startsWith('data:') ? `${draft.pdfTitle || 'formato_oficial'}.pdf` : undefined}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-3 rounded-xl border border-slate-200 hover:border-blue-400 bg-blue-50/60 hover:bg-blue-100/70 transition-all flex items-center justify-between gap-2 group"
+                      >
+                        <div className="min-w-0 flex-1 flex items-center gap-2.5">
+                          <FileText className="w-4 h-4 text-blue-600 shrink-0" />
+                          <p className="text-xs font-bold text-slate-800 group-hover:text-blue-800 truncate">
+                            {draft.pdfTitle || 'Descargar Formato / Documento Oficial (PDF)'}
+                          </p>
+                        </div>
+                        <Download className="w-4 h-4 text-blue-600 shrink-0" />
+                      </a>
+                    )}
+                    {draft.attachments && draft.attachments.map((att, idx) => (
                       <a
                         key={idx}
                         href={att.url}
@@ -539,7 +618,7 @@ function LivePreviewPanel({
               )}
 
               {/* Procedure Steps */}
-              {draft.showSteps !== false && draft.steps && draft.steps.length > 0 && (
+              {draft.steps && draft.steps.length > 0 && (
                 <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
                     <ListOrdered className="w-4 h-4 text-blue-600" />
@@ -563,7 +642,7 @@ function LivePreviewPanel({
 
               {/* Requirements & Location */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {draft.showRequirements !== false && draft.requirements && draft.requirements.length > 0 && (
+                {draft.requirements && draft.requirements.length > 0 && (
                   <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3">
                     <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -580,7 +659,7 @@ function LivePreviewPanel({
                   </div>
                 )}
 
-                {draft.showContact !== false && (draft.location || draft.schedule || draft.contact) && (
+                {(draft.location?.trim() || draft.schedule?.trim() || draft.contact?.trim()) && (
                   <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3">
                     <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
                       <Clock className="w-4 h-4 text-blue-600" />
@@ -611,7 +690,7 @@ function LivePreviewPanel({
               </div>
 
               {/* FAQs Accordion */}
-              {draft.showFaqs !== false && draft.faqs && draft.faqs.length > 0 && (
+              {draft.faqs && draft.faqs.length > 0 && (
                 <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
                     <HelpCircle className="w-4 h-4 text-blue-600" />
@@ -651,6 +730,7 @@ interface ServiceDetailProps {
   isAdminLoggedIn?: boolean;
   onUpdateService?: (updatedService: Service & { hidden?: boolean }) => void;
   initialEditMode?: boolean;
+  onLightboxToggle?: (isOpen: boolean) => void;
 }
 
 export default function ServiceDetail({ 
@@ -659,12 +739,19 @@ export default function ServiceDetail({
   onBack, 
   isAdminLoggedIn = false,
   onUpdateService,
-  initialEditMode = false
+  initialEditMode = false,
+  onLightboxToggle
 }: ServiceDetailProps) {
   const [isEditing, setIsEditing] = useState<boolean>(initialEditMode);
   const [toastMsg, setToastMsg] = useState<string>('');
-  const [editorTab, setEditorTab] = useState<'general' | 'contenido' | 'faqs' | 'visibilidad'>('general');
+  const [editorTab, setEditorTab] = useState<'general' | 'contenido' | 'multimedia' | 'faqs' | 'aviso'>('general');
   const [mobileViewMode, setMobileViewMode] = useState<'editor' | 'preview'>('editor');
+  const [lightboxImage, setLightboxImage] = useState<{ url: string; title?: string } | null>(null);
+
+  // Sync lightbox state with parent component
+  useEffect(() => {
+    onLightboxToggle?.(Boolean(lightboxImage && lightboxImage.url));
+  }, [lightboxImage, onLightboxToggle]);
 
   // Hydrate draft with current service state or data defaults
   const getPreparedDraft = (s: Service & { hidden?: boolean }) => {
@@ -678,14 +765,11 @@ export default function ServiceDetail({
       schedule: s.schedule || computed.schedule,
       contact: s.contact || computed.contact,
       faqs: s.faqs && s.faqs.length > 0 ? s.faqs : (computed.faqs || []),
-      showSteps: s.showSteps ?? computed.showSteps,
-      showRequirements: s.showRequirements ?? computed.showRequirements,
-      showContact: s.showContact ?? computed.showContact,
-      showFaqs: s.showFaqs ?? computed.showFaqs,
       imageUrl: s.imageUrl ?? computed.imageUrl,
       videoUrl: s.videoUrl ?? computed.videoUrl,
+      pdfUrl: s.pdfUrl ?? computed.pdfUrl,
+      pdfTitle: s.pdfTitle ?? computed.pdfTitle,
       attachments: s.attachments ?? computed.attachments,
-      showAlertNotice: s.showAlertNotice ?? computed.showAlertNotice,
       alertNotice: s.alertNotice ?? computed.alertNotice,
     };
   };
@@ -962,8 +1046,9 @@ export default function ServiceDetail({
               {[
                 { id: 'general', label: 'General', icon: Info, desc: 'Título, categoría, ícono y descripciones' },
                 { id: 'contenido', label: 'Contenido', icon: ListOrdered, desc: 'Pasos, requisitos, ubicación y contacto' },
+                { id: 'multimedia', label: 'Archivos y Multimedia', icon: ImageIcon, desc: 'Infografía, video tutorial y PDF' },
                 { id: 'faqs', label: 'Preguntas Frecuentes', icon: HelpCircle, desc: 'Preguntas y respuestas (FAQs)' },
-                { id: 'visibilidad', label: 'Visibilidad', icon: Eye, desc: 'Aviso importante y controles de visibilidad' },
+                { id: 'aviso', label: 'Aviso Destacado', icon: AlertTriangle, desc: 'Banner de alerta opcional en cabecera' },
               ].map((tab) => {
                 const IconComponent = tab.icon;
                 const isActive = editorTab === tab.id;
@@ -1043,6 +1128,18 @@ export default function ServiceDetail({
                         <option value="Shield">🛡️ Seguridad (Shield)</option>
                       </select>
                     </div>
+                  </div>
+
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                    <MediaUploadField
+                      type="image"
+                      label="Foto de la Tarjeta / Portada (Opcional)"
+                      value={draft.cardImage || ''}
+                      onChange={(val) => setDraft(prev => ({ ...prev, cardImage: val }))}
+                      placeholderUrl="https://ejemplo.com/foto_tarjeta.jpg o .png"
+                      helperText="Si cargas una foto o logo aquí, reemplazará al ícono vectorial genérico en la tarjeta del catálogo."
+                      idPrefix="service-detail-card-image"
+                    />
                   </div>
 
                   <div>
@@ -1269,7 +1366,57 @@ export default function ServiceDetail({
                 </div>
               )}
 
-              {/* TAB 3: PREGUNTAS FRECUENTES (FAQS REORDENABLES) */}
+              {/* TAB 3: ARCHIVOS Y MULTIMEDIA (DOBLE OPCIÓN: SUBIDA LOCAL O ENLACE URL) */}
+              {editorTab === 'multimedia' && (
+                <div className="space-y-4">
+                  <div className="border-b border-slate-100 pb-2">
+                    <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <ImageIcon className="w-4 h-4 text-blue-600" />
+                      <span>Archivos y Multimedia (Subida Local o Enlace URL)</span>
+                    </h3>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Selecciona un archivo local desde tu equipo (conversión a Base64 automática sin servidor) o ingresa un enlace web.
+                    </p>
+                  </div>
+
+                  {/* 1. IMAGEN / INFOGRAFÍA */}
+                  <MediaUploadField
+                    type="image"
+                    label="Infografía o Imagen Principal"
+                    value={draft.imageUrl || ''}
+                    onChange={(val) => setDraft({ ...draft, imageUrl: val })}
+                    placeholderUrl="https://ejemplo.com/infografia.jpg o .png"
+                    helperText="Se mostrará como banner principal o infografía visual en la cabecera del trámite."
+                    idPrefix="detail-live"
+                  />
+
+                  {/* 2. VIDEO TUTORIAL */}
+                  <MediaUploadField
+                    type="video"
+                    label="Video Tutorial Explicativo"
+                    value={draft.videoUrl || ''}
+                    onChange={(val) => setDraft({ ...draft, videoUrl: val })}
+                    placeholderUrl="https://www.youtube.com/watch?v=... o video directo .mp4"
+                    helperText="Compatible con videos locales .MP4, enlaces de YouTube o Vimeo."
+                    idPrefix="detail-live"
+                  />
+
+                  {/* 3. DOCUMENTO / FORMATO PDF */}
+                  <MediaUploadField
+                    type="pdf"
+                    label="Formato o Documento Descargable (PDF / Word)"
+                    value={draft.pdfUrl || ''}
+                    onChange={(val) => setDraft({ ...draft, pdfUrl: val })}
+                    titleValue={draft.pdfTitle || ''}
+                    onTitleChange={(title) => setDraft({ ...draft, pdfTitle: title })}
+                    placeholderUrl="https://ejemplo.com/formato_oficial.pdf"
+                    helperText="Los trabajadores podrán descargar o consultar este formato oficial."
+                    idPrefix="detail-live"
+                  />
+                </div>
+              )}
+
+              {/* TAB 4: PREGUNTAS FRECUENTES (FAQS REORDENABLES) */}
               {editorTab === 'faqs' && (
                 <div className="space-y-3.5">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-2">
@@ -1356,58 +1503,45 @@ export default function ServiceDetail({
                 </div>
               )}
 
-              {/* TAB 4: VISIBILIDAD */}
-              {editorTab === 'visibilidad' && (
+              {/* TAB 5: AVISO DESTACADO */}
+              {editorTab === 'aviso' && (
                 <div className="space-y-4">
                   <div className="border-b border-slate-100 pb-2">
                     <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                      <Eye className="w-4 h-4 text-blue-600" />
-                      Visibilidad de Secciones y Aviso
+                      <AlertTriangle className="w-4 h-4 text-amber-600" />
+                      Aviso Destacado (Banner de Alerta Opcional)
                     </h3>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Si escribes un texto, se mostrará automáticamente un recuadro de aviso destacado en la parte superior del trámite. Si lo dejas vacío, no se mostrará ningún banner.
+                    </p>
                   </div>
 
-                  <div className="space-y-2.5">
-                    {[
-                      { key: 'showSteps', label: 'Mostrar Pasos del Procedimiento' },
-                      { key: 'showRequirements', label: 'Mostrar Requisitos Necesarios' },
-                      { key: 'showContact', label: 'Mostrar Datos de Ubicación y Contacto' },
-                      { key: 'showFaqs', label: 'Mostrar Preguntas Frecuentes (FAQs)' },
-                      { key: 'showAlertNotice', label: 'Mostrar Aviso Importante Destacado (Banner Alerta)' },
-                    ].map((item) => {
-                      const isChecked = Boolean((draft as any)[item.key] !== false);
-                      return (
-                        <div key={item.key} className="space-y-2">
-                          <label className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
-                            <span className="text-xs font-bold text-slate-800">{item.label}</span>
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={(e) => setDraft({ ...draft, [item.key]: e.target.checked })}
-                              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
-                            />
-                          </label>
-
-                          {item.key === 'showAlertNotice' && isChecked && (
-                            <div className="p-3 bg-amber-50/90 border border-amber-200 rounded-xl space-y-2 animate-fadeIn ml-1">
-                              <div className="flex items-center gap-1.5 text-amber-900">
-                                <AlertTriangle className="w-4 h-4 text-amber-600" />
-                                <label className="text-xs font-bold text-slate-900">Texto del Aviso Importante</label>
-                              </div>
-                              <textarea
-                                rows={3}
-                                value={draft.alertNotice || ''}
-                                onChange={(e) => setDraft({ ...draft, alertNotice: e.target.value })}
-                                placeholder="Escribe aquí la alerta o aviso importante que aparecerá en la pantalla del trámite..."
-                                className="w-full text-xs font-medium text-slate-900 border border-amber-300 rounded-lg p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/30"
-                              />
-                              <p className="text-[10px] text-amber-800 font-medium">
-                                Este aviso se resaltará en un recuadro de color ámbar en la parte superior del trámite.
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                  <div className="p-4 bg-amber-50/90 border border-amber-200/90 rounded-2xl space-y-3">
+                    <div className="flex items-center justify-between text-amber-900">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                        <label className="text-xs font-bold text-slate-900">Texto del Aviso Importante</label>
+                      </div>
+                      {draft.alertNotice && draft.alertNotice.trim().length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setDraft({ ...draft, alertNotice: '' })}
+                          className="text-amber-800 hover:text-red-600 font-bold underline cursor-pointer text-xs transition-colors"
+                        >
+                          Limpiar aviso
+                        </button>
+                      )}
+                    </div>
+                    <textarea
+                      rows={4}
+                      value={draft.alertNotice || ''}
+                      onChange={(e) => setDraft({ ...draft, alertNotice: e.target.value })}
+                      placeholder="Ej. Atención: Por período vacacional, las solicitudes recibidas después del día 15 se procesarán la siguiente quincena..."
+                      className="w-full text-xs font-medium text-slate-900 border border-amber-300 rounded-xl p-3 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+                    />
+                    <p className="text-[11px] text-amber-800 font-medium leading-relaxed">
+                      💡 <strong>Visualización 100% automática:</strong> Al contener texto, el banner ámbar aparecerá en la cabecera del trámite para todos los colaboradores.
+                    </p>
                   </div>
                 </div>
               )}
@@ -1418,7 +1552,11 @@ export default function ServiceDetail({
             <div className={`lg:col-span-4 sticky top-4 ${
               mobileViewMode === 'editor' ? 'hidden lg:block' : 'block'
             }`}>
-              <LivePreviewPanel draft={draft} onSelectTab={(t) => { setEditorTab(t); setMobileViewMode('editor'); }} />
+              <LivePreviewPanel 
+                draft={draft} 
+                onSelectTab={(t) => { setEditorTab(t); setMobileViewMode('editor'); }} 
+                onOpenLightbox={(url, title) => setLightboxImage({ url, title })}
+              />
             </div>
 
           </div>
@@ -1500,8 +1638,22 @@ export default function ServiceDetail({
           {(draft.imageUrl || videoInfo) && (
             <div className={`grid grid-cols-1 ${draft.imageUrl && videoInfo ? 'md:grid-cols-2' : ''} gap-3`}>
               {draft.imageUrl && (
-                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
-                  <img src={draft.imageUrl} alt={draft.title} className="w-full h-48 object-cover" />
+                <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs p-2.5">
+                  <div 
+                    onClick={() => setLightboxImage({ url: draft.imageUrl!, title: draft.title })}
+                    className="relative group cursor-pointer overflow-hidden rounded-xl"
+                    title="Clic para ver infografía en pantalla completa con zoom"
+                  >
+                    <img 
+                      src={draft.imageUrl} 
+                      alt={draft.title || 'Infografía'} 
+                      className="w-full h-auto max-w-full rounded-xl object-contain shadow-sm border border-slate-100" 
+                    />
+                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-2 text-white text-xs font-bold pointer-events-none backdrop-blur-xs">
+                      <ZoomIn className="w-4 h-4" />
+                      <span>Ver Infografía Completa (Zoom)</span>
+                    </div>
+                  </div>
                 </div>
               )}
               {videoInfo && (
@@ -1525,14 +1677,41 @@ export default function ServiceDetail({
           )}
 
           {/* Downloadable PDF Formats */}
-          {draft.attachments && draft.attachments.length > 0 && (
+          {(draft.pdfUrl || (draft.attachments && draft.attachments.length > 0)) && (
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-2.5">
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
                 <FileDown className="w-4 h-4 text-emerald-600" />
                 Formatos y Documentos Descargables
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {draft.attachments.map((att, idx) => (
+              <div className="grid grid-cols-1 gap-2.5">
+                {draft.pdfUrl && (
+                  <a
+                    href={draft.pdfUrl}
+                    download={draft.pdfUrl.startsWith('data:') ? `${draft.pdfTitle || 'formato_oficial'}.pdf` : undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3.5 rounded-xl border border-slate-200 hover:border-blue-400 bg-blue-50/60 hover:bg-blue-100/70 transition-all flex items-center justify-between gap-3 group"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-900 group-hover:text-blue-700 truncate">
+                          {draft.pdfTitle || 'Descargar Formato / Documento Oficial (PDF)'}
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-medium">
+                          Haz clic para abrir o descargar el documento adjunto
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-blue-700 text-xs font-bold shadow-2xs group-hover:bg-blue-600 group-hover:text-white transition-all shrink-0">
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Descargar</span>
+                    </div>
+                  </a>
+                )}
+                {draft.attachments && draft.attachments.map((att, idx) => (
                   <a
                     key={idx}
                     href={att.url}
@@ -1552,7 +1731,7 @@ export default function ServiceDetail({
           )}
 
           {/* Procedure Steps */}
-          {draft.showSteps !== false && draft.steps && draft.steps.length > 0 && (
+          {draft.steps && draft.steps.length > 0 && (
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-3">
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
                 <ListOrdered className="w-4 h-4 text-blue-600" />
@@ -1576,7 +1755,7 @@ export default function ServiceDetail({
 
           {/* Requirements & Location */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {draft.showRequirements !== false && draft.requirements && draft.requirements.length > 0 && (
+            {draft.requirements && draft.requirements.length > 0 && (
               <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-2.5">
                 <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -1593,7 +1772,7 @@ export default function ServiceDetail({
               </div>
             )}
 
-            {draft.showContact !== false && (draft.location || draft.schedule || draft.contact) && (
+            {(draft.location?.trim() || draft.schedule?.trim() || draft.contact?.trim()) && (
               <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-2.5">
                 <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
                   <Clock className="w-4 h-4 text-blue-600" />
@@ -1624,7 +1803,7 @@ export default function ServiceDetail({
           </div>
 
           {/* FAQs Accordion */}
-          {draft.showFaqs !== false && draft.faqs && draft.faqs.length > 0 && (
+          {draft.faqs && draft.faqs.length > 0 && (
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-3">
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
                 <HelpCircle className="w-4 h-4 text-blue-600" />
@@ -1634,8 +1813,29 @@ export default function ServiceDetail({
             </div>
           )}
 
+          {/* Empty state fallback when no sub-sections exist */}
+          {(!draft.imageUrl && !videoInfo && !draft.pdfUrl && (!draft.attachments || draft.attachments.length === 0) && (!draft.steps || draft.steps.length === 0) && (!draft.requirements || draft.requirements.length === 0) && (!draft.location && !draft.schedule && !draft.contact) && (!draft.faqs || draft.faqs.length === 0)) && (
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-6 text-center shadow-2xs space-y-2">
+              <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                <Info className="w-5 h-5" />
+              </div>
+              <h3 className="text-xs font-bold text-slate-800">Contenido en preparación</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                La información detallada, pasos y formatos descargables para este trámite se están actualizando desde el Panel de Talento y Cultura.
+              </p>
+            </div>
+          )}
+
         </div>
       )}
+
+      {/* LIGHTBOX MODAL FOR HIGH RESOLUTION INFOGRAPHICS & IMAGES */}
+      <ImageLightboxModal
+        isOpen={Boolean(lightboxImage && lightboxImage.url)}
+        imageUrl={lightboxImage?.url || null}
+        title={lightboxImage?.title || draft.title}
+        onClose={() => setLightboxImage(null)}
+      />
 
     </div>
   );

@@ -20,8 +20,8 @@ export default function TopBar({ setShowAdminLogin }: TopBarProps) {
               e.currentTarget.style.display = 'none';
             }}
           />
-          <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight font-display">
-            Servicios al Personal
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-800">
+            Portal Talento y Cultura
           </h1>
         </div>
 

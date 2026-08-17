@@ -23,7 +23,10 @@ import {
   Building2,
   PhoneCall,
   LayoutDashboard,
-  GripVertical
+  GripVertical,
+  Image as ImageIcon,
+  Video,
+  FileDown
 } from 'lucide-react';
 import {
   DndContext,
@@ -45,6 +48,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Service, NewsItem, ServiceId, StepItem, ServiceFAQ, ContactInfo } from '../types';
 import { getDefaultServiceDetails, initialContact } from '../data';
 import { SERVICE_ICON_MAP } from './ServiceCard';
+import { MediaUploadField } from './MediaUploadField';
 
 interface SortableServiceItemProps {
   key?: React.Key;
@@ -190,7 +194,7 @@ export default function AdminPanel({
   const [editingService, setEditingService] = useState<(Service & { hidden?: boolean }) | null>(null);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState<boolean>(false);
   const [isNewService, setIsNewService] = useState<boolean>(false);
-  const [serviceModalTab, setServiceModalTab] = useState<'general' | 'pasos' | 'requisitos' | 'faqs'>('general');
+  const [serviceModalTab, setServiceModalTab] = useState<'general' | 'pasos' | 'requisitos' | 'multimedia' | 'faqs'>('general');
 
   // News Edit / Create Modal state
   const [editingNews, setEditingNews] = useState<NewsItem | null>(null);
@@ -267,14 +271,11 @@ export default function AdminPanel({
       schedule: 'Lunes a Viernes de 8:00 AM a 5:00 PM',
       contact: 'Recursos Humanos - Ext. 200',
       faqs: [{ question: '¿Cómo inicio este trámite?', answer: 'Presentándote en la ventanilla de Recursos Humanos.' }],
-      showSteps: true,
-      showRequirements: true,
-      showContact: true,
-      showFaqs: true,
       imageUrl: '',
       videoUrl: '',
+      pdfUrl: '',
+      pdfTitle: '',
       attachments: [],
-      showAlertNotice: false,
       alertNotice: '',
       hidden: false
     };
@@ -305,14 +306,11 @@ export default function AdminPanel({
         schedule: service.schedule || details.schedule,
         contact: service.contact || details.contact,
         faqs: service.faqs && service.faqs.length > 0 ? service.faqs : details.faqs,
-        showSteps: service.showSteps ?? details.showSteps,
-        showRequirements: service.showRequirements ?? details.showRequirements,
-        showContact: service.showContact ?? details.showContact,
-        showFaqs: service.showFaqs ?? details.showFaqs,
         imageUrl: service.imageUrl ?? details.imageUrl,
         videoUrl: service.videoUrl ?? details.videoUrl,
+        pdfUrl: service.pdfUrl ?? details.pdfUrl,
+        pdfTitle: service.pdfTitle ?? details.pdfTitle,
         attachments: service.attachments ?? details.attachments,
-        showAlertNotice: service.showAlertNotice ?? details.showAlertNotice,
         alertNotice: service.alertNotice ?? details.alertNotice,
       });
       setIsServiceModalOpen(true);
@@ -698,25 +696,6 @@ export default function AdminPanel({
                 </p>
               </div>
 
-              {/* Conmutador / Telefono Input */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                  <PhoneCall className="w-4 h-4 text-blue-600" />
-                  <span>Extensión / Teléfono Interno</span>
-                </label>
-                <input
-                  type="text"
-                  value={contactForm.telefono}
-                  onChange={(e) => setContactForm({ ...contactForm, telefono: e.target.value })}
-                  placeholder="Ej. Ext. 202 (5512345678)"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-slate-900"
-                  required
-                />
-                <p className="text-[11px] text-slate-400">
-                  Teléfono de urgencias y permisos de incapacidad para personal de planta.
-                </p>
-              </div>
-
               {/* Ubicacion Input */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
@@ -831,6 +810,19 @@ export default function AdminPanel({
 
               <button
                 type="button"
+                onClick={() => setServiceModalTab('multimedia')}
+                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                  serviceModalTab === 'multimedia'
+                    ? 'bg-white text-blue-700 shadow-2xs border border-slate-200'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                }`}
+              >
+                <ImageIcon className="w-3.5 h-3.5" />
+                <span>Archivos y Multimedia</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setServiceModalTab('faqs')}
                 className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
                   serviceModalTab === 'faqs'
@@ -902,6 +894,19 @@ export default function AdminPanel({
                         <option value="Clock">⏰ Reloj (Clock)</option>
                         <option value="Briefcase">💼 Maletín (Briefcase)</option>
                       </select>
+                    </div>
+
+                    {/* FOTO DE PORTADA / TARJETA */}
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                      <MediaUploadField
+                        type="image"
+                        label="Foto de la Tarjeta / Portada (Opcional)"
+                        value={editingService.cardImage || ''}
+                        onChange={(val) => setEditingService(prev => prev ? ({ ...prev, cardImage: val }) : prev)}
+                        placeholderUrl="https://ejemplo.com/foto_tarjeta.jpg o .png"
+                        helperText="Si cargas una foto o logo aquí, reemplazará al ícono vectorial genérico en la tarjeta del catálogo."
+                        idPrefix="admin-panel-service-card"
+                      />
                     </div>
 
                     <div>
@@ -1093,7 +1098,68 @@ export default function AdminPanel({
                   </div>
                 )}
 
-                {/* TAB 4: PREGUNTAS FRECUENTES (FAQs) */}
+                {/* TAB 4: ARCHIVOS Y MULTIMEDIA (DOBLE OPCIÓN: SUBIDA LOCAL O ENLACE URL) */}
+                {serviceModalTab === 'multimedia' && (
+                  <div className="space-y-4 animate-fadeIn">
+                    <div className="border-b border-slate-100 pb-2">
+                      <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <ImageIcon className="w-4 h-4 text-blue-600" />
+                        <span>Archivos y Multimedia (Subida Local o Enlace URL)</span>
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Carga archivos locales desde tu computadora (conversión Base64 instantánea sin servidor) o ingresa enlaces URL externos.
+                      </p>
+                    </div>
+
+                    {/* 1. FOTO DE LA TARJETA / PORTADA */}
+                    <MediaUploadField
+                      type="image"
+                      label="Foto de la Tarjeta / Portada (Catálogo Principal)"
+                      value={editingService.cardImage || ''}
+                      onChange={(val) => setEditingService(prev => prev ? ({ ...prev, cardImage: val }) : prev)}
+                      placeholderUrl="https://ejemplo.com/foto_portada.jpg o .png"
+                      helperText="Reemplaza al ícono genérico en la cuadrícula de inicio. Si está vacío, se mostrará el ícono seleccionado."
+                      idPrefix="admin-panel-service-card-media"
+                    />
+
+                    {/* 2. IMAGEN / INFOGRAFÍA */}
+                    <MediaUploadField
+                      type="image"
+                      label="Infografía o Imagen Principal"
+                      value={editingService.imageUrl || ''}
+                      onChange={(val) => setEditingService({ ...editingService, imageUrl: val })}
+                      placeholderUrl="https://ejemplo.com/infografia.png o .jpg"
+                      helperText="Se muestra como infografía visual destacada en la cabecera del trámite."
+                      idPrefix="admin-panel-service"
+                    />
+
+                    {/* 3. VIDEO TUTORIAL */}
+                    <MediaUploadField
+                      type="video"
+                      label="Video Tutorial Explicativo"
+                      value={editingService.videoUrl || ''}
+                      onChange={(val) => setEditingService({ ...editingService, videoUrl: val })}
+                      placeholderUrl="https://www.youtube.com/watch?v=... o video directo .mp4"
+                      helperText="Soporta videos locales .MP4, enlaces de YouTube o Vimeo."
+                      idPrefix="admin-panel-service"
+                    />
+
+                    {/* 4. DOCUMENTO / FORMATO PDF */}
+                    <MediaUploadField
+                      type="pdf"
+                      label="Formato o Documento Descargable (PDF / Word)"
+                      value={editingService.pdfUrl || ''}
+                      onChange={(val) => setEditingService({ ...editingService, pdfUrl: val })}
+                      titleValue={editingService.pdfTitle || ''}
+                      onTitleChange={(title) => setEditingService({ ...editingService, pdfTitle: title })}
+                      placeholderUrl="https://ejemplo.com/formato_oficial.pdf"
+                      helperText="Los colaboradores podrán abrir o descargar directamente este archivo oficial."
+                      idPrefix="admin-panel-service"
+                    />
+                  </div>
+                )}
+
+                {/* TAB 5: PREGUNTAS FRECUENTES (FAQs) */}
                 {serviceModalTab === 'faqs' && (
                   <div className="space-y-4 animate-fadeIn">
                     <div className="flex items-center justify-between">

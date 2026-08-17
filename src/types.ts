@@ -44,19 +44,15 @@ export interface Service {
   faqs?: ServiceFAQ[];
   hidden?: boolean;
 
-  // Dynamic Section Toggles
-  showSteps?: boolean;
-  showRequirements?: boolean;
-  showContact?: boolean;
-  showFaqs?: boolean;
-
   // Multimedia & Attachments
+  cardImage?: string;
   imageUrl?: string;
   videoUrl?: string;
+  pdfUrl?: string;
+  pdfTitle?: string;
   attachments?: ServiceAttachment[];
 
-  // Free Text Alert Notice Block
-  showAlertNotice?: boolean;
+  // Free Text Alert Notice Block (Banner de Alerta opcional)
   alertNotice?: string;
 }
 
