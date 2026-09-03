@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, Loader2 } from 'lucide-react';
 import { Service, NewsItem, UserProfile, ContactInfo } from './types';
 import { initialServices, initialNews, userProfileData, initialContact } from './data';
+import { 
+  getServices, 
+  saveService, 
+  saveAllServices, 
+  getContactInfo, 
+  saveContactInfo 
+} from './services/dbService';
 import BottomNav from './components/BottomNav';
 import TopBar from './components/TopBar';
 import HomeTab from './components/HomeTab';
@@ -22,68 +29,49 @@ export default function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
   const [isImageZoomed, setIsImageZoomed] = useState<boolean>(false);
 
-  // Dynamic content states with LocalStorage persistence
-  const [services, setServices] = useState<(Service & { hidden?: boolean })[]>(() => {
-    const saved = localStorage.getItem('cc-services-cms-v1');
-    if (saved) {
+  // Loading State para Firebase
+  const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
+
+  // Dynamic content states backed by Firebase Firestore
+  const [services, setServices] = useState<(Service & { hidden?: boolean })[]>(initialServices);
+  const [news, setNews] = useState<NewsItem[]>(initialNews);
+  const [contactInfo, setContactInfo] = useState<ContactInfo>(initialContact);
+
+  // Carga inicial de datos desde Firebase Firestore
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDataFromFirebase() {
       try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map((item: Service & { hidden?: boolean }) => {
-            const initialMatch = initialServices.find(init => init.id === item.id);
-            if ((!item.decisionTree || item.decisionTree.length === 0) && initialMatch?.decisionTree && initialMatch.decisionTree.length > 0) {
-              return { ...item, decisionTree: initialMatch.decisionTree };
-            }
-            return item;
-          });
+        setIsLoadingData(true);
+        const [remoteServices, remoteContact] = await Promise.all([
+          getServices(),
+          getContactInfo(),
+        ]);
+
+        if (isMounted) {
+          if (remoteServices && remoteServices.length > 0) {
+            setServices(remoteServices);
+          }
+          if (remoteContact) {
+            setContactInfo(remoteContact);
+          }
         }
-      } catch (e) {
-        console.error(e);
+      } catch (err) {
+        console.error('Error al sincronizar datos con Firebase:', err);
+      } finally {
+        if (isMounted) {
+          setIsLoadingData(false);
+        }
       }
     }
-    return initialServices;
-  });
-  const [news, setNews] = useState<NewsItem[]>(() => {
-    const saved = localStorage.getItem('cc-news');
-    return saved ? JSON.parse(saved) : initialNews;
-  });
-  const [contactInfo, setContactInfo] = useState<ContactInfo>(() => {
-    const saved = localStorage.getItem('portalContactInfo') || localStorage.getItem('cc-contact');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        // If old generic location or schedule exists, update to real module data
-        if (parsed.ubicacion && (parsed.ubicacion.includes('Edificio Administrativo') || parsed.ubicacion.includes('Comedor General'))) {
-          parsed.ubicacion = initialContact.ubicacion;
-        }
-        if (parsed.horario && parsed.horario.includes('8:00 AM a 5:00 PM')) {
-          parsed.horario = initialContact.horario;
-        }
-        return { ...initialContact, ...parsed };
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    return initialContact;
-  });
 
-  // LocalStorage Sync Effects
-  useEffect(() => {
-    localStorage.setItem('cc-services-cms-v1', JSON.stringify(services));
-  }, [services]);
+    loadDataFromFirebase();
 
-  useEffect(() => {
-    localStorage.setItem('cc-news', JSON.stringify(news));
-  }, [news]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('portalContactInfo', JSON.stringify(contactInfo));
-      localStorage.setItem('cc-contact', JSON.stringify(contactInfo));
-    } catch (e) {
-      console.error('Error syncing contactInfo to localStorage', e);
-    }
-  }, [contactInfo]);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Public user context
   const user: UserProfile = userProfileData;
@@ -116,7 +104,8 @@ export default function App() {
     };
   }, []);
 
-  const handleUpdateService = (updated: Service & { hidden?: boolean }) => {
+  // Guardar trámite individual en Firebase
+  const handleUpdateService = async (updated: Service & { hidden?: boolean }) => {
     setServices(prev => {
       const exists = prev.some(s => s.id === updated.id);
       if (exists) {
@@ -125,12 +114,53 @@ export default function App() {
       return [updated, ...prev];
     });
     setSelectedService(updated);
+
+    try {
+      await saveService(updated);
+    } catch (error) {
+      console.error('Error al guardar el trámite en Firestore:', error);
+    }
+  };
+
+  // Guardar lista completa de trámites (reordenamiento o visibilidad) en Firebase
+  const handleUpdateServices = async (newServices: (Service & { hidden?: boolean })[]) => {
+    setServices(newServices);
+    try {
+      await saveAllServices(newServices);
+    } catch (error) {
+      console.error('Error al guardar lote de trámites en Firestore:', error);
+    }
+  };
+
+  // Guardar información de contacto en Firebase
+  const handleUpdateContact = async (updatedContact: ContactInfo) => {
+    setContactInfo(updatedContact);
+    try {
+      await saveContactInfo(updatedContact);
+    } catch (error) {
+      console.error('Error al guardar configuración de contacto en Firestore:', error);
+    }
   };
 
   const handleSelectService = (service: Service & { hidden?: boolean }, startEditing: boolean = false) => {
     setSelectedService(service);
     setServiceEditMode(startEditing);
   };
+
+  // Pantalla de Carga Inicial
+  if (isLoadingData) {
+    return (
+      <div id="loading-screen" className="min-h-screen bg-slate-100 flex flex-col items-center justify-center font-sans p-6 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-white shadow-md border border-slate-200 flex items-center justify-center mb-4">
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+        </div>
+        <h2 className="text-lg font-bold text-slate-900">Cargando Kiosco de Trámites</h2>
+        <p className="text-xs text-slate-500 mt-1 max-w-xs">
+          Conectando y sincronizando datos con Firebase en la nube...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div id="app-root-layout" className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-800">
@@ -179,12 +209,12 @@ export default function App() {
               isAdminLoggedIn ? (
                 <AdminPanel
                   services={services}
-                  onUpdateServices={setServices}
+                  onUpdateServices={handleUpdateServices}
                   onSelectService={handleSelectService}
                   news={news}
                   onUpdateNews={setNews}
                   contactInfo={contactInfo}
-                  onUpdateContact={setContactInfo}
+                  onUpdateContact={handleUpdateContact}
                   onLogout={() => {
                     setIsAdminLoggedIn(false);
                     setSelectedService(null);
@@ -257,4 +287,3 @@ export default function App() {
     </div>
   );
 }
-

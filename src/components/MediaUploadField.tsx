@@ -1,8 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { 
   Upload, Link2, Trash2, CheckCircle2, FileText, Image as ImageIcon, 
-  Video, FileDown, AlertCircle, FileCheck, Check
+  Video, FileDown, AlertCircle, FileCheck, Check, Loader2
 } from 'lucide-react';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../firebaseConfig';
 
 export interface MediaUploadFieldProps {
   type: 'image' | 'video' | 'pdf';
@@ -27,9 +29,9 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
   onTitleChange,
   idPrefix = 'media'
 }) => {
-  // Determine default mode based on existing value
   const isBase64 = value ? value.startsWith('data:') : false;
-  const [mode, setMode] = useState<'upload' | 'url'>(isBase64 || !value ? 'upload' : 'url');
+  const isFirebaseStorage = value ? value.includes('firebasestorage.googleapis.com') : false;
+  const [mode, setMode] = useState<'upload' | 'url'>(isBase64 || isFirebaseStorage || !value ? 'upload' : 'url');
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
@@ -63,7 +65,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
   const getTypeText = () => {
     switch (type) {
       case 'image':
-        return 'Imagen / Infografía (PNG, JPG, WEBP, GIF)';
+        return 'Imagen / Infografía / Croquis (PNG, JPG, WEBP, GIF)';
       case 'video':
         return 'Video Tutorial (.MP4, .WebM)';
       case 'pdf':
@@ -71,102 +73,37 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
     }
   };
 
-  const processFile = (file: File) => {
+  const processFile = async (file: File) => {
     setErrorMsg('');
     setIsLoading(true);
     setFileName(file.name);
 
     try {
-      const reader = new FileReader();
+      // Normalizar nombre de archivo y definir ruta en Firebase Storage
+      const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const timestamp = Date.now();
+      const storagePath = `uploads/${timestamp}_${cleanFileName}`;
+      const storageRef = ref(storage, storagePath);
 
-      reader.onload = (e) => {
-        try {
-          const result = e.target?.result as string;
-          if (!result) {
-            setIsLoading(false);
-            return;
-          }
+      // Subir archivo a Firebase Storage
+      const snapshot = await uploadBytes(storageRef, file);
 
-          // Si es tipo 'image' o el archivo es una imagen, comprimir con canvas
-          if (type === 'image' || file.type.startsWith('image/')) {
-            const img = new Image();
+      // Obtener URL de descarga pública
+      const downloadURL = await getDownloadURL(snapshot.ref);
 
-            img.onload = () => {
-              try {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-                const maxWidth = 800;
-
-                // Mantener aspect ratio con ancho máximo de 800px
-                if (width > maxWidth) {
-                  height = Math.round((height * maxWidth) / width);
-                  width = maxWidth;
-                }
-
-                canvas.width = width;
-                canvas.height = height;
-
-                const ctx = canvas.getContext('2d');
-                if (!ctx) {
-                  throw new Error('No se pudo obtener el contexto 2D del canvas');
-                }
-
-                ctx.drawImage(img, 0, 0, width, height);
-
-                // Exportación a image/jpeg con calidad de 0.7
-                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-
-                setIsLoading(false);
-                onChange(compressedDataUrl, file.name);
-              } catch (canvasErr) {
-                console.error('Error al procesar imagen en canvas:', canvasErr);
-                setIsLoading(false);
-                alert('Error al procesar la imagen');
-                setErrorMsg('Error al procesar la imagen');
-              }
-            };
-
-            img.onerror = (imgErr) => {
-              console.error('Error al cargar imagen en new Image():', imgErr);
-              setIsLoading(false);
-              alert('Error al procesar la imagen');
-              setErrorMsg('Error al procesar la imagen');
-            };
-
-            img.src = result;
-          } else {
-            // Documentos o videos
-            setIsLoading(false);
-            onChange(result, file.name);
-
-            // If it's a PDF/document and titleValue is empty, suggest the file name
-            if (type === 'pdf' && onTitleChange && (!titleValue || titleValue.trim() === '')) {
-              const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-              onTitleChange(`Descargar ${cleanName.charAt(0).toUpperCase() + cleanName.slice(1)}`);
-            }
-          }
-        } catch (innerErr) {
-          console.error('Error en reader.onload:', innerErr);
-          setIsLoading(false);
-          alert('Error al procesar la imagen');
-          setErrorMsg('Error al procesar la imagen');
-        }
-      };
-
-      reader.onerror = (readErr) => {
-        console.error('Error al leer archivo:', readErr);
-        setIsLoading(false);
-        alert('Error al procesar la imagen');
-        setErrorMsg('Error al procesar la imagen');
-      };
-
-      reader.readAsDataURL(file);
-    } catch (err) {
-      console.error('Error en processFile:', err);
       setIsLoading(false);
-      alert('Error al procesar la imagen');
-      setErrorMsg('Error al procesar la imagen');
+      onChange(downloadURL, file.name);
+
+      // Si es documento PDF y no tiene título asignado, sugerir nombre
+      if (type === 'pdf' && onTitleChange && (!titleValue || titleValue.trim() === '')) {
+        const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+        onTitleChange(`Descargar ${cleanName.charAt(0).toUpperCase() + cleanName.slice(1)}`);
+      }
+    } catch (err: any) {
+      console.error('Error al subir archivo a Firebase Storage:', err);
+      setIsLoading(false);
+      alert('Error al subir el archivo a Firebase Storage. Por favor verifica tu configuración.');
+      setErrorMsg('No se pudo completar la subida del archivo.');
     }
   };
 
@@ -233,7 +170,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
             }`}
           >
             <Upload className="w-3 h-3" />
-            <span>Subir Archivo</span>
+            <span>Subir Archivo (Cloud)</span>
           </button>
           <button
             type="button"
@@ -268,25 +205,27 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-              className={`p-4 border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
-                isDragging 
+              onClick={() => !isLoading && fileInputRef.current?.click()}
+              className={`p-5 border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
+                isLoading
+                  ? 'border-blue-300 bg-blue-50/50 cursor-wait'
+                  : isDragging 
                   ? 'border-blue-500 bg-blue-50/70 scale-[0.99]' 
                   : 'border-slate-300 hover:border-blue-400 bg-white hover:bg-blue-50/30'
               }`}
             >
-              <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-1.5 shadow-2xs">
+              <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-2 shadow-2xs">
                 {isLoading ? (
-                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
                 ) : (
-                  <Upload className="w-4 h-4" />
+                  <Upload className="w-5 h-5" />
                 )}
               </div>
               <p className="text-xs font-bold text-slate-800">
-                {isLoading ? 'Cargando archivo y convirtiendo...' : 'Haz clic para seleccionar o arrastra el archivo aquí'}
+                {isLoading ? 'Subiendo a Firebase Storage...' : 'Haz clic para seleccionar o arrastra el archivo aquí'}
               </p>
               <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
-                {getTypeText()}
+                {isLoading ? 'Por favor espera un momento' : getTypeText()}
               </p>
             </div>
           ) : null}
@@ -317,7 +256,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
           {isBase64 && (
             <p className="text-[10px] text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 flex items-center gap-1 font-medium">
               <AlertCircle className="w-3 h-3 shrink-0" />
-              <span>Actualmente hay un archivo local cargado. Si escribes una URL aquí, reemplazará el archivo local.</span>
+              <span>Hay un archivo local antiguo. Al subir un nuevo archivo se guardará en Firebase Storage.</span>
             </p>
           )}
         </div>
@@ -350,12 +289,12 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
               <div className="flex items-center gap-1.5">
                 <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[9px] font-extrabold uppercase tracking-wider">
                   <Check className="w-2.5 h-2.5" />
-                  {isBase64 ? 'Archivo Local' : 'Enlace Web'}
+                  {isFirebaseStorage ? 'Firebase Storage' : isBase64 ? 'Local' : 'Enlace Web'}
                 </span>
-                <span className="text-[10px] text-emerald-700 font-bold">Cargado con éxito</span>
+                <span className="text-[10px] text-emerald-700 font-bold">Disponible</span>
               </div>
               <p className="text-xs font-semibold text-slate-800 truncate mt-0.5">
-                {fileName || (isBase64 ? `${label} (Base64 listo)` : value)}
+                {fileName || (isFirebaseStorage ? 'Archivo en la nube (Storage)' : value)}
               </p>
             </div>
           </div>
@@ -365,10 +304,11 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
               <button
                 type="button"
                 id={`${idPrefix}-${type}-replace-btn`}
+                disabled={isLoading}
                 onClick={() => fileInputRef.current?.click()}
-                className="px-2 py-1 text-[11px] font-bold text-blue-700 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer border border-blue-200/80"
+                className="px-2 py-1 text-[11px] font-bold text-blue-700 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer border border-blue-200/80 disabled:opacity-50"
               >
-                Cambiar
+                {isLoading ? 'Subiendo...' : 'Cambiar'}
               </button>
             )}
             <button
@@ -418,3 +358,4 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
     </div>
   );
 };
+export default MediaUploadField;
