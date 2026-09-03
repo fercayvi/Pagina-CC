@@ -48,7 +48,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : initialNews;
   });
   const [contactInfo, setContactInfo] = useState<ContactInfo>(() => {
-    const saved = localStorage.getItem('cc-contact');
+    const saved = localStorage.getItem('portalContactInfo') || localStorage.getItem('cc-contact');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -77,7 +77,12 @@ export default function App() {
   }, [news]);
 
   useEffect(() => {
-    localStorage.setItem('cc-contact', JSON.stringify(contactInfo));
+    try {
+      localStorage.setItem('portalContactInfo', JSON.stringify(contactInfo));
+      localStorage.setItem('cc-contact', JSON.stringify(contactInfo));
+    } catch (e) {
+      console.error('Error syncing contactInfo to localStorage', e);
+    }
   }, [contactInfo]);
 
   // Public user context

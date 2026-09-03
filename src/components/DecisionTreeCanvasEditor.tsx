@@ -408,11 +408,27 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
       setNodes((nds) =>
         nds.map((n) => {
           if (n.id === selectedNodeId) {
+            let nextContentData = updates.contentData !== undefined
+              ? {
+                  ...n.data.contentData,
+                  ...updates.contentData,
+                }
+              : n.data.contentData;
+
+            // Asegurar copia profunda del arreglo blocks y de cada bloque
+            if (nextContentData?.blocks) {
+              nextContentData = {
+                ...nextContentData,
+                blocks: nextContentData.blocks.map((b) => ({ ...b })),
+              };
+            }
+
             return {
               ...n,
               data: {
                 ...n.data,
                 ...updates,
+                ...(nextContentData ? { contentData: nextContentData } : {}),
               },
             };
           }

@@ -185,7 +185,17 @@ export default function AdminPanel({
   const [successMessage, setSuccessMessage] = useState<string>('');
 
   // Contact Form State
-  const [contactForm, setContactForm] = useState<ContactInfo>(() => contactInfo || initialContact);
+  const [contactForm, setContactForm] = useState<ContactInfo>(() => {
+    try {
+      const saved = localStorage.getItem('portalContactInfo') || localStorage.getItem('cc-contact');
+      if (saved) {
+        return { ...initialContact, ...(contactInfo || {}), ...JSON.parse(saved) };
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return contactInfo || initialContact;
+  });
 
   // Sync contactForm if props change
   React.useEffect(() => {
@@ -677,10 +687,27 @@ export default function AdminPanel({
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                if (onUpdateContact) {
-                  onUpdateContact(contactForm);
+                const contactData: ContactInfo = {
+                  whatsapp: contactForm.whatsapp,
+                  telefono: contactForm.telefono,
+                  ubicacion: contactForm.ubicacion,
+                  horario: contactForm.horario,
+                  croquisUrl: contactForm.croquisUrl || '',
+                };
+
+                try {
+                  localStorage.setItem('portalContactInfo', JSON.stringify(contactData));
+                  localStorage.setItem('cc-contact', JSON.stringify(contactData));
+                } catch (storageErr) {
+                  console.error('Error al guardar en localStorage:', storageErr);
                 }
+
+                if (onUpdateContact) {
+                  onUpdateContact(contactData);
+                }
+
                 showToast('✅ Cambios guardados correctamente');
+                alert('Cambios guardados correctamente');
               }}
               className="space-y-4"
             >
