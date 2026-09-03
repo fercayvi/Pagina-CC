@@ -11,6 +11,9 @@ import { getDefaultServiceDetails } from '../data';
 import { SERVICE_ICON_MAP } from './ServiceCard';
 import { MediaUploadField } from './MediaUploadField';
 import { ImageLightboxModal } from './ImageLightboxModal';
+import { DecisionTreeBuilder } from './DecisionTreeBuilder';
+import { DecisionTreeNavigator } from './DecisionTreeNavigator';
+import { DecisionTreeCanvasEditor } from './DecisionTreeCanvasEditor';
 
 // Helper to resolve video URLs (YouTube, Vimeo, direct MP4, or Base64 data URL)
 function getEmbedVideoInfo(url?: string): { type: 'youtube' | 'vimeo' | 'direct' | 'iframe'; embedUrl: string } | null {
@@ -166,7 +169,7 @@ function LivePreviewPanel({
   onOpenLightbox
 }: { 
   draft: Service & { hidden?: boolean };
-  onSelectTab: (tab: 'general' | 'contenido' | 'multimedia' | 'faqs' | 'aviso') => void;
+  onSelectTab: (tab: 'general' | 'arbol' | 'contenido' | 'multimedia' | 'faqs' | 'aviso') => void;
   onOpenLightbox?: (url: string, title?: string) => void;
 }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -245,6 +248,30 @@ function LivePreviewPanel({
               {draft.shortDesc || draft.fullDescription}
             </p>
           </div>
+
+          {/* Decision Tree Interactive Preview */}
+          {draft.decisionTree && draft.decisionTree.length > 0 && (
+            <div className="mb-4">
+              <div className="flex items-center justify-between px-1 mb-1.5">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-700 flex items-center gap-1">
+                  <Layers className="w-3 h-3" />
+                  Árbol de Decisión
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onSelectTab('arbol')}
+                  className="text-[10px] font-bold text-slate-500 hover:text-blue-600"
+                >
+                  Editar flujo
+                </button>
+              </div>
+              <DecisionTreeNavigator
+                tree={draft.decisionTree}
+                onOpenLightbox={onOpenLightbox}
+                serviceTitle={draft.title}
+              />
+            </div>
+          )}
 
           {/* Multimedia Preview */}
           {(draft.imageUrl || videoInfo) && (
@@ -527,6 +554,17 @@ function LivePreviewPanel({
                 </p>
               </div>
 
+              {/* Progressive Disclosure: Árbol de Decisión */}
+              {draft.decisionTree && draft.decisionTree.length > 0 && (
+                <div className="mb-4">
+                  <DecisionTreeNavigator
+                    tree={draft.decisionTree}
+                    onOpenLightbox={onOpenLightbox}
+                    serviceTitle={draft.title}
+                  />
+                </div>
+              )}
+
               {/* Multimedia: Banner and/or Video */}
               {(draft.imageUrl || videoInfo) && (
                 <div className={`grid grid-cols-1 ${draft.imageUrl && videoInfo ? 'md:grid-cols-2' : ''} gap-4`}>
@@ -744,7 +782,7 @@ export default function ServiceDetail({
 }: ServiceDetailProps) {
   const [isEditing, setIsEditing] = useState<boolean>(initialEditMode);
   const [toastMsg, setToastMsg] = useState<string>('');
-  const [editorTab, setEditorTab] = useState<'general' | 'contenido' | 'multimedia' | 'faqs' | 'aviso'>('general');
+  const [editorTab, setEditorTab] = useState<'general' | 'arbol' | 'contenido' | 'multimedia' | 'faqs' | 'aviso'>('general');
   const [mobileViewMode, setMobileViewMode] = useState<'editor' | 'preview'>('editor');
   const [lightboxImage, setLightboxImage] = useState<{ url: string; title?: string } | null>(null);
 
@@ -758,6 +796,7 @@ export default function ServiceDetail({
     const computed = getDefaultServiceDetails(s);
     return {
       ...s,
+      decisionTree: s.decisionTree ? [...s.decisionTree] : (computed.decisionTree ? [...computed.decisionTree] : []),
       fullDescription: s.fullDescription || computed.fullDescription,
       steps: s.steps && s.steps.length > 0 ? s.steps : (computed.steps || []),
       requirements: s.requirements && s.requirements.length > 0 ? s.requirements : (computed.requirements || []),
@@ -775,6 +814,7 @@ export default function ServiceDetail({
   };
 
   const [draft, setDraft] = useState<(Service & { hidden?: boolean })>(() => getPreparedDraft(service));
+  const [isFlowEditorOpen, setIsFlowEditorOpen] = useState(false);
 
   // Sync draft when service prop changes
   useEffect(() => {
@@ -1045,6 +1085,7 @@ export default function ServiceDetail({
             }`}>
               {[
                 { id: 'general', label: 'General', icon: Info, desc: 'Título, categoría, ícono y descripciones' },
+                { id: 'arbol', label: 'Árbol de Decisión', icon: Layers, desc: 'Flujo guiado interactivo (Preguntas y respuestas)' },
                 { id: 'contenido', label: 'Contenido', icon: ListOrdered, desc: 'Pasos, requisitos, ubicación y contacto' },
                 { id: 'multimedia', label: 'Archivos y Multimedia', icon: ImageIcon, desc: 'Infografía, video tutorial y PDF' },
                 { id: 'faqs', label: 'Preguntas Frecuentes', icon: HelpCircle, desc: 'Preguntas y respuestas (FAQs)' },
@@ -1174,6 +1215,83 @@ export default function ServiceDetail({
                       className="w-full text-xs font-medium text-slate-800 border border-slate-300 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20"
                     />
                   </div>
+                </div>
+              )}
+
+              {/* TAB: ÁRBOL DE DECISIÓN DINÁMICO */}
+              {editorTab === 'arbol' && (
+                <div className="space-y-5">
+                  <div className="bg-gradient-to-r from-blue-50 via-indigo-50/40 to-slate-50 border border-blue-200/80 rounded-2xl p-6 shadow-xs">
+                    <div className="space-y-1.5">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-100/70 text-blue-700 text-[11px] font-bold uppercase tracking-wider">
+                        <Layers className="w-3.5 h-3.5" />
+                        <span>Editor Visual Bidimensional</span>
+                      </div>
+                      <h4 className="text-sm font-bold text-gray-900">
+                        Editor de Diagrama de Flujo (Flowchart Canvas)
+                      </h4>
+                      <p className="text-xs text-gray-600 max-w-xl leading-relaxed">
+                        Edita el árbol de decisiones en un lienzo infinito interactivo con zoom, paneo libre y panel de propiedades lateral.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsFlowEditorOpen(true)}
+                      className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95"
+                    >
+                      <Layers className="w-4 h-4" />
+                      <span>Abrir Editor en Pantalla Completa</span>
+                    </button>
+
+                    <div className="mt-4 pt-3 border-t border-blue-100 flex items-center justify-between text-xs text-blue-900/80 font-medium">
+                      <span>Estado actual: {draft.decisionTree?.length || 0} ramas de nivel raíz</span>
+                      <span className="text-[11px] text-blue-600 font-semibold">React Flow 2D Canvas</span>
+                    </div>
+                  </div>
+
+                  {/* Live Interactive Preview */}
+                  {draft.decisionTree && draft.decisionTree.length > 0 ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between px-1">
+                        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                          <Eye className="w-3.5 h-3.5 text-blue-600" />
+                          Vista Previa Interactiva (Estilo Colaborador)
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-medium">
+                          Navegación paso a paso
+                        </span>
+                      </div>
+
+                      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        <DecisionTreeNavigator
+                          tree={draft.decisionTree}
+                          serviceTitle={draft.title}
+                          onOpenLightbox={(url, title) => setLightboxImage({ url, title })}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 px-4 bg-slate-50 border border-dashed border-slate-200 rounded-2xl space-y-3">
+                      <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                        <Layers className="w-6 h-6" />
+                      </div>
+                      <div className="space-y-1">
+                        <h5 className="text-xs font-bold text-slate-800">No hay árbol de decisiones creado aún</h5>
+                        <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                          Haz clic en el botón superior para abrir el lienzo visual y comenzar a trazar las preguntas y opciones de este trámite.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsFlowEditorOpen(true)}
+                        className="px-4 py-2 bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl text-xs font-bold transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Crear Primer Diagrama</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1730,27 +1848,38 @@ export default function ServiceDetail({
             </div>
           )}
 
-          {/* Procedure Steps */}
-          {draft.steps && draft.steps.length > 0 && (
-            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-3">
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                <ListOrdered className="w-4 h-4 text-blue-600" />
-                Paso a Paso del Trámite
-              </h3>
-              <div className="space-y-2.5">
-                {draft.steps.map((st, idx) => (
-                  <div key={idx} className="flex items-start gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200/80">
-                    <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0">
-                      {st.num || idx + 1}
-                    </span>
-                    <div>
-                      {st.title && <h4 className="text-xs font-bold text-slate-900">{st.title}</h4>}
-                      <p className="text-xs text-slate-600 font-medium leading-relaxed mt-0.5">{st.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {/* Progressive Disclosure (Decision Tree) vs Legacy Flat Procedure */}
+          {draft.decisionTree && draft.decisionTree.length > 0 ? (
+            <div className="space-y-3">
+              <DecisionTreeNavigator
+                tree={draft.decisionTree}
+                onOpenLightbox={(url, title) => setLightboxImage({ url, title })}
+                serviceTitle={draft.title}
+              />
             </div>
+          ) : (
+            /* Flat Legacy Procedure Steps */
+            draft.steps && draft.steps.length > 0 && (
+              <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-3">
+                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                  <ListOrdered className="w-4 h-4 text-blue-600" />
+                  Paso a Paso del Trámite
+                </h3>
+                <div className="space-y-2.5">
+                  {draft.steps.map((st, idx) => (
+                    <div key={idx} className="flex items-start gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+                      <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0">
+                        {st.num || idx + 1}
+                      </span>
+                      <div>
+                        {st.title && <h4 className="text-xs font-bold text-slate-900">{st.title}</h4>}
+                        <p className="text-xs text-slate-600 font-medium leading-relaxed mt-0.5">{st.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
           )}
 
           {/* Requirements & Location */}
@@ -1814,17 +1943,47 @@ export default function ServiceDetail({
           )}
 
           {/* Empty state fallback when no sub-sections exist */}
-          {(!draft.imageUrl && !videoInfo && !draft.pdfUrl && (!draft.attachments || draft.attachments.length === 0) && (!draft.steps || draft.steps.length === 0) && (!draft.requirements || draft.requirements.length === 0) && (!draft.location && !draft.schedule && !draft.contact) && (!draft.faqs || draft.faqs.length === 0)) && (
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-6 text-center shadow-2xs space-y-2">
-              <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
-                <Info className="w-5 h-5" />
+          {(() => {
+            const hasContent = Boolean(
+              (draft.steps && draft.steps.length > 0) ||
+              (draft.requirements && draft.requirements.length > 0) ||
+              Boolean(draft.location?.trim() || draft.schedule?.trim() || draft.contact?.trim()) ||
+              (draft.faqs && draft.faqs.length > 0) ||
+              (draft as { content?: string }).content ||
+              (service as { content?: string }).content
+            );
+            const hasMultimedia = Boolean(
+              draft.imageUrl ||
+              videoInfo ||
+              draft.pdfUrl ||
+              (draft.attachments && draft.attachments.length > 0) ||
+              service.imageUrl ||
+              service.videoUrl ||
+              service.pdfUrl ||
+              (service.attachments && service.attachments.length > 0)
+            );
+            const hasDecisionTree = Boolean(
+              (draft.decisionTree && draft.decisionTree.length > 0) ||
+              (service.decisionTree && service.decisionTree.length > 0)
+            );
+
+            // Solo mostrar si no hay contenido, no hay multimedia Y no hay árbol de decisiones
+            if (hasDecisionTree || hasMultimedia || hasContent) {
+              return null;
+            }
+
+            return (
+              <div className="bg-white border border-slate-200/90 rounded-2xl p-6 text-center shadow-2xs space-y-2">
+                <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                  <Info className="w-5 h-5" />
+                </div>
+                <h3 className="text-xs font-bold text-slate-800">Contenido en preparación</h3>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  La información detallada, pasos y formatos descargables para este trámite se están actualizando desde el Panel de Talento y Cultura.
+                </p>
               </div>
-              <h3 className="text-xs font-bold text-slate-800">Contenido en preparación</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                La información detallada, pasos y formatos descargables para este trámite se están actualizando desde el Panel de Talento y Cultura.
-              </p>
-            </div>
-          )}
+            );
+          })()}
 
         </div>
       )}
@@ -1836,6 +1995,20 @@ export default function ServiceDetail({
         title={lightboxImage?.title || draft.title}
         onClose={() => setLightboxImage(null)}
       />
+
+      {/* Fullscreen Flowchart Canvas Editor */}
+      {isFlowEditorOpen && (
+        <DecisionTreeCanvasEditor
+          tree={draft.decisionTree || []}
+          serviceTitle={draft.title}
+          onSave={(newTree) => {
+            setDraft(prev => ({ ...prev, decisionTree: newTree }));
+            setIsFlowEditorOpen(false);
+            showToast('Árbol de decisiones actualizado en el borrador');
+          }}
+          onClose={() => setIsFlowEditorOpen(false)}
+        />
+      )}
 
     </div>
   );

@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { 
   X, Save, FileText, ListOrdered, CheckCircle2, 
   ImageIcon, HelpCircle, AlertTriangle, Plus, Trash2, MapPin, Clock, Phone,
-  Sparkles, Eye, Image as ImageLucide
+  Sparkles, Eye, Image as ImageLucide, Layers, GitBranch
 } from 'lucide-react';
 import { Service, StepItem, ServiceFAQ } from '../types';
 import { MediaUploadField } from './MediaUploadField';
 import { SERVICE_ICON_MAP } from './ServiceCard';
+import { DecisionTreeBuilder } from './DecisionTreeBuilder';
+import { DecisionTreeNavigator } from './DecisionTreeNavigator';
+import { DecisionTreeCanvasEditor } from './DecisionTreeCanvasEditor';
 
 interface EditServiceModalProps {
   isOpen: boolean;
@@ -21,9 +24,10 @@ export const EditServiceModal: React.FC<EditServiceModalProps> = ({
   service,
   onSave
 }) => {
-  const [activeTab, setActiveTab] = useState<'general' | 'pasos' | 'requisitos' | 'multimedia' | 'faqs' | 'aviso'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'arbol' | 'pasos' | 'requisitos' | 'multimedia' | 'faqs' | 'aviso'>('general');
   const [editingService, setEditingService] = useState<(Service & { hidden?: boolean }) | null>(null);
   const [visualMode, setVisualMode] = useState<'icon' | 'image'>('icon');
+  const [isFlowEditorOpen, setIsFlowEditorOpen] = useState(false);
 
   useEffect(() => {
     if (service) {
@@ -34,6 +38,7 @@ export const EditServiceModal: React.FC<EditServiceModalProps> = ({
         steps: service.steps ? [...service.steps] : [],
         requirements: service.requirements ? [...service.requirements] : [],
         faqs: service.faqs ? [...service.faqs] : [],
+        decisionTree: service.decisionTree ? [...service.decisionTree] : [],
         cardImage: service.cardImage || '',
         imageUrl: service.imageUrl || '',
         videoUrl: service.videoUrl || '',
@@ -165,6 +170,19 @@ export const EditServiceModal: React.FC<EditServiceModalProps> = ({
           >
             <FileText className="w-3.5 h-3.5" />
             <span>General</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('arbol')}
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeTab === 'arbol'
+                ? 'bg-white text-blue-700 shadow-2xs border border-slate-200 font-extrabold'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5 text-blue-600" />
+            <span>Árbol de Decisión ({editingService.decisionTree?.length || 0})</span>
           </button>
 
           <button
@@ -431,6 +449,83 @@ export const EditServiceModal: React.FC<EditServiceModalProps> = ({
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* TAB: ÁRBOL DE DECISIÓN (DIVULGACIÓN PROGRESIVA) */}
+            {activeTab === 'arbol' && (
+              <div className="space-y-5 animate-fadeIn">
+                {/* Banner de acceso al Editor de Diagrama de Flujo en Pantalla Completa */}
+                <div className="bg-gradient-to-r from-blue-50 via-indigo-50/40 to-slate-50 border border-blue-200/80 rounded-2xl p-6 shadow-xs">
+                  <div className="space-y-1.5">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-100/70 text-blue-700 text-[11px] font-bold uppercase tracking-wider">
+                      <Layers className="w-3.5 h-3.5" />
+                      <span>Editor Visual Bidimensional</span>
+                    </div>
+                    <h4 className="text-sm font-bold text-gray-900">
+                      Editor de Diagrama de Flujo (Flowchart Canvas)
+                    </h4>
+                    <p className="text-xs text-gray-600 max-w-xl leading-relaxed">
+                      Edita el árbol de decisiones en un lienzo infinito interactivo con zoom, paneo, conexión de ramas y panel de propiedades lateral.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsFlowEditorOpen(true)}
+                    className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95"
+                  >
+                    <GitBranch className="w-4 h-4" />
+                    <span>Abrir Editor en Pantalla Completa</span>
+                  </button>
+
+                  <div className="mt-4 pt-3 border-t border-blue-100 flex items-center justify-between text-xs text-blue-900/80 font-medium">
+                    <span>Estado actual: {editingService.decisionTree?.length || 0} ramas de nivel raíz</span>
+                    <span className="text-[11px] text-blue-600 font-semibold">React Flow 2D Canvas</span>
+                  </div>
+                </div>
+
+                {/* Live Interactive Preview for Admin */}
+                {editingService.decisionTree && editingService.decisionTree.length > 0 ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between px-1">
+                      <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <Eye className="w-3.5 h-3.5 text-blue-600" />
+                        Vista Previa Interactiva (Estilo Colaborador)
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-medium">
+                        Prueba la navegación paso a paso
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                      <DecisionTreeNavigator
+                        tree={editingService.decisionTree}
+                        serviceTitle={editingService.title}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 px-4 bg-slate-50 border border-dashed border-slate-200 rounded-2xl space-y-3">
+                    <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                      <GitBranch className="w-6 h-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <h5 className="text-xs font-bold text-slate-800">No hay árbol de decisiones creado aún</h5>
+                      <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                        Haz clic en el botón superior para abrir el lienzo visual y comenzar a trazar las preguntas y opciones de este trámite.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsFlowEditorOpen(true)}
+                      className="px-4 py-2 bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl text-xs font-bold transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Crear Primer Diagrama</span>
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -784,6 +879,19 @@ export const EditServiceModal: React.FC<EditServiceModalProps> = ({
         </form>
 
       </div>
+
+      {/* Fullscreen Flowchart Canvas Editor */}
+      {isFlowEditorOpen && editingService && (
+        <DecisionTreeCanvasEditor
+          tree={editingService.decisionTree || []}
+          serviceTitle={editingService.title}
+          onSave={(newTree) => {
+            setEditingService(prev => prev ? ({ ...prev, decisionTree: newTree }) : prev);
+            setIsFlowEditorOpen(false);
+          }}
+          onClose={() => setIsFlowEditorOpen(false)}
+        />
+      )}
     </div>
   );
 };

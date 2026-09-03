@@ -4,7 +4,8 @@ export const initialContact: ContactInfo = {
   whatsapp: 'https://wa.me/525512345678',
   telefono: 'Ext. 202 (5512345678)',
   ubicacion: 'Módulo de Servicios al Personal, ubicado a un lado de Ropería.',
-  horario: 'Lunes - Viernes: 7:00 am a 8:00 am | 9:00 am a 12:00 pm | 2:30 pm a 3:30 pm\nSábados: 9:30 am a 12:30 pm'
+  horario: 'Lunes - Viernes: 7:00 am a 8:00 am | 9:00 am a 12:00 pm | 2:30 pm a 3:30 pm\nSábados: 9:30 am a 12:30 pm',
+  croquisUrl: ''
 };
 
 export const initialRecognitions: MonthlyRecognition[] = [
@@ -145,14 +146,84 @@ export const initialServices: Service[] = [
     icon: 'Stethoscope',
     shortDesc: 'Tipos de incapacidad, documentación requerida del IMSS y proceso para reportarla.',
     category: 'Control y Asistencia',
-    fullDescription: '',
-    steps: [],
-    requirements: [],
-    faqs: [],
+    fullDescription: 'Guía interactiva para tramitar, entregar y dar seguimiento a tus incapacidades médicas emitidas por el IMSS.',
+    steps: [
+      { num: 1, title: 'Atención Médica', desc: 'Acude a tu clínica del IMSS (UMF) para valoración médica.' },
+      { num: 2, title: 'Entrega de Certificado', desc: 'Entrega la copia patronal en Recursos Humanos dentro de 24 hrs.' }
+    ],
+    requirements: [
+      'Certificado de Incapacidad original (Copia Patrón)',
+      'Gafete de empleado vigente',
+      'Alta o reporte médico si fue riesgo de trabajo'
+    ],
+    faqs: [
+      { question: '¿Cuántos días tengo para entregar mi incapacidad?', answer: 'Cuentas con un máximo de 24 horas después de emitida para notificar y enviar comprobante a Recursos Humanos.' }
+    ],
     imageUrl: '',
     videoUrl: '',
     pdfUrl: '',
-    pdfTitle: ''
+    pdfTitle: '',
+    decisionTree: [
+      {
+        id: 'node_enf_gen',
+        title: 'Enfermedad General',
+        nodeType: 'category',
+        children: [
+          {
+            id: 'node_enf_menor_3',
+            title: 'De 1 a 3 días',
+            nodeType: 'content',
+            contentData: {
+              text: 'Las incapacidades por Enfermedad General de 1 a 3 días NO son subsidiadas por el IMSS (art. 96 LSS).\n\n1. Envía foto clara del Certificado (Copia Patrón) por WhatsApp de RH dentro de las primeras 24 hrs.\n2. Al reincorporarte a tu turno, entrega el documento físico original en la ventanilla de Recursos Humanos para justificar tus faltas.',
+              imageUrl: ''
+            }
+          },
+          {
+            id: 'node_enf_mayor_3',
+            title: '4 días o más (con Subsidio)',
+            nodeType: 'content',
+            contentData: {
+              text: 'A partir del 4to día, el IMSS cubre el 60% del salario base de cotización registrado.\n\n• Requisito IMSS: Tener al menos 4 cotizaciones semanales inmediatas anteriores.\n• Cobro: Registra tu CLABE interbancaria en el portal IMSS Digital para recibir el pago directo en tu cuenta bancaria sin acudir al banco.',
+              imageUrl: ''
+            }
+          }
+        ]
+      },
+      {
+        id: 'node_riesgo_trabajo',
+        title: 'Accidente de Trabajo / Trayecto',
+        nodeType: 'category',
+        children: [
+          {
+            id: 'node_acc_planta',
+            title: 'Ocurrió dentro de la Planta',
+            nodeType: 'content',
+            contentData: {
+              text: '1. Notifica inmediatamente a tu supervisor y al Médico de Planta.\n2. Te emitirán el formato ST-7 (Aviso de Atención Médica Inicial).\n3. El IMSS cubre el 100% de tu salario desde el primer día una vez calificado como Sí de Trabajo por Salud en el Trabajo.',
+              imageUrl: ''
+            }
+          },
+          {
+            id: 'node_acc_trayecto',
+            title: 'Ocurrió en Trayecto (Casa - Trabajo)',
+            nodeType: 'content',
+            contentData: {
+              text: 'Si el accidente ocurrió en la ruta directa entre tu domicilio y la empresa:\n\n1. Acude al área de urgencias de tu clínica del IMSS.\n2. Solicita en RH tu Carta de Horario y Trayecto Oficial.\n3. Presenta ambos documentos en Salud en el Trabajo de tu clínica para la calificación correspondiente.',
+              imageUrl: ''
+            }
+          }
+        ]
+      },
+      {
+        id: 'node_maternidad',
+        title: 'Maternidad (Prenatal / Postnatal)',
+        nodeType: 'content',
+        contentData: {
+          text: 'La incapacidad por Maternidad abarca 84 días naturales (42 días prenatal y 42 días postnatal) y se subsidia al 100% de tu salario registrado por el IMSS.\n\n• Acude a tu UMF entre las semanas 34 y 37 de gestación para la expedición de tu Certificado Único de Maternidad.\n• Entrega en RH la copia patronal inmediatamente tras recibirla para programar tu periodo de descanso.',
+          imageUrl: ''
+        }
+      }
+    ]
   },
   {
     id: ServiceId.RelojChecador,
@@ -208,7 +279,8 @@ export function getDefaultServiceDetails(service: Service) {
     pdfUrl: service.pdfUrl || '',
     pdfTitle: service.pdfTitle || '',
     attachments: service.attachments || [],
-    alertNotice: service.alertNotice || ''
+    alertNotice: service.alertNotice || '',
+    decisionTree: service.decisionTree || []
   };
 }
 

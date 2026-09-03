@@ -1,10 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Info, MapPin } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MapPin } from 'lucide-react';
 import { Service, NewsItem, UserProfile, ContactInfo } from './types';
 import { initialServices, initialNews, userProfileData, initialContact } from './data';
 import BottomNav from './components/BottomNav';
 import TopBar from './components/TopBar';
-import ServiceCard from './components/ServiceCard';
+import HomeTab from './components/HomeTab';
 import ServiceDetail from './components/ServiceDetail';
 import NewsTab from './components/NewsTab';
 import AsistenteTab from './components/AsistenteTab';
@@ -15,7 +15,7 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState<'inicio' | 'noticias' | 'asistente'>('inicio');
   const [selectedService, setSelectedService] = useState<(Service & { hidden?: boolean }) | null>(null);
   const [serviceEditMode, setServiceEditMode] = useState<boolean>(false);
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'Nómina y Pagos' | 'Tarjetas y Créditos' | 'Control y Asistencia'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   // Admin State
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
@@ -29,7 +29,13 @@ export default function App() {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          return parsed.map((item: Service & { hidden?: boolean }) => {
+            const initialMatch = initialServices.find(init => init.id === item.id);
+            if ((!item.decisionTree || item.decisionTree.length === 0) && initialMatch?.decisionTree && initialMatch.decisionTree.length > 0) {
+              return { ...item, decisionTree: initialMatch.decisionTree };
+            }
+            return item;
+          });
         }
       } catch (e) {
         console.error(e);
@@ -90,7 +96,7 @@ export default function App() {
         setServiceEditMode(false);
         setIsAdminLoggedIn(false);
         setIsLoginModalOpen(false);
-        setSelectedCategory('all');
+        setSelectedCategory(null);
       }, 90000); // 90 seconds
     };
 
@@ -120,23 +126,6 @@ export default function App() {
     setSelectedService(service);
     setServiceEditMode(startEditing);
   };
-
-  // Filter services based on category selection and non-hidden status in public view
-  const filteredServices = useMemo(() => {
-    return services.filter((service) => {
-      if (service.hidden) return false;
-      const matchesCategory = selectedCategory === 'all' || service.category === selectedCategory;
-      return matchesCategory;
-    });
-  }, [services, selectedCategory]);
-
-  // Categories helper
-  const categories = [
-    { id: 'all', label: 'Todos los trámites' },
-    { id: 'Nómina y Pagos', label: 'Nómina y Pagos' },
-    { id: 'Tarjetas y Créditos', label: 'Tarjetas y Créditos' },
-    { id: 'Control y Asistencia', label: 'Control y Asistencia' },
-  ] as const;
 
   return (
     <div id="app-root-layout" className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-800">
@@ -200,7 +189,7 @@ export default function App() {
                 <>
                   {/* TAB 1: INICIO */}
                   {currentTab === 'inicio' && (
-                    <div className="space-y-2 sm:space-y-2 animate-fadeIn">
+                    <div className="space-y-4 animate-fadeIn">
                       
                       {/* TopBar with Title & Admin Lock Button */}
                       <TopBar 
@@ -215,42 +204,13 @@ export default function App() {
                         </p>
                       </div>
 
-                      {/* Horizontal Categories Filters */}
-                      <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar my-1">
-                        {categories.map((cat) => (
-                          <button
-                            key={cat.id}
-                            id={`category-tab-${cat.id}`}
-                            onClick={() => setSelectedCategory(cat.id)}
-                            className={`py-1.5 px-3 rounded-xl text-xs font-extrabold shrink-0 transition-all cursor-pointer active:scale-95 ${
-                              selectedCategory === cat.id
-                                ? 'bg-slate-900 text-white shadow-md border-0 ring-2 ring-slate-900'
-                                : 'bg-slate-200 hover:bg-slate-300 text-slate-900 border-0 shadow-xs'
-                            }`}
-                          >
-                            {cat.label}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Responsive Grid of Services Cards */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2.5 sm:gap-3.5 pb-2">
-                        {filteredServices.map((service) => (
-                          <ServiceCard
-                            key={service.id}
-                            service={service}
-                            onClick={() => handleSelectService(service, false)}
-                          />
-                        ))}
-                      </div>
-
-                      {filteredServices.length === 0 && (
-                        <div className="text-center py-10 bg-white border border-slate-200 rounded-2xl p-6">
-                          <Info className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                          <p className="text-xs font-bold text-slate-700">No se encontraron trámites</p>
-                          <p className="text-[11px] text-slate-400 mt-1">Prueba seleccionando otra categoría.</p>
-                        </div>
-                      )}
+                      {/* Navegación por Niveles (Drill-Down de Trámites) */}
+                      <HomeTab
+                        services={services}
+                        onSelectService={(service) => handleSelectService(service, false)}
+                        selectedCategory={selectedCategory}
+                        onSelectCategory={setSelectedCategory}
+                      />
 
                     </div>
                   )}

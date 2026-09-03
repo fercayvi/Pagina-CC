@@ -16,6 +16,29 @@ export interface StepItem {
   desc: string;
 }
 
+// Progressive Disclosure (Árbol de decisiones dinámico)
+export interface ContentBlock {
+  id: string;
+  text?: string;
+  imageUrl?: string;
+  videoUrl?: string;
+}
+
+export interface ServiceNodeContentData {
+  text?: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  blocks?: ContentBlock[];
+}
+
+export interface ServiceNode {
+  id: string;
+  title: string; // El texto del botón
+  nodeType: 'category' | 'content' | 'step'; // categoría = tiene sub-botones; content = respuesta final; step = paso con contenido + botones
+  children?: ServiceNode[]; // Opcional, si es category o step
+  contentData?: ServiceNodeContentData; // Opcional, si es content o step
+}
+
 export interface ServiceFAQ {
   question: string;
   answer: string;
@@ -43,6 +66,9 @@ export interface Service {
   contact?: string;
   faqs?: ServiceFAQ[];
   hidden?: boolean;
+
+  // Árbol de decisiones dinámico (Divulgación progresiva)
+  decisionTree?: ServiceNode[];
 
   // Multimedia & Attachments
   cardImage?: string;
@@ -113,4 +139,5 @@ export interface ContactInfo {
   telefono: string;
   ubicacion: string;
   horario: string;
+  croquisUrl?: string;
 }
