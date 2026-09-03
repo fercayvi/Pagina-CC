@@ -185,7 +185,17 @@ export default function AdminPanel({
   const [successMessage, setSuccessMessage] = useState<string>('');
 
   // Contact Form State
-  const [contactForm, setContactForm] = useState<ContactInfo>(() => contactInfo || initialContact);
+  const [contactForm, setContactForm] = useState<ContactInfo>(() => {
+    try {
+      const saved = localStorage.getItem('portalContactInfo') || localStorage.getItem('cc-contact');
+      if (saved) {
+        return { ...initialContact, ...(contactInfo || {}), ...JSON.parse(saved) };
+      }
+    } catch (e) {
+      console.error('Error al leer contacto desde localStorage:', e);
+    }
+    return contactInfo || initialContact;
+  });
 
   // Sync contactForm if props change
   React.useEffect(() => {
@@ -328,14 +338,23 @@ export default function AdminPanel({
     e.preventDefault();
     if (!editingService || !editingService.title.trim()) return;
 
+    let updatedList: (Service & { hidden?: boolean })[];
     if (isNewService) {
-      onUpdateServices([editingService, ...services]);
+      updatedList = [editingService, ...services];
+      onUpdateServices(updatedList);
       showToast('¡Nuevo trámite creado e integrado al portal!');
     } else {
-      const updated = services.map(s => s.id === editingService.id ? editingService : s);
-      onUpdateServices(updated);
+      updatedList = services.map(s => s.id === editingService.id ? editingService : s);
+      onUpdateServices(updatedList);
       showToast('Trámite modificado y guardado con éxito.');
     }
+
+    try {
+      localStorage.setItem('cc-services-cms-v1', JSON.stringify(updatedList));
+    } catch (storageErr) {
+      console.error('Error al guardar trámites en localStorage:', storageErr);
+    }
+
     setIsServiceModalOpen(false);
   };
 
@@ -684,6 +703,13 @@ export default function AdminPanel({
                   horario: contactForm.horario,
                   croquisUrl: contactForm.croquisUrl || '',
                 };
+
+                try {
+                  localStorage.setItem('portalContactInfo', JSON.stringify(contactData));
+                  localStorage.setItem('cc-contact', JSON.stringify(contactData));
+                } catch (storageErr) {
+                  console.error('Error al guardar contacto en localStorage:', storageErr);
+                }
 
                 if (onUpdateContact) {
                   onUpdateContact(contactData);

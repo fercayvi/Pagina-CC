@@ -1,10 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { 
-  Upload, Link2, Trash2, CheckCircle2, FileText, Image as ImageIcon, 
+  Upload, Link2, Trash2, Image as ImageIcon, 
   Video, FileDown, AlertCircle, FileCheck, Check, Loader2
 } from 'lucide-react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../firebaseConfig';
 
 export interface MediaUploadFieldProps {
   type: 'image' | 'video' | 'pdf';
@@ -30,8 +28,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
   idPrefix = 'media'
 }) => {
   const isBase64 = value ? value.startsWith('data:') : false;
-  const isFirebaseStorage = value ? value.includes('firebasestorage.googleapis.com') : false;
-  const [mode, setMode] = useState<'upload' | 'url'>(isBase64 || isFirebaseStorage || !value ? 'upload' : 'url');
+  const [mode, setMode] = useState<'upload' | 'url'>(isBase64 || !value ? 'upload' : 'url');
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
@@ -65,7 +62,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
   const getTypeText = () => {
     switch (type) {
       case 'image':
-        return 'Imagen / Infografía / Croquis (PNG, JPG, WEBP, GIF)';
+        return 'Imagen / Croquis (Optimización automática en Canvas a 800px máx, JPG 0.6)';
       case 'video':
         return 'Video Tutorial (.MP4, .WebM)';
       case 'pdf':
@@ -73,37 +70,93 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
     }
   };
 
-  const processFile = async (file: File) => {
+  const processFile = (file: File) => {
     setErrorMsg('');
     setIsLoading(true);
     setFileName(file.name);
 
-    try {
-      // Normalizar nombre de archivo y definir ruta en Firebase Storage
-      const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const timestamp = Date.now();
-      const storagePath = `uploads/${timestamp}_${cleanFileName}`;
-      const storageRef = ref(storage, storagePath);
+    if (type === 'image') {
+      const reader = new FileReader();
+      reader.onerror = () => {
+        setIsLoading(false);
+        setErrorMsg('Error al leer el archivo de imagen.');
+        alert('Error al leer el archivo de imagen');
+      };
+      reader.onload = (e) => {
+        try {
+          const rawBase64 = e.target?.result as string;
+          const img = new Image();
+          img.onerror = () => {
+            setIsLoading(false);
+            setErrorMsg('Error al decodificar la imagen.');
+            alert('Error al procesar la imagen');
+          };
+          img.onload = () => {
+            try {
+              const MAX_WIDTH = 800;
+              let width = img.width;
+              let height = img.height;
 
-      // Subir archivo a Firebase Storage
-      const snapshot = await uploadBytes(storageRef, file);
+              // Calcular dimensiones manteniendo la relación de aspecto
+              if (width > MAX_WIDTH) {
+                const scale = MAX_WIDTH / width;
+                width = MAX_WIDTH;
+                height = Math.round(height * scale);
+              }
 
-      // Obtener URL de descarga pública
-      const downloadURL = await getDownloadURL(snapshot.ref);
+              // Crear canvas offscreen para renderizar y comprimir
+              const canvas = document.createElement('canvas');
+              canvas.width = width;
+              canvas.height = height;
 
-      setIsLoading(false);
-      onChange(downloadURL, file.name);
+              const ctx = canvas.getContext('2d');
+              if (!ctx) {
+                throw new Error('No se pudo inicializar el contexto del canvas');
+              }
 
-      // Si es documento PDF y no tiene título asignado, sugerir nombre
-      if (type === 'pdf' && onTitleChange && (!titleValue || titleValue.trim() === '')) {
-        const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-        onTitleChange(`Descargar ${cleanName.charAt(0).toUpperCase() + cleanName.slice(1)}`);
-      }
-    } catch (err: any) {
-      console.error('Error al subir archivo a Firebase Storage:', err);
-      setIsLoading(false);
-      alert('Error al subir el archivo a Firebase Storage. Por favor verifica tu configuración.');
-      setErrorMsg('No se pudo completar la subida del archivo.');
+              // Dibujar la imagen redimensionada
+              ctx.drawImage(img, 0, 0, width, height);
+
+              // Comprimir en JPEG con calidad 0.6 para proteger el límite de 5MB en localStorage
+              const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+
+              setIsLoading(false);
+              onChange(compressedBase64, file.name);
+            } catch (canvasErr) {
+              console.error('Error durante la compresión en canvas:', canvasErr);
+              setIsLoading(false);
+              setErrorMsg('Error al optimizar la imagen.');
+              alert('Error al procesar la imagen');
+            }
+          };
+          img.src = rawBase64;
+        } catch (readErr) {
+          console.error('Error al procesar la imagen:', readErr);
+          setIsLoading(false);
+          setErrorMsg('Error al procesar la imagen.');
+          alert('Error al procesar la imagen');
+        }
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // Documentos u otros archivos
+      const reader = new FileReader();
+      reader.onerror = () => {
+        setIsLoading(false);
+        setErrorMsg('Error al leer el archivo.');
+        alert('Error al leer el archivo');
+      };
+      reader.onload = (e) => {
+        setIsLoading(false);
+        const fileBase64 = e.target?.result as string;
+        onChange(fileBase64, file.name);
+
+        if (type === 'pdf' && onTitleChange && (!titleValue || titleValue.trim() === '')) {
+          const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+          onTitleChange(`Descargar ${cleanName.charAt(0).toUpperCase() + cleanName.slice(1)}`);
+        }
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -150,14 +203,14 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
 
   return (
     <div className="space-y-2.5 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
-      {/* Header with Title & Mode Switcher */}
+      {/* Header con Título y Switcher de Modo */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/70 pb-2">
         <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
           <IconComponent className="w-4 h-4 text-blue-600 shrink-0" />
           <span>{label}</span>
         </label>
 
-        {/* Dual Mode Switcher Tabs */}
+        {/* Pestañas de Modo: Subir / URL */}
         <div className="inline-flex p-0.5 bg-slate-200/80 rounded-xl self-start sm:self-auto border border-slate-300/60">
           <button
             type="button"
@@ -170,7 +223,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
             }`}
           >
             <Upload className="w-3 h-3" />
-            <span>Subir Archivo (Cloud)</span>
+            <span>Subir Archivo (Local)</span>
           </button>
           <button
             type="button"
@@ -188,7 +241,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
         </div>
       </div>
 
-      {/* Upload or URL Input Section */}
+      {/* Zona de Arrastrar o Input de Archivo */}
       {mode === 'upload' ? (
         <div className="space-y-2">
           <input
@@ -222,16 +275,16 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
                 )}
               </div>
               <p className="text-xs font-bold text-slate-800">
-                {isLoading ? 'Subiendo a Firebase Storage...' : 'Haz clic para seleccionar o arrastra el archivo aquí'}
+                {isLoading ? 'Comprimiendo imagen con Canvas...' : 'Haz clic para seleccionar o arrastra la imagen aquí'}
               </p>
               <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
-                {isLoading ? 'Por favor espera un momento' : getTypeText()}
+                {isLoading ? 'Optimizando a 800px máx (JPG 0.6)...' : getTypeText()}
               </p>
             </div>
           ) : null}
         </div>
       ) : (
-        /* URL Input Mode */
+        /* Modo URL Externa */
         <div className="space-y-1.5">
           <div className="relative flex items-center">
             <Link2 className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
@@ -253,20 +306,13 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
               className="w-full pl-8 pr-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
             />
           </div>
-          {isBase64 && (
-            <p className="text-[10px] text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 flex items-center gap-1 font-medium">
-              <AlertCircle className="w-3 h-3 shrink-0" />
-              <span>Hay un archivo local antiguo. Al subir un nuevo archivo se guardará en Firebase Storage.</span>
-            </p>
-          )}
         </div>
       )}
 
-      {/* Control de Archivo Cargado / Status Bar */}
+      {/* Vista previa y estado del elemento cargado */}
       {hasValue && (
         <div className="p-2.5 bg-white border border-emerald-200/90 rounded-xl shadow-2xs flex items-center justify-between gap-3 animate-fadeIn">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            {/* Thumbnail / Icon Badge */}
             {type === 'image' && (
               <img 
                 src={value} 
@@ -289,12 +335,12 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
               <div className="flex items-center gap-1.5">
                 <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[9px] font-extrabold uppercase tracking-wider">
                   <Check className="w-2.5 h-2.5" />
-                  {isFirebaseStorage ? 'Firebase Storage' : isBase64 ? 'Local' : 'Enlace Web'}
+                  {isBase64 ? 'Local Optimizado' : 'Enlace Web'}
                 </span>
-                <span className="text-[10px] text-emerald-700 font-bold">Disponible</span>
+                <span className="text-[10px] text-emerald-700 font-bold">Listo</span>
               </div>
               <p className="text-xs font-semibold text-slate-800 truncate mt-0.5">
-                {fileName || (isFirebaseStorage ? 'Archivo en la nube (Storage)' : value)}
+                {fileName || (isBase64 ? 'Imagen comprimida para localStorage' : value)}
               </p>
             </div>
           </div>
@@ -308,7 +354,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
                 onClick={() => fileInputRef.current?.click()}
                 className="px-2 py-1 text-[11px] font-bold text-blue-700 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer border border-blue-200/80 disabled:opacity-50"
               >
-                {isLoading ? 'Subiendo...' : 'Cambiar'}
+                {isLoading ? 'Optimizando...' : 'Cambiar'}
               </button>
             )}
             <button
@@ -324,7 +370,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
         </div>
       )}
 
-      {/* Additional title input for PDF / Download button */}
+      {/* Título opcional de botón para PDF */}
       {type === 'pdf' && onTitleChange && (
         <div className="pt-1">
           <label className="block text-[11px] font-bold text-slate-700 mb-1">
@@ -341,7 +387,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
         </div>
       )}
 
-      {/* Error / Warning Notice */}
+      {/* Mensaje de error */}
       {errorMsg && (
         <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-700 flex items-start gap-1.5 font-medium">
           <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
@@ -349,7 +395,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
         </div>
       )}
 
-      {/* Helper text footer */}
+      {/* Texto de ayuda */}
       {helperText && (
         <p className="text-[10px] text-slate-400 font-medium">
           {helperText}

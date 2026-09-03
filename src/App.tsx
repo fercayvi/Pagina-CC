@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Loader2 } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { Service, NewsItem, UserProfile, ContactInfo } from './types';
 import { initialServices, initialNews, userProfileData, initialContact } from './data';
-import { 
-  getServices, 
-  saveService, 
-  saveAllServices, 
-  getContactInfo, 
-  saveContactInfo 
-} from './services/dbService';
 import BottomNav from './components/BottomNav';
 import TopBar from './components/TopBar';
 import HomeTab from './components/HomeTab';
@@ -29,49 +22,69 @@ export default function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
   const [isImageZoomed, setIsImageZoomed] = useState<boolean>(false);
 
-  // Loading State para Firebase
-  const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
+  // 100% Offline / LocalStorage State Initialization
+  const [services, setServices] = useState<(Service & { hidden?: boolean })[]>(() => {
+    try {
+      const saved = localStorage.getItem('cc-services-cms-v1');
+      return saved ? JSON.parse(saved) : initialServices;
+    } catch (e) {
+      console.error('Error al cargar trámites desde localStorage:', e);
+      return initialServices;
+    }
+  });
 
-  // Dynamic content states backed by Firebase Firestore
-  const [services, setServices] = useState<(Service & { hidden?: boolean })[]>(initialServices);
-  const [news, setNews] = useState<NewsItem[]>(initialNews);
-  const [contactInfo, setContactInfo] = useState<ContactInfo>(initialContact);
+  const [news, setNews] = useState<NewsItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('cc-news');
+      return saved ? JSON.parse(saved) : initialNews;
+    } catch (e) {
+      console.error('Error al cargar noticias desde localStorage:', e);
+      return initialNews;
+    }
+  });
 
-  // Carga inicial de datos desde Firebase Firestore
+  const [contactInfo, setContactInfo] = useState<ContactInfo>(() => {
+    try {
+      const saved = localStorage.getItem('portalContactInfo') || localStorage.getItem('cc-contact');
+      if (saved) {
+        return { ...initialContact, ...JSON.parse(saved) };
+      }
+    } catch (e) {
+      console.error('Error al cargar contacto desde localStorage:', e);
+    }
+    return initialContact;
+  });
+
+  // Guardar trámites en localStorage de forma reactiva
   useEffect(() => {
-    let isMounted = true;
-
-    async function loadDataFromFirebase() {
-      try {
-        setIsLoadingData(true);
-        const [remoteServices, remoteContact] = await Promise.all([
-          getServices(),
-          getContactInfo(),
-        ]);
-
-        if (isMounted) {
-          if (remoteServices && remoteServices.length > 0) {
-            setServices(remoteServices);
-          }
-          if (remoteContact) {
-            setContactInfo(remoteContact);
-          }
-        }
-      } catch (err) {
-        console.error('Error al sincronizar datos con Firebase:', err);
-      } finally {
-        if (isMounted) {
-          setIsLoadingData(false);
-        }
+    try {
+      localStorage.setItem('cc-services-cms-v1', JSON.stringify(services));
+    } catch (e: any) {
+      console.error('Error al guardar trámites en localStorage:', e);
+      if (e?.name === 'QuotaExceededError' || e?.code === 22) {
+        alert('Aviso de almacenamiento: Se ha alcanzado el límite de 5MB en localStorage. Procura usar enlaces URL para imágenes pesadas o eliminar elementos obsoletos.');
       }
     }
+  }, [services]);
 
-    loadDataFromFirebase();
+  // Guardar noticias en localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('cc-news', JSON.stringify(news));
+    } catch (e) {
+      console.error('Error al guardar noticias en localStorage:', e);
+    }
+  }, [news]);
 
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  // Guardar información de contacto en localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('portalContactInfo', JSON.stringify(contactInfo));
+      localStorage.setItem('cc-contact', JSON.stringify(contactInfo));
+    } catch (e) {
+      console.error('Error al sincronizar contactInfo en localStorage:', e);
+    }
+  }, [contactInfo]);
 
   // Public user context
   const user: UserProfile = userProfileData;
@@ -104,41 +117,42 @@ export default function App() {
     };
   }, []);
 
-  // Guardar trámite individual en Firebase
-  const handleUpdateService = async (updated: Service & { hidden?: boolean }) => {
+  // Handler para actualizar un trámite individual
+  const handleUpdateService = (updated: Service & { hidden?: boolean }) => {
     setServices(prev => {
       const exists = prev.some(s => s.id === updated.id);
-      if (exists) {
-        return prev.map(s => s.id === updated.id ? updated : s);
+      const nextServices = exists 
+        ? prev.map(s => s.id === updated.id ? updated : s) 
+        : [updated, ...prev];
+
+      try {
+        localStorage.setItem('cc-services-cms-v1', JSON.stringify(nextServices));
+      } catch (err) {
+        console.error('Error guardando trámite actualizado en localStorage:', err);
       }
-      return [updated, ...prev];
+      return nextServices;
     });
     setSelectedService(updated);
-
-    try {
-      await saveService(updated);
-    } catch (error) {
-      console.error('Error al guardar el trámite en Firestore:', error);
-    }
   };
 
-  // Guardar lista completa de trámites (reordenamiento o visibilidad) en Firebase
-  const handleUpdateServices = async (newServices: (Service & { hidden?: boolean })[]) => {
+  // Handler para actualizar la lista completa de trámites
+  const handleUpdateServices = (newServices: (Service & { hidden?: boolean })[]) => {
     setServices(newServices);
     try {
-      await saveAllServices(newServices);
-    } catch (error) {
-      console.error('Error al guardar lote de trámites en Firestore:', error);
+      localStorage.setItem('cc-services-cms-v1', JSON.stringify(newServices));
+    } catch (err) {
+      console.error('Error guardando catálogo de trámites en localStorage:', err);
     }
   };
 
-  // Guardar información de contacto en Firebase
-  const handleUpdateContact = async (updatedContact: ContactInfo) => {
+  // Handler para actualizar la información de contacto
+  const handleUpdateContact = (updatedContact: ContactInfo) => {
     setContactInfo(updatedContact);
     try {
-      await saveContactInfo(updatedContact);
-    } catch (error) {
-      console.error('Error al guardar configuración de contacto en Firestore:', error);
+      localStorage.setItem('portalContactInfo', JSON.stringify(updatedContact));
+      localStorage.setItem('cc-contact', JSON.stringify(updatedContact));
+    } catch (err) {
+      console.error('Error guardando contacto en localStorage:', err);
     }
   };
 
@@ -146,21 +160,6 @@ export default function App() {
     setSelectedService(service);
     setServiceEditMode(startEditing);
   };
-
-  // Pantalla de Carga Inicial
-  if (isLoadingData) {
-    return (
-      <div id="loading-screen" className="min-h-screen bg-slate-100 flex flex-col items-center justify-center font-sans p-6 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-white shadow-md border border-slate-200 flex items-center justify-center mb-4">
-          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-        </div>
-        <h2 className="text-lg font-bold text-slate-900">Cargando Kiosco de Trámites</h2>
-        <p className="text-xs text-slate-500 mt-1 max-w-xs">
-          Conectando y sincronizando datos con Firebase en la nube...
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div id="app-root-layout" className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-800">
@@ -268,7 +267,6 @@ export default function App() {
               currentTab={currentTab} 
               setCurrentTab={(tab) => {
                 setCurrentTab(tab);
-                // Reset service detail view when switching tabs
                 setSelectedService(null);
               }} 
             />
