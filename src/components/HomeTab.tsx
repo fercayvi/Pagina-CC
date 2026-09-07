@@ -7,51 +7,42 @@ import {
   ArrowLeft,
   Info
 } from 'lucide-react';
-import { Service } from '../types';
+import { Service, CategoryConfig } from '../types';
+import { defaultCategories } from '../data';
 import ServiceCard from './ServiceCard';
 
-export type MainCategory =
-  | 'Todos los trámites'
-  | 'Nómina y Pagos'
-  | 'Tarjetas y Créditos'
-  | 'Control y Asistencia';
+const CATEGORY_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  LayoutGrid,
+  Wallet,
+  CreditCard,
+  CalendarClock,
+};
 
-export const MAIN_CATEGORIES = [
-  {
-    id: 'Todos los trámites' as const,
-    label: 'Todos los trámites',
-    icon: LayoutGrid,
+const CATEGORY_COLOR_MAP: Record<string, { iconColor: string; bgLight: string }> = {
+  indigo: {
     iconColor: 'text-indigo-600',
     bgLight: 'bg-indigo-50/80 border-indigo-100',
   },
-  {
-    id: 'Nómina y Pagos' as const,
-    label: 'Nómina y Pagos',
-    icon: Wallet,
+  emerald: {
     iconColor: 'text-emerald-600',
     bgLight: 'bg-emerald-50/80 border-emerald-100',
   },
-  {
-    id: 'Tarjetas y Créditos' as const,
-    label: 'Tarjetas y Créditos',
-    icon: CreditCard,
+  violet: {
     iconColor: 'text-violet-600',
     bgLight: 'bg-violet-50/80 border-violet-100',
   },
-  {
-    id: 'Control y Asistencia' as const,
-    label: 'Control y Asistencia',
-    icon: CalendarClock,
+  amber: {
     iconColor: 'text-amber-600',
     bgLight: 'bg-amber-50/80 border-amber-100',
   },
-] as const;
+};
 
 interface HomeTabProps {
   services: (Service & { hidden?: boolean })[];
   onSelectService: (service: Service & { hidden?: boolean }) => void;
   selectedCategory?: string | null;
   onSelectCategory?: (category: string | null) => void;
+  categories?: CategoryConfig[];
 }
 
 export default function HomeTab({
@@ -59,9 +50,14 @@ export default function HomeTab({
   onSelectService,
   selectedCategory: controlledCategory,
   onSelectCategory,
+  categories,
 }: HomeTabProps) {
-  // 1. Manejo de Estado (inicializado en null)
+  // Manejo de Estado (inicializado en null)
   const [internalCategory, setInternalCategory] = useState<string | null>(null);
+
+  const activeCategories = useMemo(() => {
+    return categories && categories.length > 0 ? categories : defaultCategories;
+  }, [categories]);
 
   const selectedCategory = controlledCategory !== undefined 
     ? controlledCategory 
@@ -74,45 +70,78 @@ export default function HomeTab({
     setInternalCategory(cat);
   };
 
+  // Obtener el objeto de la categoría activa
+  const activeCategoryObj = useMemo(() => {
+    if (!selectedCategory) return null;
+    return activeCategories.find(c => 
+      c.id === selectedCategory || 
+      c.label === selectedCategory || 
+      c.defaultLabel === selectedCategory
+    );
+  }, [activeCategories, selectedCategory]);
+
+  const categoryDisplayTitle = activeCategoryObj ? activeCategoryObj.label : selectedCategory;
+
   // Filtrado de servicios para Nivel 2
   const filteredServices = useMemo(() => {
     if (!selectedCategory) return [];
+
+    // Si la categoría seleccionada es 'all' o equivalente a 'Todos los trámites'
+    if (
+      selectedCategory === 'all' || 
+      selectedCategory === 'Todos los trámites' || 
+      (activeCategoryObj && activeCategoryObj.id === 'all')
+    ) {
+      return services.filter(s => !s.hidden);
+    }
+
     return services.filter((service) => {
       if (service.hidden) return false;
-      // Si es 'Todos los trámites', muestra TODO el arreglo de servicios
-      if (selectedCategory === 'Todos los trámites') return true;
-      // Si es otra categoría, aplica un .filter() para mostrar solo los correspondientes
-      return service.category === selectedCategory;
+      if (!activeCategoryObj) {
+        return service.category === selectedCategory;
+      }
+      return (
+        service.category === activeCategoryObj.label ||
+        service.category === activeCategoryObj.defaultLabel ||
+        service.category === activeCategoryObj.id
+      );
     });
-  }, [services, selectedCategory]);
+  }, [services, selectedCategory, activeCategoryObj]);
 
-  const getCategoryCount = (categoryId: string) => {
-    if (categoryId === 'Todos los trámites') {
+  const getCategoryCount = (cat: CategoryConfig) => {
+    if (cat.id === 'all') {
       return services.filter(s => !s.hidden).length;
     }
-    return services.filter(s => !s.hidden && s.category === categoryId).length;
+    return services.filter(s => 
+      !s.hidden && (
+        s.category === cat.label || 
+        s.category === cat.defaultLabel || 
+        s.category === cat.id
+      )
+    ).length;
   };
 
   return (
     <div className="w-full">
-      {/* 2. VISTA INICIAL (NIVEL 1 - CATEGORÍAS GIGANTES) */}
+      {/* 1. VISTA INICIAL (NIVEL 1 - 4 TARJETAS PRINCIPALES) */}
       {selectedCategory === null ? (
         <div className="py-2 animate-fadeIn">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-            {MAIN_CATEGORIES.map((cat) => {
-              const IconComponent = cat.icon;
-              const count = getCategoryCount(cat.id);
+            {activeCategories.map((cat) => {
+              const IconComponent = CATEGORY_ICON_MAP[cat.iconName] || LayoutGrid;
+              const colorStyles = CATEGORY_COLOR_MAP[cat.colorScheme] || CATEGORY_COLOR_MAP.indigo;
+              const count = getCategoryCount(cat);
 
               return (
                 <button
                   key={cat.id}
                   type="button"
-                  id={`cat-card-${cat.id.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+                  id={`cat-card-${cat.id}`}
                   onClick={() => handleCategoryChange(cat.id)}
                   className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-500 transition-all cursor-pointer flex flex-col items-center justify-center p-6 gap-4 text-center aspect-square group active:scale-[0.98]"
                 >
-                  <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border flex items-center justify-center transition-transform group-hover:scale-110 shadow-2xs ${cat.bgLight}`}>
-                    <IconComponent className={`w-8 h-8 sm:w-10 sm:h-10 ${cat.iconColor}`} />
+                  <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border flex items-center justify-center transition-transform group-hover:scale-110 shadow-2xs ${colorStyles.bgLight}`}>
+                    <IconComponent className={`w-8 h-8 sm:w-10 sm:h-10 ${colorStyles.iconColor}`} />
                   </div>
 
                   <div>
@@ -129,9 +158,9 @@ export default function HomeTab({
           </div>
         </div>
       ) : (
-        /* 3. VISTA SECUNDARIA (NIVEL 2 - TRÁMITES DE LA CATEGORÍA) */
+        /* 2. VISTA SECUNDARIA (NIVEL 2 - TRÁMITES DE LA CATEGORÍA SELECCIONADA) */
         <div className="py-2 animate-fadeIn">
-          {/* a) Botón superior de volver a categorías */}
+          {/* Botón superior de volver a categorías */}
           <div>
             <button
               type="button"
@@ -144,12 +173,12 @@ export default function HomeTab({
             </button>
           </div>
 
-          {/* b) Título de la categoría seleccionada en grande */}
+          {/* Título de la categoría seleccionada con nombre personalizado */}
           <h2 className="text-2xl font-bold mb-6 text-gray-900">
-            {selectedCategory}
+            {categoryDisplayTitle}
           </h2>
 
-          {/* c) Cuadrícula con las tarjetas de los trámites */}
+          {/* Cuadrícula con las tarjetas de los trámites */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2.5 sm:gap-3.5 pb-2">
             {filteredServices.map((service) => (
               <ServiceCard

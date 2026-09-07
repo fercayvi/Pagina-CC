@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin } from 'lucide-react';
-import { Service, NewsItem, UserProfile, ContactInfo } from './types';
-import { initialServices, initialNews, userProfileData, initialContact } from './data';
+import { Service, NewsItem, UserProfile, ContactInfo, CategoryConfig } from './types';
+import { initialServices, initialNews, userProfileData, initialContact, defaultCategories } from './data';
 import BottomNav from './components/BottomNav';
 import TopBar from './components/TopBar';
 import HomeTab from './components/HomeTab';
@@ -54,6 +54,39 @@ export default function App() {
     }
     return initialContact;
   });
+
+  const [categories, setCategories] = useState<CategoryConfig[]>(() => {
+    try {
+      const saved = localStorage.getItem('cc-categories');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.error('Error al cargar categorías desde localStorage:', e);
+    }
+    return defaultCategories;
+  });
+
+  const handleUpdateCategories = (newCategories: CategoryConfig[], updatedServices?: (Service & { hidden?: boolean })[]) => {
+    setCategories(newCategories);
+    try {
+      localStorage.setItem('cc-categories', JSON.stringify(newCategories));
+    } catch (err) {
+      console.error('Error al guardar categorías:', err);
+    }
+
+    if (updatedServices) {
+      setServices(updatedServices);
+      try {
+        localStorage.setItem('cc-services-cms-v1', JSON.stringify(updatedServices));
+      } catch (err) {
+        console.error('Error al guardar servicios actualizados:', err);
+      }
+    }
+  };
 
   // Guardar trámites en localStorage de forma reactiva
   useEffect(() => {
@@ -214,6 +247,8 @@ export default function App() {
                   onUpdateNews={setNews}
                   contactInfo={contactInfo}
                   onUpdateContact={handleUpdateContact}
+                  categories={categories}
+                  onUpdateCategories={handleUpdateCategories}
                   onLogout={() => {
                     setIsAdminLoggedIn(false);
                     setSelectedService(null);
@@ -244,6 +279,7 @@ export default function App() {
                         onSelectService={(service) => handleSelectService(service, false)}
                         selectedCategory={selectedCategory}
                         onSelectCategory={setSelectedCategory}
+                        categories={categories}
                       />
 
                     </div>

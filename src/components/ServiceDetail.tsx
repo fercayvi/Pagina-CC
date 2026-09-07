@@ -4,16 +4,20 @@ import {
   HelpCircle, Edit3, Save, Plus, Trash2, X, AlertCircle, Check,
   Image as ImageIcon, Video, FileDown, Eye, EyeOff, AlertTriangle,
   ExternalLink, Download, Layers, Sparkles, GripVertical, ChevronUp, ChevronDown, Sliders, Info, ListOrdered,
-  Maximize2, Minimize2, ZoomIn
+  Maximize2, Minimize2, ZoomIn, LayoutGrid, Type
 } from 'lucide-react';
-import { Service, UserProfile, FAQ, StepItem, ServiceFAQ, ServiceAttachment } from '../types';
-import { getDefaultServiceDetails } from '../data';
+import { Service, UserProfile, FAQ, StepItem, ServiceFAQ, ServiceAttachment, CategoryConfig } from '../types';
+import { getDefaultServiceDetails, defaultCategories } from '../data';
 import { SERVICE_ICON_MAP } from './ServiceCard';
 import { MediaUploadField } from './MediaUploadField';
 import { ImageLightboxModal } from './ImageLightboxModal';
 import { DecisionTreeBuilder } from './DecisionTreeBuilder';
 import { DecisionTreeNavigator } from './DecisionTreeNavigator';
 import { DecisionTreeCanvasEditor } from './DecisionTreeCanvasEditor';
+import { BlockBuilder } from './BlockBuilder';
+import { PageBuilderFullScreenEditor } from './PageBuilderFullScreenEditor';
+import { LayoutBlocksRenderer } from './LayoutBlocksRenderer';
+import { ensureServiceLayoutBlocks } from '../utils/layoutBlocks';
 
 // Helper to resolve video URLs (YouTube, Vimeo, direct MP4, or Base64 data URL)
 function getEmbedVideoInfo(url?: string): { type: 'youtube' | 'vimeo' | 'direct' | 'iframe'; embedUrl: string } | null {
@@ -169,7 +173,7 @@ function LivePreviewPanel({
   onOpenLightbox
 }: { 
   draft: Service & { hidden?: boolean };
-  onSelectTab: (tab: 'general' | 'arbol' | 'contenido' | 'multimedia' | 'faqs' | 'aviso') => void;
+  onSelectTab: (tab: 'general' | 'arbol' | 'bloques') => void;
   onOpenLightbox?: (url: string, title?: string) => void;
 }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -200,21 +204,6 @@ function LivePreviewPanel({
         <div 
           className="bg-slate-50 rounded-xl p-3 border border-slate-200 text-slate-900 max-h-[650px] overflow-y-auto custom-scrollbar relative group/preview"
         >
-          {/* Banner Alert Notice */}
-          {draft.alertNotice && draft.alertNotice.trim().length > 0 && (
-            <div 
-              onClick={() => onSelectTab('aviso')}
-              className="bg-amber-500 text-white rounded-xl p-3.5 shadow-sm flex items-start gap-2.5 cursor-pointer hover:opacity-95 transition-opacity mb-4"
-              title="Haz clic para editar el aviso destacado"
-            >
-              <AlertTriangle className="w-4 h-4 shrink-0 text-amber-100 mt-0.5" />
-              <div className="min-w-0 flex-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-100 block">Aviso Importante</span>
-                <p className="text-xs font-medium leading-relaxed">{draft.alertNotice}</p>
-              </div>
-            </div>
-          )}
-
           {/* Header Card (Información General) */}
           <div 
             onClick={() => onSelectTab('general')}
@@ -273,206 +262,36 @@ function LivePreviewPanel({
             </div>
           )}
 
-          {/* Multimedia Preview */}
-          {(draft.imageUrl || videoInfo) && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-3 mb-4 space-y-2">
-              {draft.imageUrl && (
-                <div 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (onOpenLightbox) {
-                      onOpenLightbox(draft.imageUrl!, draft.title);
-                    } else {
-                      onSelectTab('multimedia');
-                    }
-                  }}
-                  className="relative group cursor-pointer"
-                  title="Haz clic para ver la infografía ampliada con zoom"
-                >
-                  <img 
-                    src={draft.imageUrl} 
-                    alt={draft.title || 'Infografía'} 
-                    className="w-full h-auto max-w-full rounded-xl object-contain shadow-sm border border-slate-100" 
-                  />
-                  <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-1.5 text-white text-xs font-bold pointer-events-none backdrop-blur-xs">
-                    <ZoomIn className="w-4 h-4" />
-                    <span>Ver Infografía (Zoom)</span>
-                  </div>
-                </div>
-              )}
-              {videoInfo && (
-                <div 
-                  onClick={() => onSelectTab('multimedia')}
-                  className="w-full h-24 bg-slate-900 rounded-lg flex items-center justify-center text-xs text-blue-300 font-bold border border-blue-900/50 cursor-pointer hover:border-blue-500 transition-colors"
-                  title="Haz clic para configurar video tutorial"
-                >
-                  Video Tutorial Adjunto
-                </div>
-              )}
+          {/* Dynamic Content Blocks */}
+          <div className="space-y-2 mt-2">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                <LayoutGrid className="w-3 h-3 text-blue-600" />
+                Bloques de Contenido ({draft.layoutBlocks?.length || 0})
+              </span>
+              <button
+                type="button"
+                onClick={() => onSelectTab('bloques')}
+                className="text-[10px] font-bold text-blue-600 hover:text-blue-700 cursor-pointer"
+              >
+                Editar bloques
+              </button>
             </div>
-          )}
-
-          {/* PDF Download Preview */}
-          {(draft.pdfUrl || (draft.attachments && draft.attachments.length > 0)) && (
-            <div 
-              onClick={() => onSelectTab('multimedia')}
-              className="bg-white rounded-xl border border-slate-200 shadow-sm p-3.5 mb-4 cursor-pointer hover:border-blue-300 transition-all space-y-2"
-              title="Haz clic para ver multimedia y archivos"
-            >
-              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                <FileDown className="w-4 h-4 text-emerald-600" />
-                Formatos Descargables
-              </h4>
-              <div className="space-y-1.5">
-                {draft.pdfUrl && (
-                  <div className="p-2 rounded-lg border border-slate-200 bg-blue-50/60 flex items-center justify-between gap-2">
-                    <div className="min-w-0 flex-1 flex items-center gap-2">
-                      <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                      <span className="text-xs font-bold text-slate-800 truncate">
-                        {draft.pdfTitle || 'Descargar Formato (PDF)'}
-                      </span>
-                    </div>
-                    <Download className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                  </div>
-                )}
-                {draft.attachments && draft.attachments.map((att, i) => (
-                  <div key={i} className="p-2 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
-                    <div className="min-w-0 flex-1 flex items-center gap-2">
-                      <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                      <span className="text-xs font-bold text-slate-800 truncate">{att.name || 'Documento PDF'}</span>
-                    </div>
-                    <Download className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  </div>
-                ))}
+            {draft.layoutBlocks && draft.layoutBlocks.length > 0 ? (
+              <LayoutBlocksRenderer 
+                blocks={draft.layoutBlocks} 
+                onOpenLightbox={onOpenLightbox} 
+              />
+            ) : (
+              <div 
+                onClick={() => onSelectTab('bloques')}
+                className="p-4 rounded-xl border border-dashed border-slate-300 bg-white text-center cursor-pointer hover:border-blue-400 transition-colors"
+              >
+                <p className="text-xs text-slate-400 font-medium">No hay bloques de contenido añadidos.</p>
+                <span className="text-[11px] text-blue-600 font-bold mt-1 inline-block">Haz clic para agregar bloques con el constructor</span>
               </div>
-            </div>
-          )}
-
-          {/* Procedure Steps Preview */}
-          {draft.steps && draft.steps.length > 0 && (
-            <div 
-              onClick={() => onSelectTab('contenido')}
-              className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4 cursor-pointer hover:border-blue-300 transition-all space-y-3"
-              title="Haz clic para editar pasos"
-            >
-              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                <ListOrdered className="w-4 h-4 text-blue-600" />
-                Pasos del Procedimiento
-              </h4>
-              <div className="space-y-2.5">
-                {draft.steps.slice(0, 3).map((st, i) => (
-                  <div key={i} className="flex items-start gap-3 bg-slate-50 p-2.5 rounded-lg border border-slate-200/80">
-                    <span className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
-                      {st.num || i + 1}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      {st.title && <h5 className="text-xs font-bold text-slate-900 leading-tight">{st.title}</h5>}
-                      <p className="text-xs text-slate-600 font-medium leading-relaxed mt-0.5 line-clamp-2">{st.desc}</p>
-                    </div>
-                  </div>
-                ))}
-                {draft.steps.length > 3 && (
-                  <span className="text-[11px] text-blue-600 font-semibold block text-center pt-1">
-                    +{draft.steps.length - 3} pasos más...
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Requirements Preview */}
-          {draft.requirements && draft.requirements.length > 0 && (
-            <div 
-              onClick={() => onSelectTab('contenido')}
-              className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4 cursor-pointer hover:border-emerald-300 transition-all space-y-2.5"
-              title="Haz clic para editar requisitos"
-            >
-              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                Requisitos Necesarios
-              </h4>
-              <ul className="space-y-2">
-                {draft.requirements.slice(0, 4).map((req, i) => (
-                  <li key={i} className="flex items-start gap-2 text-xs text-slate-700">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0"></span>
-                    <span className="line-clamp-2">{req}</span>
-                  </li>
-                ))}
-                {draft.requirements.length > 4 && (
-                  <span className="text-[11px] text-emerald-600 font-semibold block text-center pt-1">
-                    +{draft.requirements.length - 4} requisitos más...
-                  </span>
-                )}
-              </ul>
-            </div>
-          )}
-
-          {/* Location and Contact Preview */}
-          {(draft.location?.trim() || draft.schedule?.trim() || draft.contact?.trim()) && (
-            <div 
-              onClick={() => onSelectTab('contenido')}
-              className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4 cursor-pointer hover:border-blue-300 transition-all space-y-2.5"
-              title="Haz clic para editar datos de contacto"
-            >
-              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-blue-600" />
-                Atención y Ubicación
-              </h4>
-              <div className="space-y-2 text-xs text-slate-700">
-                {draft.location && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                    <span className="line-clamp-1">{draft.location}</span>
-                  </div>
-                )}
-                {draft.schedule && (
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-slate-400 shrink-0" />
-                    <span className="line-clamp-1">{draft.schedule}</span>
-                  </div>
-                )}
-                {draft.contact && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-slate-400 shrink-0" />
-                    <span className="font-semibold text-blue-700 line-clamp-1">{draft.contact}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* FAQs Preview */}
-          {draft.faqs && draft.faqs.length > 0 && (
-            <div 
-              onClick={() => onSelectTab('faqs')}
-              className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4 cursor-pointer hover:border-amber-300 transition-all space-y-3"
-              title="Haz clic para editar FAQs"
-            >
-              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                <HelpCircle className="w-4 h-4 text-blue-600" />
-                Preguntas Frecuentes
-              </h4>
-              <div className="space-y-2">
-                {draft.faqs.slice(0, 3).map((faq, i) => (
-                  <div key={i} className="p-2.5 rounded-lg border border-slate-200 bg-slate-50 flex flex-col gap-1.5">
-                    <div className="flex items-start gap-2">
-                      <span className="bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded shrink-0">FAQ</span>
-                      <span className="text-xs font-bold text-slate-800 leading-snug mt-0.5 line-clamp-2">{faq.question}</span>
-                    </div>
-                    {faq.answer && (
-                      <p className="text-xs text-slate-600 leading-relaxed pl-1 pt-1 border-t border-slate-200/60 line-clamp-2">{faq.answer}</p>
-                    )}
-                  </div>
-                ))}
-                {draft.faqs.length > 3 && (
-                  <span className="text-[11px] text-amber-600 font-semibold block text-center pt-1">
-                    +{draft.faqs.length - 3} preguntas más...
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
+            )}
+          </div>
         </div>
       </div>
 
@@ -521,17 +340,6 @@ function LivePreviewPanel({
             {/* Modal Body: Full Trámite Render */}
             <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
               
-              {/* Alert Notice */}
-              {draft.alertNotice && draft.alertNotice.trim().length > 0 && (
-                <div className="bg-amber-500 text-white rounded-2xl p-4 shadow-md flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 shrink-0 text-amber-100 mt-0.5" />
-                  <div>
-                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-100 mb-0.5">Aviso Importante</h4>
-                    <p className="text-xs font-medium leading-relaxed">{draft.alertNotice}</p>
-                  </div>
-                </div>
-              )}
-
               {/* Header Card */}
               <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs space-y-3">
                 <div className="flex items-center justify-between gap-2">
@@ -541,11 +349,19 @@ function LivePreviewPanel({
                 </div>
 
                 <div className="flex items-center gap-3 pt-1">
-                  <div className="bg-blue-50 text-blue-600 rounded-xl p-2.5 shrink-0 border border-blue-100">
-                    {React.createElement(SERVICE_ICON_MAP[draft.iconName || draft.icon || 'FileText'] || FileText, {
-                      className: "w-7 h-7 text-blue-600"
-                    })}
-                  </div>
+                  {draft.cardImage && draft.cardImage.trim().length > 0 ? (
+                    <img 
+                      src={draft.cardImage} 
+                      alt={draft.title || 'Foto'} 
+                      className="w-12 h-12 rounded-xl object-cover shadow-2xs border border-slate-200 shrink-0" 
+                    />
+                  ) : (
+                    <div className="bg-blue-50 text-blue-600 rounded-xl p-2.5 shrink-0 border border-blue-100">
+                      {React.createElement(SERVICE_ICON_MAP[draft.iconName || draft.icon || 'FileText'] || FileText, {
+                        className: "w-7 h-7 text-blue-600"
+                      })}
+                    </div>
+                  )}
                   <h1 className="text-xl sm:text-2xl font-bold text-slate-900 font-display">{draft.title || 'Título sin definir'}</h1>
                 </div>
 
@@ -554,7 +370,7 @@ function LivePreviewPanel({
                 </p>
               </div>
 
-              {/* Progressive Disclosure: Árbol de Decisión */}
+              {/* Árbol de Decisión Independiente */}
               {draft.decisionTree && draft.decisionTree.length > 0 && (
                 <div className="mb-4">
                   <DecisionTreeNavigator
@@ -565,179 +381,11 @@ function LivePreviewPanel({
                 </div>
               )}
 
-              {/* Multimedia: Banner and/or Video */}
-              {(draft.imageUrl || videoInfo) && (
-                <div className={`grid grid-cols-1 ${draft.imageUrl && videoInfo ? 'md:grid-cols-2' : ''} gap-4`}>
-                  {draft.imageUrl && (
-                    <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs p-2.5">
-                      <div 
-                        onClick={() => {
-                          if (onOpenLightbox) {
-                            onOpenLightbox(draft.imageUrl!, draft.title);
-                          }
-                        }}
-                        className="relative group cursor-pointer overflow-hidden rounded-xl"
-                        title="Clic para ver infografía en pantalla completa con zoom"
-                      >
-                        <img 
-                          src={draft.imageUrl} 
-                          alt={draft.title || 'Infografía'} 
-                          className="w-full h-auto max-w-full rounded-xl object-contain shadow-sm border border-slate-100" 
-                        />
-                        <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-2 text-white text-xs font-bold pointer-events-none backdrop-blur-xs">
-                          <ZoomIn className="w-4 h-4" />
-                          <span>Ver Infografía Completa (Zoom)</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  {videoInfo && (
-                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs p-2">
-                      <div className="aspect-video w-full rounded-xl overflow-hidden bg-black">
-                        {videoInfo.type === 'direct' ? (
-                          <video src={videoInfo.embedUrl} controls className="w-full h-full" />
-                        ) : (
-                          <iframe 
-                            src={videoInfo.embedUrl} 
-                            title="Video explicativo" 
-                            className="w-full h-full border-0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                            allowFullScreen
-                          />
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Downloadable PDF Formats */}
-              {(draft.pdfUrl || (draft.attachments && draft.attachments.length > 0)) && (
-                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3">
-                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
-                    <FileDown className="w-4 h-4 text-emerald-600" />
-                    Formatos y Documentos Descargables
-                  </h3>
-                  <div className="grid grid-cols-1 gap-2.5">
-                    {draft.pdfUrl && (
-                      <a
-                        href={draft.pdfUrl}
-                        download={draft.pdfUrl.startsWith('data:') ? `${draft.pdfTitle || 'formato_oficial'}.pdf` : undefined}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-3 rounded-xl border border-slate-200 hover:border-blue-400 bg-blue-50/60 hover:bg-blue-100/70 transition-all flex items-center justify-between gap-2 group"
-                      >
-                        <div className="min-w-0 flex-1 flex items-center gap-2.5">
-                          <FileText className="w-4 h-4 text-blue-600 shrink-0" />
-                          <p className="text-xs font-bold text-slate-800 group-hover:text-blue-800 truncate">
-                            {draft.pdfTitle || 'Descargar Formato / Documento Oficial (PDF)'}
-                          </p>
-                        </div>
-                        <Download className="w-4 h-4 text-blue-600 shrink-0" />
-                      </a>
-                    )}
-                    {draft.attachments && draft.attachments.map((att, idx) => (
-                      <a
-                        key={idx}
-                        href={att.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50/50 hover:border-emerald-300 transition-all flex items-center justify-between gap-2 group"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-bold text-slate-800 group-hover:text-emerald-800 truncate">{att.name || 'Documento PDF'}</p>
-                          <p className="text-[10px] text-slate-400 uppercase">Documento Oficial PDF</p>
-                        </div>
-                        <Download className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 shrink-0" />
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Procedure Steps */}
-              {draft.steps && draft.steps.length > 0 && (
-                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3">
-                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                    <ListOrdered className="w-4 h-4 text-blue-600" />
-                    Paso a Paso del Trámite
-                  </h3>
-                  <div className="space-y-3">
-                    {draft.steps.map((st, idx) => (
-                      <div key={idx} className="flex items-start gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
-                        <span className="w-7 h-7 rounded-full bg-blue-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0">
-                          {st.num || idx + 1}
-                        </span>
-                        <div>
-                          {st.title && <h4 className="text-xs font-bold text-slate-900">{st.title}</h4>}
-                          <p className="text-xs text-slate-600 font-medium leading-relaxed mt-0.5">{st.desc}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Requirements & Location */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {draft.requirements && draft.requirements.length > 0 && (
-                  <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3">
-                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      Requisitos Necesarios
-                    </h3>
-                    <ul className="space-y-2">
-                      {draft.requirements.map((req, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-xs text-slate-700">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0"></span>
-                          <span>{req}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {(draft.location?.trim() || draft.schedule?.trim() || draft.contact?.trim()) && (
-                  <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3">
-                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-blue-600" />
-                      Atención y Ubicación
-                    </h3>
-                    <div className="space-y-2.5 text-xs text-slate-700">
-                      {draft.location && (
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                          <span>{draft.location}</span>
-                        </div>
-                      )}
-                      {draft.schedule && (
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-slate-400 shrink-0" />
-                          <span>{draft.schedule}</span>
-                        </div>
-                      )}
-                      {draft.contact && (
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-4 h-4 text-slate-400 shrink-0" />
-                          <span className="font-semibold text-blue-700">{draft.contact}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* FAQs Accordion */}
-              {draft.faqs && draft.faqs.length > 0 && (
-                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3">
-                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                    <HelpCircle className="w-4 h-4 text-blue-600" />
-                    Preguntas Frecuentes
-                  </h3>
-                  <FAQAccordion items={draft.faqs} />
-                </div>
-              )}
-
+              {/* Dynamic Content Blocks */}
+              <LayoutBlocksRenderer
+                blocks={draft.layoutBlocks || []}
+                onOpenLightbox={onOpenLightbox}
+              />
             </div>
 
             {/* Modal Footer */}
@@ -782,7 +430,7 @@ export default function ServiceDetail({
 }: ServiceDetailProps) {
   const [isEditing, setIsEditing] = useState<boolean>(initialEditMode);
   const [toastMsg, setToastMsg] = useState<string>('');
-  const [editorTab, setEditorTab] = useState<'general' | 'arbol' | 'contenido' | 'multimedia' | 'faqs' | 'aviso'>('general');
+  const [editorTab, setEditorTab] = useState<'general' | 'arbol' | 'bloques'>('general');
   const [mobileViewMode, setMobileViewMode] = useState<'editor' | 'preview'>('editor');
   const [lightboxImage, setLightboxImage] = useState<{ url: string; title?: string } | null>(null);
 
@@ -794,7 +442,7 @@ export default function ServiceDetail({
   // Hydrate draft with current service state or data defaults
   const getPreparedDraft = (s: Service & { hidden?: boolean }) => {
     const computed = getDefaultServiceDetails(s);
-    return {
+    const hydrated: Service & { hidden?: boolean } = {
       ...s,
       decisionTree: s.decisionTree ? [...s.decisionTree] : (computed.decisionTree ? [...computed.decisionTree] : []),
       fullDescription: s.fullDescription || computed.fullDescription,
@@ -810,11 +458,28 @@ export default function ServiceDetail({
       pdfTitle: s.pdfTitle ?? computed.pdfTitle,
       attachments: s.attachments ?? computed.attachments,
       alertNotice: s.alertNotice ?? computed.alertNotice,
+      layoutBlocks: s.layoutBlocks && s.layoutBlocks.length > 0 ? s.layoutBlocks : undefined
     };
+    return ensureServiceLayoutBlocks(hydrated);
   };
 
   const [draft, setDraft] = useState<(Service & { hidden?: boolean })>(() => getPreparedDraft(service));
   const [isFlowEditorOpen, setIsFlowEditorOpen] = useState(false);
+  const [isPageBuilderOpen, setIsPageBuilderOpen] = useState(false);
+
+  // Available categories from localStorage or defaults
+  const availableCategories = React.useMemo<CategoryConfig[]>(() => {
+    try {
+      const saved = localStorage.getItem('cc-categories');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Error al leer categorías en ServiceDetail:', e);
+    }
+    return defaultCategories;
+  }, []);
 
   // Sync draft when service prop changes
   useEffect(() => {
@@ -1086,10 +751,7 @@ export default function ServiceDetail({
               {[
                 { id: 'general', label: 'General', icon: Info, desc: 'Título, categoría, ícono y descripciones' },
                 { id: 'arbol', label: 'Árbol de Decisión', icon: Layers, desc: 'Flujo guiado interactivo (Preguntas y respuestas)' },
-                { id: 'contenido', label: 'Contenido', icon: ListOrdered, desc: 'Pasos, requisitos, ubicación y contacto' },
-                { id: 'multimedia', label: 'Archivos y Multimedia', icon: ImageIcon, desc: 'Infografía, video tutorial y PDF' },
-                { id: 'faqs', label: 'Preguntas Frecuentes', icon: HelpCircle, desc: 'Preguntas y respuestas (FAQs)' },
-                { id: 'aviso', label: 'Aviso Destacado', icon: AlertTriangle, desc: 'Banner de alerta opcional en cabecera' },
+                { id: 'bloques', label: 'Constructor de Página', icon: LayoutGrid, desc: 'Bloques de texto, alertas, FAQs y multimedia' },
               ].map((tab) => {
                 const IconComponent = tab.icon;
                 const isActive = editorTab === tab.id;
@@ -1141,9 +803,15 @@ export default function ServiceDetail({
                         onChange={(e) => setDraft({ ...draft, category: e.target.value as any })}
                         className="w-full text-xs font-bold text-slate-800 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
                       >
-                        <option value="Nómina y Pagos">Nómina y Pagos</option>
-                        <option value="Tarjetas y Créditos">Tarjetas y Créditos</option>
-                        <option value="Control y Asistencia">Control y Asistencia</option>
+                        {availableCategories.filter(c => c.id !== 'all').map((cat) => (
+                          <option key={cat.id} value={cat.label}>
+                            {cat.label}
+                          </option>
+                        ))}
+                        {/* Fallback if current category is custom and not among available */}
+                        {draft.category && !availableCategories.some(c => c.label === draft.category || c.id === draft.category) && (
+                          <option value={draft.category}>{draft.category}</option>
+                        )}
                       </select>
                     </div>
 
@@ -1295,372 +963,119 @@ export default function ServiceDetail({
                 </div>
               )}
 
-              {/* TAB 2: CONTENIDO (PASOS, REQUISITOS, CONTACTO) */}
-              {editorTab === 'contenido' && (
-                <div className="space-y-5">
-                  
-                  {/* Pasos Reordenables */}
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                      <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                        <ListOrdered className="w-4 h-4 text-blue-600" />
-                        Pasos del Procedimiento ({draft.steps?.length || 0})
-                      </h3>
-                      <button
-                        type="button"
-                        onClick={handleAddStep}
-                        className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1 border border-blue-200 cursor-pointer"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Paso</span>
-                      </button>
-                    </div>
-
-                    <div className="space-y-2">
-                      {draft.steps && draft.steps.length > 0 ? (
-                        draft.steps.map((st, idx) => (
-                          <div key={idx} className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 space-y-2">
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-1.5">
-                                <GripVertical className="w-4 h-4 text-slate-400 cursor-grab" />
-                                <span className="w-5 h-5 rounded-md bg-blue-600 text-white font-extrabold text-[10px] flex items-center justify-center">
-                                  #{idx + 1}
-                                </span>
-                                <span className="text-xs font-bold text-slate-700">Paso {idx + 1}</span>
-                              </div>
-
-                              <div className="flex items-center gap-1">
-                                <button
-                                  type="button"
-                                  onClick={() => handleMoveStep(idx, 'up')}
-                                  disabled={idx === 0}
-                                  className="p-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 rounded hover:bg-slate-200 cursor-pointer"
-                                  title="Mover arriba"
-                                >
-                                  <ChevronUp className="w-4 h-4" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleMoveStep(idx, 'down')}
-                                  disabled={idx === (draft.steps?.length || 0) - 1}
-                                  className="p-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 rounded hover:bg-slate-200 cursor-pointer"
-                                  title="Mover abajo"
-                                >
-                                  <ChevronDown className="w-4 h-4" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveStep(idx)}
-                                  className="p-1 text-rose-500 hover:text-rose-700 rounded hover:bg-rose-50 cursor-pointer ml-1"
-                                  title="Eliminar paso"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </div>
-
-                            <input
-                              type="text"
-                              value={st.title}
-                              onChange={(e) => handleUpdateStep(idx, 'title', e.target.value)}
-                              placeholder="Título del paso (ej. Llenar solicitud)"
-                              className="w-full text-xs font-bold text-slate-900 border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20"
-                            />
-                            <textarea
-                              rows={2}
-                              value={st.desc}
-                              onChange={(e) => handleUpdateStep(idx, 'desc', e.target.value)}
-                              placeholder="Instrucciones detalladas del paso..."
-                              className="w-full text-xs font-medium text-slate-800 border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20"
-                            />
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-xs text-slate-400 italic py-1">No hay pasos registrados.</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Requisitos Reordenables */}
-                  <div className="space-y-2.5 pt-3 border-t border-slate-100">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                      <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        Requisitos ({draft.requirements?.length || 0})
-                      </h3>
-                      <button
-                        type="button"
-                        onClick={handleAddRequirement}
-                        className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1 border border-emerald-200 cursor-pointer"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Requisito</span>
-                      </button>
-                    </div>
-
-                    <div className="space-y-2">
-                      {draft.requirements && draft.requirements.length > 0 ? (
-                        draft.requirements.map((req, idx) => (
-                          <div key={idx} className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
-                            <GripVertical className="w-4 h-4 text-slate-400 cursor-grab shrink-0" />
-                            <input
-                              type="text"
-                              value={req}
-                              onChange={(e) => handleUpdateRequirement(idx, e.target.value)}
-                              placeholder="Ej. Gafete oficial activo o Identificación INE"
-                              className="flex-1 px-2.5 py-1 text-xs font-medium border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleMoveRequirement(idx, 'up')}
-                              disabled={idx === 0}
-                              className="p-1 text-slate-400 hover:text-slate-800 disabled:opacity-20 cursor-pointer"
-                            >
-                              <ChevronUp className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleMoveRequirement(idx, 'down')}
-                              disabled={idx === (draft.requirements?.length || 0) - 1}
-                              className="p-1 text-slate-400 hover:text-slate-800 disabled:opacity-20 cursor-pointer"
-                            >
-                              <ChevronDown className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveRequirement(idx)}
-                              className="p-1 text-rose-500 hover:text-rose-700 cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-xs text-slate-400 italic py-1">No hay requisitos registrados.</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Contacto & Ubicación */}
-                  <div className="space-y-2.5 pt-3 border-t border-slate-100">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-blue-600" />
-                      Ubicación, Horarios y Teléfono
-                    </h3>
-                    <div className="space-y-2 text-xs">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Ubicación</label>
-                        <input
-                          type="text"
-                          value={draft.location || ''}
-                          onChange={(e) => setDraft({ ...draft, location: e.target.value })}
-                          placeholder="Ej. Edificio A - Oficina RH"
-                          className="w-full px-3 py-1.5 border border-slate-300 rounded-lg bg-slate-50 text-slate-900 focus:bg-white"
-                        />
+              {/* TAB 3: CONSTRUCTOR DE PÁGINA (BLOQUES DINÁMICOS) */}
+              {editorTab === 'bloques' && (
+                <div className="space-y-5 animate-fadeIn">
+                  {/* Banner de acceso al Editor de Página en Pantalla Completa */}
+                  <div className="bg-gradient-to-r from-blue-50 via-indigo-50/40 to-slate-50 border border-blue-200/80 rounded-2xl p-6 shadow-xs">
+                    <div className="space-y-1.5">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-100/70 text-blue-700 text-[11px] font-bold uppercase tracking-wider">
+                        <LayoutGrid className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Constructor de Bloques Modulares</span>
                       </div>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Horario</label>
-                        <input
-                          type="text"
-                          value={draft.schedule || ''}
-                          onChange={(e) => setDraft({ ...draft, schedule: e.target.value })}
-                          placeholder="Ej. Lunes a Viernes de 8:00 AM a 5:00 PM"
-                          className="w-full px-3 py-1.5 border border-slate-300 rounded-lg bg-slate-50 text-slate-900 focus:bg-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Contacto / Extensión</label>
-                        <input
-                          type="text"
-                          value={draft.contact || ''}
-                          onChange={(e) => setDraft({ ...draft, contact: e.target.value })}
-                          placeholder="Ej. Ext. 200 - RH"
-                          className="w-full px-3 py-1.5 border border-slate-300 rounded-lg bg-slate-50 text-slate-900 focus:bg-white"
-                        />
-                      </div>
+                      <h4 className="text-sm font-bold text-slate-900">
+                        Editor de Página Completa (Block Builder)
+                      </h4>
+                      <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
+                        Diseña y organiza bloques de texto explicativo con formato, avisos de alerta, preguntas frecuentes y material multimedia interactivo en un espacio amplio y sin distracciones.
+                      </p>
                     </div>
-                  </div>
 
-                </div>
-              )}
-
-              {/* TAB 3: ARCHIVOS Y MULTIMEDIA (DOBLE OPCIÓN: SUBIDA LOCAL O ENLACE URL) */}
-              {editorTab === 'multimedia' && (
-                <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-2">
-                    <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                      <ImageIcon className="w-4 h-4 text-blue-600" />
-                      <span>Archivos y Multimedia (Subida Local o Enlace URL)</span>
-                    </h3>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
-                      Selecciona un archivo local desde tu equipo (conversión a Base64 automática sin servidor) o ingresa un enlace web.
-                    </p>
-                  </div>
-
-                  {/* 1. IMAGEN / INFOGRAFÍA */}
-                  <MediaUploadField
-                    type="image"
-                    label="Infografía o Imagen Principal"
-                    value={draft.imageUrl || ''}
-                    onChange={(val) => setDraft({ ...draft, imageUrl: val })}
-                    placeholderUrl="https://ejemplo.com/infografia.jpg o .png"
-                    helperText="Se mostrará como banner principal o infografía visual en la cabecera del trámite."
-                    idPrefix="detail-live"
-                  />
-
-                  {/* 2. VIDEO TUTORIAL */}
-                  <MediaUploadField
-                    type="video"
-                    label="Video Tutorial Explicativo"
-                    value={draft.videoUrl || ''}
-                    onChange={(val) => setDraft({ ...draft, videoUrl: val })}
-                    placeholderUrl="https://www.youtube.com/watch?v=... o video directo .mp4"
-                    helperText="Compatible con videos locales .MP4, enlaces de YouTube o Vimeo."
-                    idPrefix="detail-live"
-                  />
-
-                  {/* 3. DOCUMENTO / FORMATO PDF */}
-                  <MediaUploadField
-                    type="pdf"
-                    label="Formato o Documento Descargable (PDF / Word)"
-                    value={draft.pdfUrl || ''}
-                    onChange={(val) => setDraft({ ...draft, pdfUrl: val })}
-                    titleValue={draft.pdfTitle || ''}
-                    onTitleChange={(title) => setDraft({ ...draft, pdfTitle: title })}
-                    placeholderUrl="https://ejemplo.com/formato_oficial.pdf"
-                    helperText="Los trabajadores podrán descargar o consultar este formato oficial."
-                    idPrefix="detail-live"
-                  />
-                </div>
-              )}
-
-              {/* TAB 4: PREGUNTAS FRECUENTES (FAQS REORDENABLES) */}
-              {editorTab === 'faqs' && (
-                <div className="space-y-3.5">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                      <HelpCircle className="w-4 h-4 text-blue-600" />
-                      Preguntas Frecuentes ({draft.faqs?.length || 0})
-                    </h3>
                     <button
+                      id="btn-open-page-builder-fullscreen-detail"
                       type="button"
-                      onClick={handleAddFAQ}
-                      className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1 border border-blue-200 cursor-pointer"
+                      onClick={() => setIsPageBuilderOpen(true)}
+                      className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-5 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95 text-xs sm:text-sm"
                     >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>FAQ</span>
+                      <Maximize2 className="w-4 h-4" />
+                      <span>Abrir Editor de Página (Pantalla Completa)</span>
                     </button>
-                  </div>
 
-                  <div className="space-y-3">
-                    {draft.faqs && draft.faqs.length > 0 ? (
-                      draft.faqs.map((faq, idx) => (
-                        <div key={idx} className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
-                          <div className="flex items-center justify-between gap-2 border-b border-slate-200/80 pb-1.5">
-                            <div className="flex items-center gap-1.5">
-                              <GripVertical className="w-4 h-4 text-slate-400 cursor-grab" />
-                              <span className="text-[10px] font-extrabold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">
-                                FAQ #{idx + 1}
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-1">
-                              <button
-                                type="button"
-                                onClick={() => handleMoveFAQ(idx, 'up')}
-                                disabled={idx === 0}
-                                className="p-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 rounded hover:bg-slate-200 cursor-pointer"
-                              >
-                                <ChevronUp className="w-4 h-4" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleMoveFAQ(idx, 'down')}
-                                disabled={idx === (draft.faqs?.length || 0) - 1}
-                                className="p-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 rounded hover:bg-slate-200 cursor-pointer"
-                              >
-                                <ChevronDown className="w-4 h-4" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveFAQ(idx)}
-                                className="p-1 text-rose-500 hover:text-rose-700 rounded hover:bg-rose-50 cursor-pointer ml-1"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Pregunta</label>
-                            <input
-                              type="text"
-                              value={faq.question}
-                              onChange={(e) => handleUpdateFAQ(idx, 'question', e.target.value)}
-                              placeholder="Ej. ¿Puedo solicitar el trámite si soy de nuevo ingreso?"
-                              className="w-full text-xs font-bold text-slate-900 border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">Respuesta</label>
-                            <textarea
-                              rows={2}
-                              value={faq.answer}
-                              onChange={(e) => handleUpdateFAQ(idx, 'answer', e.target.value)}
-                              placeholder="Respuesta explicativa..."
-                              className="w-full text-xs font-medium text-slate-800 border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20"
-                            />
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-xs text-slate-400 italic py-1">No hay preguntas frecuentes registradas.</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 5: AVISO DESTACADO */}
-              {editorTab === 'aviso' && (
-                <div className="space-y-4">
-                  <div className="border-b border-slate-100 pb-2">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                      <AlertTriangle className="w-4 h-4 text-amber-600" />
-                      Aviso Destacado (Banner de Alerta Opcional)
-                    </h3>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
-                      Si escribes un texto, se mostrará automáticamente un recuadro de aviso destacado en la parte superior del trámite. Si lo dejas vacío, no se mostrará ningún banner.
-                    </p>
-                  </div>
-
-                  <div className="p-4 bg-amber-50/90 border border-amber-200/90 rounded-2xl space-y-3">
-                    <div className="flex items-center justify-between text-amber-900">
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                        <label className="text-xs font-bold text-slate-900">Texto del Aviso Importante</label>
-                      </div>
-                      {draft.alertNotice && draft.alertNotice.trim().length > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => setDraft({ ...draft, alertNotice: '' })}
-                          className="text-amber-800 hover:text-red-600 font-bold underline cursor-pointer text-xs transition-colors"
-                        >
-                          Limpiar aviso
-                        </button>
-                      )}
+                    <div className="mt-4 pt-3 border-t border-blue-100 flex items-center justify-between text-xs text-blue-900/80 font-medium">
+                      <span className="font-bold">
+                        Estado actual: {draft.layoutBlocks?.length || 0}{' '}
+                        {(draft.layoutBlocks?.length || 0) === 1
+                          ? 'bloque configurado'
+                          : 'bloques configurados'}
+                      </span>
+                      <span className="text-[11px] text-blue-600 font-semibold">
+                        Layout Blocks v2
+                      </span>
                     </div>
-                    <textarea
-                      rows={4}
-                      value={draft.alertNotice || ''}
-                      onChange={(e) => setDraft({ ...draft, alertNotice: e.target.value })}
-                      placeholder="Ej. Atención: Por período vacacional, las solicitudes recibidas después del día 15 se procesarán la siguiente quincena..."
-                      className="w-full text-xs font-medium text-slate-900 border border-amber-300 rounded-xl p-3 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
-                    />
-                    <p className="text-[11px] text-amber-800 font-medium leading-relaxed">
-                      💡 <strong>Visualización 100% automática:</strong> Al contener texto, el banner ámbar aparecerá en la cabecera del trámite para todos los colaboradores.
-                    </p>
                   </div>
+
+                  {/* Resumen de Bloques Configurados */}
+                  {draft.layoutBlocks && draft.layoutBlocks.length > 0 ? (
+                    <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-3">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                          <Layers className="w-3.5 h-3.5 text-blue-600" />
+                          Resumen de Bloques Configurados
+                        </span>
+                        <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/70">
+                          {draft.layoutBlocks.length}{' '}
+                          {draft.layoutBlocks.length === 1 ? 'bloque configurado' : 'bloques configurados'}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 flex flex-col items-center justify-center text-center">
+                          <Type className="w-4 h-4 text-blue-600 mb-1" />
+                          <span className="text-[11px] font-bold text-slate-700">
+                            {draft.layoutBlocks.filter(b => b.type === 'text').length}
+                          </span>
+                          <span className="text-[10px] text-slate-400">Texto</span>
+                        </div>
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 flex flex-col items-center justify-center text-center">
+                          <AlertTriangle className="w-4 h-4 text-amber-500 mb-1" />
+                          <span className="text-[11px] font-bold text-slate-700">
+                            {draft.layoutBlocks.filter(b => b.type === 'alert').length}
+                          </span>
+                          <span className="text-[10px] text-slate-400">Avisos</span>
+                        </div>
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 flex flex-col items-center justify-center text-center">
+                          <HelpCircle className="w-4 h-4 text-purple-600 mb-1" />
+                          <span className="text-[11px] font-bold text-slate-700">
+                            {draft.layoutBlocks.filter(b => b.type === 'faq').length}
+                          </span>
+                          <span className="text-[10px] text-slate-400">FAQs</span>
+                        </div>
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 flex flex-col items-center justify-center text-center">
+                          <ImageIcon className="w-4 h-4 text-emerald-600 mb-1" />
+                          <span className="text-[11px] font-bold text-slate-700">
+                            {draft.layoutBlocks.filter(b => b.type === 'media').length}
+                          </span>
+                          <span className="text-[10px] text-slate-400">Media</span>
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] text-slate-500 text-center pt-1">
+                        Para editar, reordenar o añadir nuevos bloques, haz clic en el botón superior de Pantalla Completa.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 px-4 bg-white border border-dashed border-slate-200 rounded-2xl space-y-3">
+                      <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto border border-blue-100">
+                        <LayoutGrid className="w-6 h-6" />
+                      </div>
+                      <div className="space-y-1">
+                        <h5 className="text-xs font-bold text-slate-800">
+                          0 bloques configurados actualmente
+                        </h5>
+                        <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                          Este trámite aún no tiene bloques modulares. Abre el editor en pantalla completa para comenzar a agregar textos, avisos, preguntas frecuentes y multimedia.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsPageBuilderOpen(true)}
+                        className="px-4 py-2 bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl text-xs font-bold transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Crear Primeros Bloques</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1711,20 +1126,9 @@ export default function ServiceDetail({
 
         </div>
       ) : (
-        /* ==================== NORMAL PUBLIC VIEW MODE ==================== */
-        <div className="space-y-3">
+        /* ==================== NORMAL PUBLIC VIEW MODE (DYNAMIC LAYOUT BLOCKS) ==================== */
+        <div className="space-y-4">
           
-          {/* Aviso Importante Notice Box */}
-          {draft.showAlertNotice && draft.alertNotice && (
-            <div className="bg-amber-500 text-white rounded-2xl p-4 shadow-md flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 shrink-0 text-amber-100 mt-0.5" />
-              <div>
-                <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-100 mb-0.5">Aviso Importante</h4>
-                <p className="text-xs font-medium leading-relaxed">{draft.alertNotice}</p>
-              </div>
-            </div>
-          )}
-
           {/* Header Card */}
           <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-2">
             <div className="flex items-center justify-between gap-2">
@@ -1741,9 +1145,17 @@ export default function ServiceDetail({
             </div>
 
             <div className="flex items-center gap-2.5 pt-1">
-              {React.createElement(SERVICE_ICON_MAP[draft.iconName || draft.icon || 'FileText'] || FileText, {
-                className: "w-6 h-6 text-blue-600 shrink-0"
-              })}
+              {draft.cardImage && draft.cardImage.trim().length > 0 ? (
+                <img 
+                  src={draft.cardImage} 
+                  alt={draft.title || 'Foto'} 
+                  className="w-10 h-10 rounded-xl object-cover shadow-2xs border border-slate-200 shrink-0" 
+                />
+              ) : (
+                React.createElement(SERVICE_ICON_MAP[draft.iconName || draft.icon || 'FileText'] || FileText, {
+                  className: "w-6 h-6 text-blue-600 shrink-0"
+                })
+              )}
               <h1 className="text-lg sm:text-xl font-bold text-slate-900 font-display">{draft.title}</h1>
             </div>
 
@@ -1752,104 +1164,8 @@ export default function ServiceDetail({
             </p>
           </div>
 
-          {/* Multimedia: Banner and/or Video */}
-          {(draft.imageUrl || videoInfo) && (
-            <div className={`grid grid-cols-1 ${draft.imageUrl && videoInfo ? 'md:grid-cols-2' : ''} gap-3`}>
-              {draft.imageUrl && (
-                <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs p-2.5">
-                  <div 
-                    onClick={() => setLightboxImage({ url: draft.imageUrl!, title: draft.title })}
-                    className="relative group cursor-pointer overflow-hidden rounded-xl"
-                    title="Clic para ver infografía en pantalla completa con zoom"
-                  >
-                    <img 
-                      src={draft.imageUrl} 
-                      alt={draft.title || 'Infografía'} 
-                      className="w-full h-auto max-w-full rounded-xl object-contain shadow-sm border border-slate-100" 
-                    />
-                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-2 text-white text-xs font-bold pointer-events-none backdrop-blur-xs">
-                      <ZoomIn className="w-4 h-4" />
-                      <span>Ver Infografía Completa (Zoom)</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {videoInfo && (
-                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs p-2">
-                  <div className="aspect-video w-full rounded-xl overflow-hidden bg-black">
-                    {videoInfo.type === 'direct' ? (
-                      <video src={videoInfo.embedUrl} controls className="w-full h-full" />
-                    ) : (
-                      <iframe 
-                        src={videoInfo.embedUrl} 
-                        title="Video explicativo" 
-                        className="w-full h-full border-0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowFullScreen
-                      />
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Downloadable PDF Formats */}
-          {(draft.pdfUrl || (draft.attachments && draft.attachments.length > 0)) && (
-            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-2.5">
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
-                <FileDown className="w-4 h-4 text-emerald-600" />
-                Formatos y Documentos Descargables
-              </h3>
-              <div className="grid grid-cols-1 gap-2.5">
-                {draft.pdfUrl && (
-                  <a
-                    href={draft.pdfUrl}
-                    download={draft.pdfUrl.startsWith('data:') ? `${draft.pdfTitle || 'formato_oficial'}.pdf` : undefined}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-3.5 rounded-xl border border-slate-200 hover:border-blue-400 bg-blue-50/60 hover:bg-blue-100/70 transition-all flex items-center justify-between gap-3 group"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                        <FileText className="w-5 h-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-slate-900 group-hover:text-blue-700 truncate">
-                          {draft.pdfTitle || 'Descargar Formato / Documento Oficial (PDF)'}
-                        </p>
-                        <p className="text-[10px] text-slate-500 font-medium">
-                          Haz clic para abrir o descargar el documento adjunto
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-blue-700 text-xs font-bold shadow-2xs group-hover:bg-blue-600 group-hover:text-white transition-all shrink-0">
-                      <Download className="w-3.5 h-3.5" />
-                      <span>Descargar</span>
-                    </div>
-                  </a>
-                )}
-                {draft.attachments && draft.attachments.map((att, idx) => (
-                  <a
-                    key={idx}
-                    href={att.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2.5 rounded-xl border border-slate-200 hover:border-emerald-300 bg-slate-50 hover:bg-emerald-50/50 transition-all flex items-center justify-between gap-2 group"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-slate-800 group-hover:text-emerald-800 truncate">{att.name}</p>
-                      <p className="text-[10px] text-slate-400 uppercase">Documento Oficial PDF</p>
-                    </div>
-                    <Download className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 shrink-0" />
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Progressive Disclosure (Decision Tree) vs Legacy Flat Procedure */}
-          {draft.decisionTree && draft.decisionTree.length > 0 ? (
+          {/* Árbol de Decisión Independiente */}
+          {draft.decisionTree && draft.decisionTree.length > 0 && (
             <div className="space-y-3">
               <DecisionTreeNavigator
                 tree={draft.decisionTree}
@@ -1857,133 +1173,25 @@ export default function ServiceDetail({
                 serviceTitle={draft.title}
               />
             </div>
-          ) : (
-            /* Flat Legacy Procedure Steps */
-            draft.steps && draft.steps.length > 0 && (
-              <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-3">
-                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                  <ListOrdered className="w-4 h-4 text-blue-600" />
-                  Paso a Paso del Trámite
-                </h3>
-                <div className="space-y-2.5">
-                  {draft.steps.map((st, idx) => (
-                    <div key={idx} className="flex items-start gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200/80">
-                      <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0">
-                        {st.num || idx + 1}
-                      </span>
-                      <div>
-                        {st.title && <h4 className="text-xs font-bold text-slate-900">{st.title}</h4>}
-                        <p className="text-xs text-slate-600 font-medium leading-relaxed mt-0.5">{st.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )
           )}
 
-          {/* Requirements & Location */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {draft.requirements && draft.requirements.length > 0 && (
-              <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-2.5">
-                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  Requisitos Necesarios
-                </h3>
-                <ul className="space-y-2">
-                  {draft.requirements.map((req, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-xs text-slate-700">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0"></span>
-                      <span>{req}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+          {/* Dynamic Layout Blocks */}
+          <LayoutBlocksRenderer
+            blocks={draft.layoutBlocks || []}
+            onOpenLightbox={(url, title) => setLightboxImage({ url, title })}
+          />
 
-            {(draft.location?.trim() || draft.schedule?.trim() || draft.contact?.trim()) && (
-              <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-2.5">
-                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-blue-600" />
-                  Atención y Ubicación
-                </h3>
-                <div className="space-y-2 text-xs text-slate-700">
-                  {draft.location && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                      <span>{draft.location}</span>
-                    </div>
-                  )}
-                  {draft.schedule && (
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-slate-400 shrink-0" />
-                      <span>{draft.schedule}</span>
-                    </div>
-                  )}
-                  {draft.contact && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-slate-400 shrink-0" />
-                      <span className="font-semibold text-blue-700">{draft.contact}</span>
-                    </div>
-                  )}
-                </div>
+          {(!draft.decisionTree || draft.decisionTree.length === 0) && (!draft.layoutBlocks || draft.layoutBlocks.length === 0) && (
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-6 text-center shadow-2xs space-y-2">
+              <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                <Info className="w-5 h-5" />
               </div>
-            )}
-          </div>
-
-          {/* FAQs Accordion */}
-          {draft.faqs && draft.faqs.length > 0 && (
-            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-3">
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                <HelpCircle className="w-4 h-4 text-blue-600" />
-                Preguntas Frecuentes
-              </h3>
-              <FAQAccordion items={draft.faqs} />
+              <h3 className="text-xs font-bold text-slate-800">Contenido en preparación</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                La información detallada, pasos y formatos para este trámite se están actualizando desde el Panel de Talento y Cultura.
+              </p>
             </div>
           )}
-
-          {/* Empty state fallback when no sub-sections exist */}
-          {(() => {
-            const hasContent = Boolean(
-              (draft.steps && draft.steps.length > 0) ||
-              (draft.requirements && draft.requirements.length > 0) ||
-              Boolean(draft.location?.trim() || draft.schedule?.trim() || draft.contact?.trim()) ||
-              (draft.faqs && draft.faqs.length > 0) ||
-              (draft as { content?: string }).content ||
-              (service as { content?: string }).content
-            );
-            const hasMultimedia = Boolean(
-              draft.imageUrl ||
-              videoInfo ||
-              draft.pdfUrl ||
-              (draft.attachments && draft.attachments.length > 0) ||
-              service.imageUrl ||
-              service.videoUrl ||
-              service.pdfUrl ||
-              (service.attachments && service.attachments.length > 0)
-            );
-            const hasDecisionTree = Boolean(
-              (draft.decisionTree && draft.decisionTree.length > 0) ||
-              (service.decisionTree && service.decisionTree.length > 0)
-            );
-
-            // Solo mostrar si no hay contenido, no hay multimedia Y no hay árbol de decisiones
-            if (hasDecisionTree || hasMultimedia || hasContent) {
-              return null;
-            }
-
-            return (
-              <div className="bg-white border border-slate-200/90 rounded-2xl p-6 text-center shadow-2xs space-y-2">
-                <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
-                  <Info className="w-5 h-5" />
-                </div>
-                <h3 className="text-xs font-bold text-slate-800">Contenido en preparación</h3>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  La información detallada, pasos y formatos descargables para este trámite se están actualizando desde el Panel de Talento y Cultura.
-                </p>
-              </div>
-            );
-          })()}
 
         </div>
       )}
@@ -2007,6 +1215,21 @@ export default function ServiceDetail({
             showToast('Árbol de decisiones actualizado en el borrador');
           }}
           onClose={() => setIsFlowEditorOpen(false)}
+        />
+      )}
+
+      {/* Fullscreen Page Builder Editor */}
+      {isPageBuilderOpen && (
+        <PageBuilderFullScreenEditor
+          blocks={draft.layoutBlocks || []}
+          onChange={(newBlocks) => {
+            setDraft(prev => ({ ...prev, layoutBlocks: newBlocks }));
+          }}
+          onClose={() => {
+            setIsPageBuilderOpen(false);
+            showToast('Bloques de contenido actualizados en el borrador');
+          }}
+          serviceTitle={draft.title}
         />
       )}
 

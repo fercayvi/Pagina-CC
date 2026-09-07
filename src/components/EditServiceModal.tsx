@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  X, Save, FileText, ListOrdered, CheckCircle2, 
-  ImageIcon, HelpCircle, AlertTriangle, Plus, Trash2, MapPin, Clock, Phone,
-  Sparkles, Eye, Image as ImageLucide, Layers, GitBranch
+  X, Save, FileText, CheckCircle2, 
+  HelpCircle, AlertTriangle, Plus, Trash2, MapPin, Clock, Phone,
+  Sparkles, Eye, Image as ImageLucide, Layers, GitBranch, LayoutGrid,
+  Maximize2, Type
 } from 'lucide-react';
-import { Service, StepItem, ServiceFAQ } from '../types';
+import { Service } from '../types';
 import { MediaUploadField } from './MediaUploadField';
 import { SERVICE_ICON_MAP } from './ServiceCard';
 import { DecisionTreeBuilder } from './DecisionTreeBuilder';
 import { DecisionTreeNavigator } from './DecisionTreeNavigator';
 import { DecisionTreeCanvasEditor } from './DecisionTreeCanvasEditor';
+import { PageBuilderFullScreenEditor } from './PageBuilderFullScreenEditor';
+import { ensureServiceLayoutBlocks } from '../utils/layoutBlocks';
 
 interface EditServiceModalProps {
   isOpen: boolean;
@@ -24,10 +27,11 @@ export const EditServiceModal: React.FC<EditServiceModalProps> = ({
   service,
   onSave
 }) => {
-  const [activeTab, setActiveTab] = useState<'general' | 'arbol' | 'pasos' | 'requisitos' | 'multimedia' | 'faqs' | 'aviso'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'arbol' | 'bloques'>('general');
   const [editingService, setEditingService] = useState<(Service & { hidden?: boolean }) | null>(null);
   const [visualMode, setVisualMode] = useState<'icon' | 'image'>('icon');
   const [isFlowEditorOpen, setIsFlowEditorOpen] = useState(false);
+  const [isPageBuilderOpen, setIsPageBuilderOpen] = useState(false);
 
   useEffect(() => {
     if (service) {
@@ -35,6 +39,7 @@ export const EditServiceModal: React.FC<EditServiceModalProps> = ({
       setVisualMode(hasImage ? 'image' : 'icon');
       setEditingService({
         ...service,
+        layoutBlocks: ensureServiceLayoutBlocks(service),
         steps: service.steps ? [...service.steps] : [],
         requirements: service.requirements ? [...service.requirements] : [],
         faqs: service.faqs ? [...service.faqs] : [],
@@ -51,6 +56,20 @@ export const EditServiceModal: React.FC<EditServiceModalProps> = ({
 
   if (!isOpen || !editingService) return null;
 
+  // Render Fullscreen Page Builder Editor if open
+  if (isPageBuilderOpen) {
+    return (
+      <PageBuilderFullScreenEditor
+        blocks={editingService.layoutBlocks || []}
+        onChange={(newBlocks) => {
+          setEditingService(prev => prev ? ({ ...prev, layoutBlocks: newBlocks }) : prev);
+        }}
+        onClose={() => setIsPageBuilderOpen(false)}
+        serviceTitle={editingService.title || 'Trámite'}
+      />
+    );
+  }
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingService.title.trim()) {
@@ -64,69 +83,6 @@ export const EditServiceModal: React.FC<EditServiceModalProps> = ({
     };
     onSave(serviceToSave);
     onClose();
-  };
-
-  // Step handlers
-  const handleAddStep = () => {
-    const nextNum = (editingService.steps?.length || 0) + 1;
-    setEditingService({
-      ...editingService,
-      steps: [...(editingService.steps || []), { num: nextNum, title: '', desc: '' }]
-    });
-  };
-
-  const handleUpdateStep = (index: number, field: keyof StepItem, value: any) => {
-    const updated = [...(editingService.steps || [])];
-    updated[index] = { ...updated[index], [field]: value };
-    setEditingService({ ...editingService, steps: updated });
-  };
-
-  const handleRemoveStep = (index: number) => {
-    const updated = (editingService.steps || []).filter((_, i) => i !== index);
-    const renumbered = updated.map((step, idx) => ({ ...step, num: idx + 1 }));
-    setEditingService({ ...editingService, steps: renumbered });
-  };
-
-  // Requirement handlers
-  const handleAddRequirement = () => {
-    setEditingService({
-      ...editingService,
-      requirements: [...(editingService.requirements || []), '']
-    });
-  };
-
-  const handleUpdateRequirement = (index: number, value: string) => {
-    const updated = [...(editingService.requirements || [])];
-    updated[index] = value;
-    setEditingService({ ...editingService, requirements: updated });
-  };
-
-  const handleRemoveRequirement = (index: number) => {
-    setEditingService({
-      ...editingService,
-      requirements: (editingService.requirements || []).filter((_, i) => i !== index)
-    });
-  };
-
-  // FAQ handlers
-  const handleAddFAQ = () => {
-    setEditingService({
-      ...editingService,
-      faqs: [...(editingService.faqs || []), { question: '', answer: '' }]
-    });
-  };
-
-  const handleUpdateFAQ = (index: number, field: keyof ServiceFAQ, value: string) => {
-    const updated = [...(editingService.faqs || [])];
-    updated[index] = { ...updated[index], [field]: value };
-    setEditingService({ ...editingService, faqs: updated });
-  };
-
-  const handleRemoveFAQ = (index: number) => {
-    setEditingService({
-      ...editingService,
-      faqs: (editingService.faqs || []).filter((_, i) => i !== index)
-    });
   };
 
   return (
@@ -162,7 +118,7 @@ export const EditServiceModal: React.FC<EditServiceModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('general')}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
               activeTab === 'general'
                 ? 'bg-white text-blue-700 shadow-2xs border border-slate-200'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
@@ -175,7 +131,7 @@ export const EditServiceModal: React.FC<EditServiceModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('arbol')}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
               activeTab === 'arbol'
                 ? 'bg-white text-blue-700 shadow-2xs border border-slate-200 font-extrabold'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
@@ -187,67 +143,15 @@ export const EditServiceModal: React.FC<EditServiceModalProps> = ({
 
           <button
             type="button"
-            onClick={() => setActiveTab('pasos')}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-              activeTab === 'pasos'
-                ? 'bg-white text-blue-700 shadow-2xs border border-slate-200'
+            onClick={() => setActiveTab('bloques')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeTab === 'bloques'
+                ? 'bg-white text-blue-700 shadow-2xs border border-slate-200 font-extrabold'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
-            <ListOrdered className="w-3.5 h-3.5" />
-            <span>Pasos ({editingService.steps?.length || 0})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('requisitos')}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-              activeTab === 'requisitos'
-                ? 'bg-white text-blue-700 shadow-2xs border border-slate-200'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
-          >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Requisitos y Contacto</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('multimedia')}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-              activeTab === 'multimedia'
-                ? 'bg-white text-blue-700 shadow-2xs border border-slate-200'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
-          >
-            <ImageIcon className="w-3.5 h-3.5" />
-            <span>Archivos y Multimedia</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('faqs')}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-              activeTab === 'faqs'
-                ? 'bg-white text-blue-700 shadow-2xs border border-slate-200'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
-          >
-            <HelpCircle className="w-3.5 h-3.5" />
-            <span>Preguntas Frecuentes ({editingService.faqs?.length || 0})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('aviso')}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-              activeTab === 'aviso'
-                ? 'bg-white text-amber-700 shadow-2xs border border-slate-200'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
-          >
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-            <span>Aviso Destacado</span>
+            <LayoutGrid className="w-3.5 h-3.5 text-blue-600" />
+            <span>Constructor de Página ({editingService.layoutBlocks?.length || 0})</span>
           </button>
         </div>
 
@@ -529,328 +433,126 @@ export const EditServiceModal: React.FC<EditServiceModalProps> = ({
               </div>
             )}
 
-            {/* TAB 2: PROCEDIMIENTO PASO A PASO */}
-            {activeTab === 'pasos' && (
-              <div className="space-y-4 animate-fadeIn">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    Pasos del Procedimiento ({editingService.steps?.length || 0})
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleAddStep}
-                    className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-xs font-bold transition-all flex items-center gap-1 border border-blue-200 cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Agregar Paso</span>
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  {editingService.steps && editingService.steps.length > 0 ? (
-                    editingService.steps.map((step, idx) => (
-                      <div key={idx} className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 relative">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-[11px] font-extrabold text-white bg-slate-900 px-2 py-0.5 rounded-md">
-                            Paso {step.num || idx + 1}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveStep(idx)}
-                            className="text-rose-500 hover:text-rose-700 p-1 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                            title="Eliminar paso"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-
-                        <input
-                          type="text"
-                          value={step.title}
-                          onChange={(e) => handleUpdateStep(idx, 'title', e.target.value)}
-                          placeholder="Título del paso (ej. Validación con Supervisor)"
-                          className="w-full px-3 py-1.5 text-xs font-bold border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600"
-                        />
-
-                        <textarea
-                          rows={2}
-                          value={step.desc}
-                          onChange={(e) => handleUpdateStep(idx, 'desc', e.target.value)}
-                          placeholder="Descripción detallada de lo que debe realizar el colaborador..."
-                          className="w-full px-3 py-1.5 text-xs font-normal border border-slate-200 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-600"
-                        />
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-xs text-slate-400 italic text-center py-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                      No se han definido pasos. Haz clic en "Agregar Paso".
+            {/* TAB: CONSTRUCTOR DE PÁGINA (BLOQUES MODULARES) */}
+            {activeTab === 'bloques' && (
+              <div className="space-y-5 animate-fadeIn">
+                {/* Banner de acceso al Editor de Página en Pantalla Completa */}
+                <div className="bg-gradient-to-r from-blue-50 via-indigo-50/40 to-slate-50 border border-blue-200/80 rounded-2xl p-6 shadow-xs">
+                  <div className="space-y-1.5">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-100/70 text-blue-700 text-[11px] font-bold uppercase tracking-wider">
+                      <LayoutGrid className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Constructor de Bloques Modulares</span>
+                    </div>
+                    <h4 className="text-sm font-bold text-slate-900">
+                      Editor de Página Completa (Block Builder)
+                    </h4>
+                    <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
+                      Diseña la estructura del trámite organizando bloques de texto con formato, avisos de alerta, preguntas frecuentes y material multimedia en un espacio amplio y sin distracciones.
                     </p>
-                  )}
-                </div>
-              </div>
-            )}
+                  </div>
 
-            {/* TAB 3: REQUISITOS Y CONTACTO */}
-            {activeTab === 'requisitos' && (
-              <div className="space-y-4 animate-fadeIn">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                      Requisitos Necesarios
-                    </label>
+                  {/* Botón Principal Grande (Launcher) */}
+                  <button
+                    id="btn-open-page-builder-fullscreen"
+                    type="button"
+                    onClick={() => setIsPageBuilderOpen(true)}
+                    className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-5 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95 text-xs sm:text-sm"
+                  >
+                    <Maximize2 className="w-4 h-4" />
+                    <span>Abrir Editor de Página (Pantalla Completa)</span>
+                  </button>
+
+                  <div className="mt-4 pt-3 border-t border-blue-100 flex items-center justify-between text-xs text-blue-900/80 font-medium">
+                    <span className="font-bold">
+                      Estado actual: {editingService.layoutBlocks?.length || 0}{' '}
+                      {(editingService.layoutBlocks?.length || 0) === 1
+                        ? 'bloque configurado'
+                        : 'bloques configurados'}
+                    </span>
+                    <span className="text-[11px] text-blue-600 font-semibold">
+                      Layout Blocks v2
+                    </span>
+                  </div>
+                </div>
+
+                {/* Tarjeta de Resumen Limpia de Bloques */}
+                {editingService.layoutBlocks && editingService.layoutBlocks.length > 0 ? (
+                  <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                      <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <Layers className="w-3.5 h-3.5 text-blue-600" />
+                        Resumen de Bloques Configurados
+                      </span>
+                      <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/70">
+                        {editingService.layoutBlocks.length}{' '}
+                        {editingService.layoutBlocks.length === 1 ? 'bloque configurado' : 'bloques configurados'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 flex flex-col items-center justify-center text-center">
+                        <Type className="w-4 h-4 text-blue-600 mb-1" />
+                        <span className="text-[11px] font-bold text-slate-700">
+                          {editingService.layoutBlocks.filter(b => b.type === 'text').length}
+                        </span>
+                        <span className="text-[10px] text-slate-400">Texto</span>
+                      </div>
+                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 flex flex-col items-center justify-center text-center">
+                        <AlertTriangle className="w-4 h-4 text-amber-500 mb-1" />
+                        <span className="text-[11px] font-bold text-slate-700">
+                          {editingService.layoutBlocks.filter(b => b.type === 'alert').length}
+                        </span>
+                        <span className="text-[10px] text-slate-400">Avisos</span>
+                      </div>
+                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 flex flex-col items-center justify-center text-center">
+                        <HelpCircle className="w-4 h-4 text-purple-600 mb-1" />
+                        <span className="text-[11px] font-bold text-slate-700">
+                          {editingService.layoutBlocks.filter(b => b.type === 'faq').length}
+                        </span>
+                        <span className="text-[10px] text-slate-400">FAQs</span>
+                      </div>
+                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 flex flex-col items-center justify-center text-center">
+                        <ImageLucide className="w-4 h-4 text-emerald-600 mb-1" />
+                        <span className="text-[11px] font-bold text-slate-700">
+                          {editingService.layoutBlocks.filter(b => b.type === 'media').length}
+                        </span>
+                        <span className="text-[10px] text-slate-400">Media</span>
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-slate-500 text-center pt-1">
+                      Para editar, reordenar o añadir nuevos bloques, haz clic en el botón superior de Pantalla Completa.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 px-4 bg-slate-50 border border-dashed border-slate-200 rounded-2xl space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto border border-blue-100">
+                      <LayoutGrid className="w-6 h-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <h5 className="text-xs font-bold text-slate-800">
+                        0 bloques configurados actualmente
+                      </h5>
+                      <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                        Este trámite aún no tiene bloques modulares. Abre el editor en pantalla completa para comenzar a agregar textos, avisos, preguntas frecuentes y multimedia.
+                      </p>
+                    </div>
                     <button
                       type="button"
-                      onClick={handleAddRequirement}
-                      className="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border border-emerald-200 cursor-pointer"
+                      onClick={() => setIsPageBuilderOpen(true)}
+                      className="px-4 py-2 bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl text-xs font-bold transition-colors cursor-pointer inline-flex items-center gap-1.5"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>Agregar Requisito</span>
+                      <span>Crear Primeros Bloques</span>
                     </button>
                   </div>
-
-                  <div className="space-y-2">
-                    {editingService.requirements && editingService.requirements.length > 0 ? (
-                      editingService.requirements.map((req, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                          <input
-                            type="text"
-                            value={req}
-                            onChange={(e) => handleUpdateRequirement(idx, e.target.value)}
-                            placeholder="Ej. Gafete oficial activo o Identificación INE"
-                            className="flex-1 px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:bg-white"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveRequirement(idx)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-xs text-slate-400 italic">No hay requisitos registrados.</p>
-                    )}
-                  </div>
-                </div>
-
-                <hr className="border-slate-100" />
-
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                    Ubicación, Horario y Teléfono
-                  </h4>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                      Ubicación de Atención
-                    </label>
-                    <input
-                      type="text"
-                      value={editingService.location || ''}
-                      onChange={(e) => setEditingService({ ...editingService, location: e.target.value })}
-                      placeholder="Ej. Planta Baja • Edificio de Recursos Humanos"
-                      className="w-full px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:bg-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      Horario de Atención
-                    </label>
-                    <input
-                      type="text"
-                      value={editingService.schedule || ''}
-                      onChange={(e) => setEditingService({ ...editingService, schedule: e.target.value })}
-                      placeholder="Ej. Lunes a Viernes de 8:00 AM a 5:00 PM"
-                      className="w-full px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:bg-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
-                      <Phone className="w-3.5 h-3.5 text-slate-400" />
-                      Teléfono o Extensión de Contacto
-                    </label>
-                    <input
-                      type="text"
-                      value={editingService.contact || ''}
-                      onChange={(e) => setEditingService({ ...editingService, contact: e.target.value })}
-                      placeholder="Ej. Atención a Nóminas - Ext. 201"
-                      className="w-full px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:bg-white"
-                    />
-                  </div>
-                </div>
+                )}
               </div>
             )}
 
-            {/* TAB 4: ARCHIVOS Y MULTIMEDIA (DOBLE OPCIÓN: SUBIR ARCHIVO LOCAL O ENLACE URL) */}
-            {activeTab === 'multimedia' && (
-              <div className="space-y-4 animate-fadeIn">
-                <div className="border-b border-slate-100 pb-2">
-                  <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                    <ImageIcon className="w-4 h-4 text-blue-600" />
-                    <span>Archivos y Multimedia (Subida Local o Enlace URL)</span>
-                  </h4>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Carga archivos locales desde tu computadora (conversión Base64 instantánea) o ingresa enlaces URL externos.
-                  </p>
-                </div>
 
-                {/* 1. FOTO DE LA TARJETA / PORTADA */}
-                <MediaUploadField
-                  type="image"
-                  label="Foto de la Tarjeta / Portada (Catálogo Principal)"
-                  value={editingService.cardImage || ''}
-                  onChange={(val) => setEditingService(prev => prev ? ({ ...prev, cardImage: val }) : prev)}
-                  placeholderUrl="https://ejemplo.com/foto_portada.jpg o .png"
-                  helperText="Reemplaza al ícono genérico en la cuadrícula de inicio. Si está vacío, se mostrará el ícono seleccionado."
-                  idPrefix="modal-service-card-media"
-                />
 
-                {/* 2. IMAGEN / INFOGRAFÍA */}
-                <MediaUploadField
-                  type="image"
-                  label="Infografía o Banner del Trámite (Cabecera Detalle)"
-                  value={editingService.imageUrl || ''}
-                  onChange={(val) => setEditingService({ ...editingService, imageUrl: val })}
-                  placeholderUrl="https://ejemplo.com/infografia.png o .jpg"
-                  helperText="Se muestra como banner visual o infografía en la cabecera del trámite."
-                  idPrefix="modal-service"
-                />
 
-                {/* 3. VIDEO TUTORIAL */}
-                <MediaUploadField
-                  type="video"
-                  label="Video Tutorial Explicativo"
-                  value={editingService.videoUrl || ''}
-                  onChange={(val) => setEditingService({ ...editingService, videoUrl: val })}
-                  placeholderUrl="https://www.youtube.com/watch?v=... o video directo .mp4"
-                  helperText="Soporta videos directos locales (.MP4) o enlaces de YouTube y Vimeo."
-                  idPrefix="modal-service"
-                />
-
-                {/* 4. DOCUMENTO / FORMATO PDF */}
-                <MediaUploadField
-                  type="pdf"
-                  label="Formato o Documento Descargable (PDF / Word)"
-                  value={editingService.pdfUrl || ''}
-                  onChange={(val) => setEditingService({ ...editingService, pdfUrl: val })}
-                  titleValue={editingService.pdfTitle || ''}
-                  onTitleChange={(title) => setEditingService({ ...editingService, pdfTitle: title })}
-                  placeholderUrl="https://ejemplo.com/formato_oficial.pdf"
-                  helperText="Los colaboradores podrán abrir o descargar directamente este archivo oficial."
-                  idPrefix="modal-service"
-                />
-              </div>
-            )}
-
-            {/* TAB 5: PREGUNTAS FRECUENTES (FAQs) */}
-            {activeTab === 'faqs' && (
-              <div className="space-y-4 animate-fadeIn">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    Preguntas Frecuentes ({editingService.faqs?.length || 0})
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleAddFAQ}
-                    className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-xs font-bold transition-all flex items-center gap-1 border border-blue-200 cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Agregar Pregunta</span>
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  {editingService.faqs && editingService.faqs.length > 0 ? (
-                    editingService.faqs.map((faq, idx) => (
-                      <div key={idx} className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 relative">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-[10px] font-extrabold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">
-                            FAQ #{idx + 1}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveFAQ(idx)}
-                            className="text-rose-500 hover:text-rose-700 p-1 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                            title="Eliminar pregunta"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-
-                        <input
-                          type="text"
-                          value={faq.question}
-                          onChange={(e) => handleUpdateFAQ(idx, 'question', e.target.value)}
-                          placeholder="Pregunta frecuente (ej. ¿Qué pasa si no cobro a tiempo?)"
-                          className="w-full px-3 py-1.5 text-xs font-bold border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600"
-                        />
-
-                        <textarea
-                          rows={2}
-                          value={faq.answer}
-                          onChange={(e) => handleUpdateFAQ(idx, 'answer', e.target.value)}
-                          placeholder="Respuesta detallada..."
-                          className="w-full px-3 py-1.5 text-xs font-normal border border-slate-200 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-600"
-                        />
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-xs text-slate-400 italic text-center py-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                      No hay preguntas registradas. Haz clic en "Agregar Pregunta".
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* TAB 6: AVISO DESTACADO */}
-            {activeTab === 'aviso' && (
-              <div className="space-y-4 animate-fadeIn">
-                <div className="border-b border-slate-100 pb-2">
-                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                    <AlertTriangle className="w-4 h-4 text-amber-600" />
-                    Aviso Destacado (Banner de Alerta Opcional)
-                  </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Si escribes un texto aquí, se mostrará automáticamente un recuadro de aviso destacado en la parte superior del trámite. Si lo dejas vacío, no se mostrará ningún banner.
-                  </p>
-                </div>
-
-                <div className="p-4 bg-amber-50/90 border border-amber-200/90 rounded-2xl space-y-3">
-                  <div className="flex items-center justify-between text-amber-900">
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                      <label className="text-xs font-bold text-slate-900">Texto del Aviso Importante</label>
-                    </div>
-                    {editingService.alertNotice && editingService.alertNotice.trim().length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setEditingService({ ...editingService, alertNotice: '' })}
-                        className="text-amber-800 hover:text-red-600 font-bold underline cursor-pointer text-xs transition-colors"
-                      >
-                        Limpiar aviso
-                      </button>
-                    )}
-                  </div>
-                  <textarea
-                    rows={4}
-                    value={editingService.alertNotice || ''}
-                    onChange={(e) => setEditingService({ ...editingService, alertNotice: e.target.value })}
-                    placeholder="Ej. Atención: Por período vacacional, las solicitudes recibidas después del día 15 se procesarán la siguiente quincena..."
-                    className="w-full text-xs font-medium text-slate-900 border border-amber-300 rounded-xl p-3 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
-                  />
-                  <p className="text-[11px] text-amber-800 font-medium leading-relaxed">
-                    💡 <strong>Visualización 100% automática:</strong> Al contener texto, el banner ámbar aparecerá en la cabecera del trámite para todos los colaboradores.
-                  </p>
-                </div>
-              </div>
-            )}
 
           </div>
 

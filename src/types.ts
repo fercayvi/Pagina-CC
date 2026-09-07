@@ -51,35 +51,90 @@ export interface ServiceAttachment {
   fileType?: string;
 }
 
+export interface CategoryConfig {
+  id: string;
+  label: string;
+  defaultLabel: string;
+  iconName: string;
+  colorScheme: string;
+}
+
+// ==================== BLOCK BUILDER TYPES ====================
+export interface TextLayoutBlock {
+  id: string;
+  type: 'text';
+  title?: string;
+  content: string;
+}
+
+export interface AlertLayoutBlock {
+  id: string;
+  type: 'alert';
+  title?: string;
+  message: string;
+  level: 'info' | 'warning' | 'success' | 'danger';
+}
+
+export interface FAQBlockItem {
+  q: string;
+  a: string;
+}
+
+export interface FAQLayoutBlock {
+  id: string;
+  type: 'faq';
+  title?: string;
+  items: FAQBlockItem[];
+}
+
+export interface MediaLayoutBlock {
+  id: string;
+  type: 'media';
+  title?: string;
+  url: string;
+  mediaType?: 'image' | 'video' | 'pdf';
+  caption?: string;
+}
+
+export type LayoutBlock = 
+  | TextLayoutBlock 
+  | AlertLayoutBlock 
+  | FAQLayoutBlock 
+  | MediaLayoutBlock;
+
 export interface Service {
   id: ServiceId | string;
   title: string;
   iconName: string;
   icon?: string;
   shortDesc: string;
-  category: 'Nómina y Pagos' | 'Tarjetas y Créditos' | 'Control y Asistencia';
+  category: 'Nómina y Pagos' | 'Tarjetas y Créditos' | 'Control y Asistencia' | string;
   fullDescription?: string;
+  hidden?: boolean;
+
+  // Árbol de decisiones dinámico (Divulgación progresiva)
+  decisionTree?: ServiceNode[];
+
+  // Tarjeta en home/catálogo
+  cardImage?: string;
+
+  // Constructor de Bloques de Página
+  layoutBlocks?: LayoutBlock[];
+
+  // Campos opcionales para compatibilidad con versiones previas
   steps?: StepItem[];
   requirements?: string[];
   location?: string;
   schedule?: string;
   contact?: string;
   faqs?: ServiceFAQ[];
-  hidden?: boolean;
-
-  // Árbol de decisiones dinámico (Divulgación progresiva)
-  decisionTree?: ServiceNode[];
-
-  // Multimedia & Attachments
-  cardImage?: string;
   imageUrl?: string;
   videoUrl?: string;
   pdfUrl?: string;
   pdfTitle?: string;
   attachments?: ServiceAttachment[];
-
-  // Free Text Alert Notice Block (Banner de Alerta opcional)
   alertNotice?: string;
+  showAlertNotice?: boolean;
 }
 
 export interface FAQ {

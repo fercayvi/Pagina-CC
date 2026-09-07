@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LogOut, 
   Layers, 
@@ -9,6 +9,7 @@ import {
   EyeOff, 
   Trash2, 
   CheckCircle2, 
+  Check,
   X, 
   FileText, 
   ShieldCheck,
@@ -23,6 +24,11 @@ import {
   Building2,
   PhoneCall,
   LayoutDashboard,
+  LayoutGrid,
+  Wallet,
+  CreditCard,
+  CalendarClock,
+  RotateCcw,
   GripVertical,
   Image as ImageIcon,
   Video,
@@ -46,8 +52,8 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Service, NewsItem, ServiceId, StepItem, ServiceFAQ, ContactInfo } from '../types';
-import { getDefaultServiceDetails, initialContact } from '../data';
+import { Service, NewsItem, ServiceId, StepItem, ServiceFAQ, ContactInfo, CategoryConfig } from '../types';
+import { getDefaultServiceDetails, initialContact, defaultCategories } from '../data';
 import { SERVICE_ICON_MAP } from './ServiceCard';
 import { MediaUploadField } from './MediaUploadField';
 import { DecisionTreeBuilder } from './DecisionTreeBuilder';
@@ -60,9 +66,26 @@ interface SortableServiceItemProps {
   onToggleHide: (id: string) => void;
   onEdit: (service: Service & { hidden?: boolean }) => void;
   onDelete: (id: string, title?: string) => void;
+  onRename?: (id: string, newTitle: string) => void;
 }
 
-function SortableServiceItem({ service, onToggleHide, onEdit, onDelete }: SortableServiceItemProps) {
+function SortableServiceItem({ service, onToggleHide, onEdit, onDelete, onRename }: SortableServiceItemProps) {
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [titleValue, setTitleValue] = useState(service.title);
+
+  useEffect(() => {
+    setTitleValue(service.title);
+  }, [service.title]);
+
+  const handleSaveTitle = () => {
+    setIsEditingTitle(false);
+    if (titleValue.trim() && titleValue.trim() !== service.title && onRename) {
+      onRename(service.id, titleValue.trim());
+    } else {
+      setTitleValue(service.title);
+    }
+  };
+
   const {
     attributes,
     listeners,
@@ -94,8 +117,12 @@ function SortableServiceItem({ service, onToggleHide, onEdit, onDelete }: Sortab
       {/* Top Header: Icon Left, Drag Handle Right */}
       <div>
         <div className="flex items-center justify-between w-full mb-3">
-          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 font-bold flex items-center justify-center shrink-0 border border-slate-200">
-            <IconComponent className="w-5 h-5 text-slate-600" />
+          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 font-bold flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden">
+            {service.cardImage ? (
+              <img src={service.cardImage} alt={service.title} className="w-full h-full object-cover" />
+            ) : (
+              <IconComponent className="w-5 h-5 text-slate-600" />
+            )}
           </div>
 
           <button
@@ -111,9 +138,50 @@ function SortableServiceItem({ service, onToggleHide, onEdit, onDelete }: Sortab
 
         {/* Card Content */}
         <div className="space-y-1">
-          <h4 className="text-sm font-bold text-slate-900 line-clamp-1" title={service.title}>
-            {service.title}
-          </h4>
+          {isEditingTitle ? (
+            <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+              <input
+                type="text"
+                value={titleValue}
+                onChange={(e) => setTitleValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveTitle();
+                  if (e.key === 'Escape') {
+                    setTitleValue(service.title);
+                    setIsEditingTitle(false);
+                  }
+                }}
+                autoFocus
+                className="w-full text-xs font-bold text-slate-900 bg-blue-50/50 border border-blue-400 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-600/30"
+              />
+              <button
+                type="button"
+                onClick={handleSaveTitle}
+                className="p-1 rounded-md bg-blue-600 text-white hover:bg-blue-700 shrink-0"
+                title="Guardar nuevo nombre de la tarjeta"
+              >
+                <Check className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <div className="group/title flex items-center justify-between gap-1">
+              <h4 
+                className="text-sm font-bold text-slate-900 line-clamp-1 flex-1 cursor-pointer hover:text-blue-600 transition-colors" 
+                title={`${service.title} (Haz clic para cambiar nombre)`}
+                onClick={() => setIsEditingTitle(true)}
+              >
+                {service.title}
+              </h4>
+              <button
+                type="button"
+                onClick={() => setIsEditingTitle(true)}
+                className="opacity-0 group-hover/title:opacity-100 p-1 text-slate-400 hover:text-blue-600 rounded transition-opacity"
+                title="Cambiar nombre de la tarjeta"
+              >
+                <Edit3 className="w-3 h-3" />
+              </button>
+            </div>
+          )}
           <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
             {service.shortDesc}
           </p>
@@ -168,6 +236,8 @@ interface AdminPanelProps {
   onUpdateNews: (news: NewsItem[]) => void;
   contactInfo?: ContactInfo;
   onUpdateContact?: (contact: ContactInfo) => void;
+  categories?: CategoryConfig[];
+  onUpdateCategories?: (categories: CategoryConfig[], updatedServices?: (Service & { hidden?: boolean })[]) => void;
   onLogout: () => void;
 }
 
@@ -179,10 +249,34 @@ export default function AdminPanel({
   onUpdateNews,
   contactInfo,
   onUpdateContact,
+  categories,
+  onUpdateCategories,
   onLogout
 }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'tramites' | 'noticias' | 'contacto'>('tramites');
+  const [activeTab, setActiveTab] = useState<'tramites' | 'categorias' | 'noticias' | 'contacto'>('tramites');
   const [successMessage, setSuccessMessage] = useState<string>('');
+
+  // Categories Form State
+  const [categoryForms, setCategoryForms] = useState<CategoryConfig[]>(() => {
+    if (categories && categories.length > 0) return categories;
+    try {
+      const saved = localStorage.getItem('cc-categories');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Error al leer categorías en AdminPanel:', e);
+    }
+    return defaultCategories;
+  });
+
+  // Sync categoryForms if props change
+  React.useEffect(() => {
+    if (categories && categories.length > 0) {
+      setCategoryForms(categories);
+    }
+  }, [categories]);
 
   // Contact Form State
   const [contactForm, setContactForm] = useState<ContactInfo>(() => {
@@ -256,6 +350,71 @@ export default function AdminPanel({
     setTimeout(() => setSuccessMessage(''), 3000);
   };
 
+  // --- CATEGORY HANDLERS ---
+  const handleCategoryNameChange = (id: string, newLabel: string) => {
+    setCategoryForms(prev => prev.map(c => c.id === id ? { ...c, label: newLabel } : c));
+  };
+
+  const handleResetCategoryName = (id: string) => {
+    setCategoryForms(prev => prev.map(c => c.id === id ? { ...c, label: c.defaultLabel } : c));
+  };
+
+  const handleResetAllCategories = () => {
+    setCategoryForms(defaultCategories);
+    showToast('Valores predeterminados restaurados en el formulario.');
+  };
+
+  const handleSaveCategories = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    for (const cat of categoryForms) {
+      if (!cat.label.trim()) {
+        alert('Por favor asigna un nombre válido a todas las tarjetas.');
+        return;
+      }
+    }
+
+    // Identificar categorías renombradas para actualizar los trámites existentes
+    let updatedServices = [...services];
+    let servicesChanged = false;
+
+    const currentSavedCategories = categories && categories.length > 0 ? categories : defaultCategories;
+
+    categoryForms.forEach(newCat => {
+      const oldCat = currentSavedCategories.find(c => c.id === newCat.id);
+      if (oldCat && oldCat.label !== newCat.label && newCat.id !== 'all') {
+        updatedServices = updatedServices.map(srv => {
+          if (srv.category === oldCat.label || srv.category === oldCat.defaultLabel) {
+            servicesChanged = true;
+            return { ...srv, category: newCat.label };
+          }
+          return srv;
+        });
+      }
+    });
+
+    try {
+      localStorage.setItem('cc-categories', JSON.stringify(categoryForms));
+    } catch (err) {
+      console.error('Error guardando cc-categories en localStorage:', err);
+    }
+
+    if (servicesChanged) {
+      try {
+        localStorage.setItem('cc-services-cms-v1', JSON.stringify(updatedServices));
+      } catch (err) {
+        console.error('Error guardando servicios renombrados en localStorage:', err);
+      }
+      onUpdateServices(updatedServices);
+    }
+
+    if (onUpdateCategories) {
+      onUpdateCategories(categoryForms, servicesChanged ? updatedServices : undefined);
+    }
+
+    showToast('¡Tarjetas de la pantalla de inicio actualizadas correctamente!');
+  };
+
   // --- SERVICE HANDLERS ---
   const handleToggleHideService = (id: string) => {
     const updated = services.map(s => s.id === id ? { ...s, hidden: !s.hidden } : s);
@@ -272,13 +431,25 @@ export default function AdminPanel({
     });
   };
 
+  const handleRenameService = (id: string, newTitle: string) => {
+    const updated = services.map(s => s.id === id ? { ...s, title: newTitle } : s);
+    onUpdateServices(updated);
+    try {
+      localStorage.setItem('cc-services-cms-v1', JSON.stringify(updated));
+    } catch (err) {
+      console.error('Error al guardar trámite renombrado:', err);
+    }
+    showToast(`Tarjeta renombrada a "${newTitle}"`);
+  };
+
   const handleOpenNewServiceModal = () => {
+    const defaultCategory = categoryForms.find(c => c.id !== 'all')?.label || 'Nómina y Pagos';
     const newService: Service & { hidden?: boolean } = {
       id: `custom_${Date.now()}` as ServiceId,
       title: 'Nuevo Trámite',
       iconName: 'FileText',
       shortDesc: 'Descripción corta para la tarjeta del catálogo...',
-      category: 'Nómina y Pagos',
+      category: defaultCategory,
       fullDescription: 'Descripción completa del procedimiento...',
       steps: [{ num: 1, title: 'Primer paso del trámite', desc: 'Instrucción inicial para el trabajador...' }],
       requirements: ['Gafete oficial activo'],
@@ -541,6 +712,19 @@ export default function AdminPanel({
         </button>
 
         <button
+          id="admin-tab-categorias"
+          onClick={() => setActiveTab('categorias')}
+          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+            activeTab === 'categorias'
+              ? 'bg-slate-900 text-white shadow-2xs'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          }`}
+        >
+          <LayoutGrid className="w-4 h-4" />
+          <span>Tarjetas de Inicio</span>
+        </button>
+
+        <button
           id="admin-tab-noticias"
           onClick={() => setActiveTab('noticias')}
           className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
@@ -573,17 +757,32 @@ export default function AdminPanel({
           <div className="flex items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
             <div>
               <h3 className="text-sm font-bold text-slate-900 font-display">
-                Trámites
+                Catálogo de Trámites
               </h3>
+              <p className="text-xs text-slate-500">
+                Organiza, edita o cambia la visibilidad de los trámites disponibles en el kiosco.
+              </p>
             </div>
-            <button
-              id="btn-add-service"
-              onClick={handleOpenNewServiceModal}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-2xs flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Nuevo Trámite</span>
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                id="btn-edit-categories-shortcut"
+                type="button"
+                onClick={() => setActiveTab('categorias')}
+                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                title="Personalizar nombres de las 4 tarjetas principales"
+              >
+                <LayoutGrid className="w-4 h-4 text-blue-600" />
+                <span>Editar Tarjetas</span>
+              </button>
+              <button
+                id="btn-add-service"
+                onClick={handleOpenNewServiceModal}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-2xs flex items-center gap-1.5 active:scale-95 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Nuevo Trámite</span>
+              </button>
+            </div>
           </div>
 
           {/* Services List */}
@@ -604,6 +803,7 @@ export default function AdminPanel({
                     onToggleHide={handleToggleHideService}
                     onEdit={handleOpenEditServiceModal}
                     onDelete={handleDeleteService}
+                    onRename={handleRenameService}
                   />
                 ))}
               </div>
@@ -797,6 +997,139 @@ export default function AdminPanel({
         </div>
       )}
 
+      {/* VIEW D: PERSONALIZAR TARJETAS DE INICIO / CATEGORÍAS */}
+      {activeTab === 'categorias' && (
+        <div className="space-y-4 animate-fadeIn">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 font-display flex items-center gap-2">
+                  <LayoutGrid className="w-5 h-5 text-blue-600" />
+                  <span>Personalizar Tarjetas de la Pantalla de Inicio</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Modifica los títulos de las 4 tarjetas principales que se muestran en el kiosco. Si renombras una categoría, los trámites asociados se actualizarán automáticamente.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleResetAllCategories}
+                className="px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 cursor-pointer self-start sm:self-auto shrink-0 flex items-center gap-1.5"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Restablecer Todo</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCategories} className="mt-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {categoryForms.map((cat, index) => {
+                  const count = cat.id === 'all'
+                    ? services.filter(s => !s.hidden).length
+                    : services.filter(s => !s.hidden && (s.category === cat.label || s.category === cat.defaultLabel || s.category === cat.id)).length;
+
+                  const iconMap: Record<string, any> = {
+                    LayoutGrid,
+                    Wallet,
+                    CreditCard,
+                    CalendarClock
+                  };
+                  const IconComp = iconMap[cat.iconName] || LayoutGrid;
+
+                  const colorBgMap: Record<string, string> = {
+                    indigo: 'bg-indigo-50/80 border-indigo-100 text-indigo-600',
+                    emerald: 'bg-emerald-50/80 border-emerald-100 text-emerald-600',
+                    violet: 'bg-violet-50/80 border-violet-100 text-violet-600',
+                    amber: 'bg-amber-50/80 border-amber-100 text-amber-600',
+                  };
+                  const badgeColor = colorBgMap[cat.colorScheme] || colorBgMap.indigo;
+
+                  return (
+                    <div 
+                      key={cat.id} 
+                      className="bg-slate-50/60 border border-slate-200/90 rounded-2xl p-4.5 flex flex-col justify-between gap-4 shadow-2xs hover:border-slate-300 transition-all"
+                    >
+                      <div className="flex items-start gap-3.5">
+                        {/* Vista previa miniatura de la tarjeta real */}
+                        <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center shrink-0 shadow-2xs ${badgeColor}`}>
+                          <IconComp className="w-7 h-7" />
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                              Tarjeta #{index + 1} • {cat.id === 'all' ? 'Ver Todos' : 'Filtro por Categoría'}
+                            </span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-white text-slate-600 border border-slate-200">
+                              {count} {count === 1 ? 'trámite' : 'trámites'}
+                            </span>
+                          </div>
+
+                          <div className="mt-2 space-y-1">
+                            <label 
+                              htmlFor={`input-cat-${cat.id}`} 
+                              className="block text-xs font-bold text-slate-800"
+                            >
+                              Nombre visible en la tarjeta *
+                            </label>
+                            <input
+                              id={`input-cat-${cat.id}`}
+                              type="text"
+                              value={cat.label}
+                              onChange={(e) => handleCategoryNameChange(cat.id, e.target.value)}
+                              placeholder={cat.defaultLabel}
+                              className="w-full px-3 py-2 text-xs font-bold border border-slate-200 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 shadow-2xs"
+                              required
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between mt-2 text-[11px] text-slate-500">
+                            <span>Predeterminado: <span className="font-semibold text-slate-600">{cat.defaultLabel}</span></span>
+                            {cat.label !== cat.defaultLabel && (
+                              <button
+                                type="button"
+                                onClick={() => handleResetCategoryName(cat.id)}
+                                className="text-blue-600 hover:text-blue-800 font-bold hover:underline cursor-pointer"
+                              >
+                                Restablecer
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Preview en vivo */}
+                      <div className="pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-xs">
+                        <span className="text-slate-400 font-medium text-[11px]">Vista previa en inicio:</span>
+                        <span className="font-bold text-slate-800 truncate max-w-[220px]">
+                          {cat.label || <span className="text-slate-400 italic">Sin nombre</span>}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Tips & Save Button */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200">
+                <p className="text-[11px] text-slate-500">
+                  💡 Al guardar, los cambios se reflejarán de inmediato en el Kiosco y se conservarán en este dispositivo.
+                </p>
+                <button
+                  type="submit"
+                  id="btn-save-categories"
+                  className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95 cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Guardar Nombres de Tarjetas</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* --- ENHANCED MODAL FOR ADDING / EDITING SERVICE WITH TABS --- */}
       {isServiceModalOpen && editingService && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
@@ -931,9 +1264,11 @@ export default function AdminPanel({
                         onChange={(e) => setEditingService({ ...editingService, category: e.target.value as any })}
                         className="w-full px-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 focus:bg-white"
                       >
-                        <option value="Nómina y Pagos">Nómina y Pagos</option>
-                        <option value="Tarjetas y Créditos">Tarjetas y Créditos</option>
-                        <option value="Control y Asistencia">Control y Asistencia</option>
+                        {categoryForms.filter(c => c.id !== 'all').map((cat) => (
+                          <option key={cat.id} value={cat.label}>
+                            {cat.label}
+                          </option>
+                        ))}
                       </select>
                     </div>
 

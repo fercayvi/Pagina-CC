@@ -1,4 +1,35 @@
-import { ServiceId, Service, FAQ, NewsItem, Aviso, UserProfile, MonthlyRecognition, ContactInfo } from './types';
+import { ServiceId, Service, FAQ, NewsItem, Aviso, UserProfile, MonthlyRecognition, ContactInfo, CategoryConfig } from './types';
+
+export const defaultCategories: CategoryConfig[] = [
+  {
+    id: 'all',
+    label: 'Todos los trámites',
+    defaultLabel: 'Todos los trámites',
+    iconName: 'LayoutGrid',
+    colorScheme: 'indigo'
+  },
+  {
+    id: 'nomina',
+    label: 'Nómina y Pagos',
+    defaultLabel: 'Nómina y Pagos',
+    iconName: 'Wallet',
+    colorScheme: 'emerald'
+  },
+  {
+    id: 'tarjetas',
+    label: 'Tarjetas y Créditos',
+    defaultLabel: 'Tarjetas y Créditos',
+    iconName: 'CreditCard',
+    colorScheme: 'violet'
+  },
+  {
+    id: 'control',
+    label: 'Control y Asistencia',
+    defaultLabel: 'Control y Asistencia',
+    iconName: 'CalendarClock',
+    colorScheme: 'amber'
+  }
+];
 
 export const initialContact: ContactInfo = {
   whatsapp: 'https://wa.me/525512345678',
