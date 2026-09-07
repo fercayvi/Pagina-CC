@@ -151,7 +151,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
         const fileBase64 = e.target?.result as string;
         onChange(fileBase64, file.name);
 
-        if (type === 'pdf' && onTitleChange && (!titleValue || titleValue.trim() === '')) {
+        if (type === 'pdf' && onTitleChange && (!titleValue || (typeof titleValue === 'string' && titleValue.trim() === ''))) {
           const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
           onTitleChange(`Descargar ${cleanName.charAt(0).toUpperCase() + cleanName.slice(1)}`);
         }
@@ -199,7 +199,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
   };
 
   const IconComponent = getIcon();
-  const hasValue = Boolean(value && value.trim().length > 0);
+  const hasValue = Boolean(value && typeof value === 'string' && value.trim().length > 0);
 
   return (
     <div className="space-y-2.5 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">

@@ -35,7 +35,7 @@ export const EditServiceModal: React.FC<EditServiceModalProps> = ({
 
   useEffect(() => {
     if (service) {
-      const hasImage = Boolean(service.cardImage && service.cardImage.trim().length > 0);
+      const hasImage = Boolean(service.cardImage && typeof service.cardImage === 'string' && service.cardImage.trim().length > 0);
       setVisualMode(hasImage ? 'image' : 'icon');
       setEditingService({
         ...service,
@@ -72,7 +72,7 @@ export const EditServiceModal: React.FC<EditServiceModalProps> = ({
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingService.title.trim()) {
+    if (!editingService.title?.trim()) {
       alert('Por favor, ingresa el título del trámite.');
       return;
     }
@@ -323,7 +323,7 @@ export const EditServiceModal: React.FC<EditServiceModalProps> = ({
                     {/* Card Mockup */}
                     <div className="bg-white border-2 border-slate-200 rounded-2xl p-5 flex flex-col items-center justify-center text-center shadow-sm w-full transition-all">
                       <div className="mb-3 flex items-center justify-center">
-                        {editingService.cardImage && editingService.cardImage.trim().length > 0 ? (
+                        {editingService.cardImage && typeof editingService.cardImage === 'string' && editingService.cardImage.trim().length > 0 ? (
                           <img 
                             src={editingService.cardImage} 
                             alt={editingService.title || 'Foto de tarjeta'} 

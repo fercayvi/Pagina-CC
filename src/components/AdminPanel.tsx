@@ -79,8 +79,9 @@ function SortableServiceItem({ service, onToggleHide, onEdit, onDelete, onRename
 
   const handleSaveTitle = () => {
     setIsEditingTitle(false);
-    if (titleValue.trim() && titleValue.trim() !== service.title && onRename) {
-      onRename(service.id, titleValue.trim());
+    const trimmedTitle = (titleValue || '').trim();
+    if (trimmedTitle && trimmedTitle !== service.title && onRename) {
+      onRename(service.id, trimmedTitle);
     } else {
       setTitleValue(service.title);
     }
@@ -368,7 +369,7 @@ export default function AdminPanel({
     e.preventDefault();
 
     for (const cat of categoryForms) {
-      if (!cat.label.trim()) {
+      if (!cat.label?.trim()) {
         alert('Por favor asigna un nombre válido a todas las tarjetas.');
         return;
       }
@@ -507,7 +508,7 @@ export default function AdminPanel({
 
   const handleSaveService = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingService || !editingService.title.trim()) return;
+    if (!editingService || !editingService.title?.trim()) return;
 
     let updatedList: (Service & { hidden?: boolean })[];
     if (isNewService) {
@@ -655,7 +656,7 @@ export default function AdminPanel({
 
   const handleSaveNews = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingNews || !editingNews.title.trim()) return;
+    if (!editingNews || !editingNews.title?.trim()) return;
 
     if (isNewNews) {
       onUpdateNews([editingNews, ...news]);

@@ -21,7 +21,7 @@ import { ensureServiceLayoutBlocks } from '../utils/layoutBlocks';
 
 // Helper to resolve video URLs (YouTube, Vimeo, direct MP4, or Base64 data URL)
 function getEmbedVideoInfo(url?: string): { type: 'youtube' | 'vimeo' | 'direct' | 'iframe'; embedUrl: string } | null {
-  if (!url || !url.trim()) return null;
+  if (!url || typeof url !== 'string' || !url.trim()) return null;
   const cleanUrl = url.trim();
 
   // Base64 Data URL video or direct MP4/WebM/OGG file
@@ -217,7 +217,7 @@ function LivePreviewPanel({
             </div>
 
             <div className="flex items-center gap-3 pt-1">
-              {draft.cardImage && draft.cardImage.trim().length > 0 ? (
+              {draft.cardImage && typeof draft.cardImage === 'string' && draft.cardImage.trim().length > 0 ? (
                 <img 
                   src={draft.cardImage} 
                   alt={draft.title || 'Foto'} 
@@ -349,7 +349,7 @@ function LivePreviewPanel({
                 </div>
 
                 <div className="flex items-center gap-3 pt-1">
-                  {draft.cardImage && draft.cardImage.trim().length > 0 ? (
+                  {draft.cardImage && typeof draft.cardImage === 'string' && draft.cardImage.trim().length > 0 ? (
                     <img 
                       src={draft.cardImage} 
                       alt={draft.title || 'Foto'} 
@@ -460,7 +460,10 @@ export default function ServiceDetail({
       alertNotice: s.alertNotice ?? computed.alertNotice,
       layoutBlocks: s.layoutBlocks && s.layoutBlocks.length > 0 ? s.layoutBlocks : undefined
     };
-    return ensureServiceLayoutBlocks(hydrated);
+    return {
+      ...hydrated,
+      layoutBlocks: ensureServiceLayoutBlocks(hydrated)
+    };
   };
 
   const [draft, setDraft] = useState<(Service & { hidden?: boolean })>(() => getPreparedDraft(service));
@@ -639,7 +642,7 @@ export default function ServiceDetail({
 
   // --- SAVE & CANCEL ACTION BAR ---
   const handleSaveEdit = () => {
-    if (!draft.title.trim()) {
+    if (!draft.title?.trim()) {
       showToast('El título del trámite es obligatorio.');
       return;
     }
@@ -1145,7 +1148,7 @@ export default function ServiceDetail({
             </div>
 
             <div className="flex items-center gap-2.5 pt-1">
-              {draft.cardImage && draft.cardImage.trim().length > 0 ? (
+              {draft.cardImage && typeof draft.cardImage === 'string' && draft.cardImage.trim().length > 0 ? (
                 <img 
                   src={draft.cardImage} 
                   alt={draft.title || 'Foto'} 

@@ -16,7 +16,7 @@ export default function AdminLoginModal({ isOpen, onClose, onLoginSuccess }: Adm
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username.trim() || !password.trim()) {
+    if (!username?.trim() || !password?.trim()) {
       setError('Por favor ingresa un usuario y contraseña.');
       return;
     }

@@ -195,7 +195,7 @@ export default function App() {
   };
 
   return (
-    <div id="app-root-layout" className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-800">
+    <div id="app-root-layout" className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800">
       
       {/* MAIN VIEWPORT CONTAINER */}
       <main id="phone-wrapper-container" className="w-full min-h-screen flex flex-col relative">
@@ -211,7 +211,7 @@ export default function App() {
                 {/* Light Full-Screen Background Overlay */}
                 <div 
                   id="service-detail-backdrop"
-                  className="fixed inset-0 bg-slate-100 z-30 transition-opacity"
+                  className="fixed inset-0 bg-slate-50 z-30 transition-opacity"
                   onClick={() => {
                     setSelectedService(null);
                     setServiceEditMode(false);

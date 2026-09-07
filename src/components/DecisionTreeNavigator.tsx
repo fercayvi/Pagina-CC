@@ -17,7 +17,7 @@ interface DecisionTreeNavigatorProps {
 
 // Helper to check and extract embed video info
 function getEmbedVideoInfo(url?: string) {
-  if (!url || !url.trim()) return null;
+  if (!url || typeof url !== 'string' || !url.trim()) return null;
   const cleanUrl = url.trim();
 
   // YouTube match
@@ -79,14 +79,14 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
   // Reusable Step Navigation Bar (Top and Bottom)
   const renderStepNavigation = (isTop: boolean) => {
     return (
-      <div className={`${isTop ? 'border-b border-gray-100 pb-4 mb-4' : 'border-t border-gray-100 pt-4 mt-4'} flex items-center justify-between gap-4`}>
+      <div className={`${isTop ? 'border-b border-slate-100 pb-4 mb-4' : 'border-t border-slate-100 pt-5 mt-5'} flex items-center justify-between gap-4`}>
         {navPath.length > 0 ? (
           <button
             type="button"
             onClick={handleGoBack}
-            className="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
+            className="px-5 py-3 text-base font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 active:scale-95 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-5 h-5" />
             <span>Atrás</span>
           </button>
         ) : (
@@ -98,28 +98,28 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
             <button
               type="button"
               onClick={() => handleSelectNode(currentNode.children![0])}
-              className="px-6 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm transition-all flex items-center gap-2 ml-auto cursor-pointer"
+              className="px-6 py-3 text-base font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-xl shadow-sm transition-all flex items-center gap-2 ml-auto cursor-pointer"
             >
               <span>{currentNode.children[0].title || 'Siguiente'}</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-5 h-5" />
             </button>
           ) : (
-            <div className="flex flex-wrap items-center gap-2 ml-auto justify-end">
+            <div className="flex flex-wrap items-center gap-2.5 ml-auto justify-end">
               {currentNode.children.map((childNode) => (
                 <button
                   key={childNode.id}
                   type="button"
                   onClick={() => handleSelectNode(childNode)}
-                  className="px-6 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+                  className="px-6 py-3 text-base font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer"
                 >
                   <span>{childNode.title}</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-5 h-5" />
                 </button>
               ))}
             </div>
           )
         ) : (
-          <span className="text-xs font-medium text-gray-400 italic ml-auto">
+          <span className="text-sm font-semibold text-slate-400 italic ml-auto">
             Fin del tutorial
           </span>
         )}
@@ -131,13 +131,13 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
     <div className="w-full">
       {/* 3. Navegación (Retroceso): Solo en listas de categorías */}
       {navPath.length > 0 && (!currentNode || currentNode.nodeType === 'category') && (
-        <div className="mb-3">
+        <div className="mb-4">
           <button
             type="button"
             onClick={handleGoBack}
-            className="inline-flex items-center gap-1 text-sm text-blue-600 font-medium hover:underline cursor-pointer transition-colors"
+            className="inline-flex items-center gap-2 text-base text-blue-700 font-bold hover:bg-blue-100 bg-blue-50 px-4 py-2 rounded-xl transition-colors cursor-pointer"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-5 h-5" />
             <span>Atrás</span>
           </button>
         </div>
@@ -145,16 +145,16 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
 
       {/* 4A. Vista de Paso de Tutorial (Estilo Wizard: Doble barra de navegación y múltiples bloques) */}
       {currentNode && currentNode.nodeType === 'step' ? (
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-xs space-y-4 animate-fadeIn">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm space-y-5 animate-fadeIn">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200">
-              <ListOrdered className="w-3.5 h-3.5 text-purple-600" />
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-200">
+              <ListOrdered className="w-4 h-4 text-purple-600" />
               Paso de Tutorial
             </span>
           </div>
 
           {currentNode.title && (
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 leading-snug">
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
               {currentNode.title}
             </h3>
           )}
@@ -163,7 +163,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
           {renderStepNavigation(true)}
 
           {/* Renderizado de Múltiples Bloques de Contenido con espaciado */}
-          <div className="space-y-8 my-4">
+          <div className="space-y-8 my-5">
             {((currentNode.contentData?.blocks && currentNode.contentData.blocks.length > 0)
               ? currentNode.contentData.blocks
               : [
@@ -179,7 +179,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
               return (
                 <div key={block.id || `block-${index}`} className="space-y-4">
                   {block.text && (
-                    <div className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line font-normal">
+                    <div className="text-base sm:text-lg text-slate-700 leading-relaxed whitespace-pre-line font-normal">
                       {block.text}
                     </div>
                   )}
@@ -188,7 +188,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
                     <div className="w-full flex justify-center my-4">
                       <div 
                         onClick={() => onOpenLightbox && onOpenLightbox(block.imageUrl!, currentNode.title)}
-                        className="relative group cursor-pointer overflow-hidden rounded-xl border border-gray-200 inline-block max-w-full"
+                        className="relative group cursor-pointer overflow-hidden rounded-xl border border-slate-200 inline-block max-w-full bg-slate-50"
                         title="Clic para ampliar imagen"
                       >
                         <img 
@@ -196,8 +196,8 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
                           alt={currentNode.title} 
                           className="max-w-full md:max-w-2xl h-auto rounded-xl shadow-sm object-contain" 
                         />
-                        <div className="absolute inset-0 bg-gray-900/30 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-2 text-white text-xs font-semibold">
-                          <ZoomIn className="w-4 h-4" />
+                        <div className="absolute inset-0 bg-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-2 text-white text-sm font-semibold">
+                          <ZoomIn className="w-5 h-5" />
                           <span>Ampliar</span>
                         </div>
                       </div>
@@ -206,7 +206,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
 
                   {blockVideo && (
                     <div className="w-full flex justify-center my-4">
-                      <div className="w-full max-w-3xl aspect-video rounded-xl overflow-hidden shadow-sm bg-black border border-gray-200">
+                      <div className="w-full max-w-3xl aspect-video rounded-xl overflow-hidden shadow-sm bg-black border border-slate-200">
                         {blockVideo.type === 'direct' ? (
                           <video src={blockVideo.embedUrl} controls className="w-full h-full" />
                         ) : (
@@ -231,15 +231,15 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
         </div>
       ) : currentNode && currentNode.nodeType === 'content' ? (
         /* 4B. Vista de Contenido Final: tarjeta limpia con footer de regreso */
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-xs space-y-4 animate-fadeIn">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm space-y-5 animate-fadeIn">
           {currentNode.title && (
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 leading-snug">
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
               {currentNode.title}
             </h3>
           )}
 
           {currentNode.contentData?.text && (
-            <div className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line font-normal">
+            <div className="text-base sm:text-lg text-slate-700 leading-relaxed whitespace-pre-line font-normal">
               {currentNode.contentData.text}
             </div>
           )}
@@ -248,7 +248,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
             <div className="w-full flex justify-center my-4">
               <div 
                 onClick={() => onOpenLightbox && onOpenLightbox(currentNode.contentData!.imageUrl!, currentNode.title)}
-                className="relative group cursor-pointer overflow-hidden rounded-xl border border-gray-200 inline-block max-w-full"
+                className="relative group cursor-pointer overflow-hidden rounded-xl border border-slate-200 inline-block max-w-full bg-slate-50"
                 title="Clic para ampliar imagen"
               >
                 <img 
@@ -256,8 +256,8 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
                   alt={currentNode.title} 
                   className="max-w-full md:max-w-2xl h-auto rounded-xl shadow-sm object-contain" 
                 />
-                <div className="absolute inset-0 bg-gray-900/30 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-2 text-white text-xs font-semibold">
-                  <ZoomIn className="w-4 h-4" />
+                <div className="absolute inset-0 bg-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-2 text-white text-sm font-semibold">
+                  <ZoomIn className="w-5 h-5" />
                   <span>Ampliar</span>
                 </div>
               </div>
@@ -266,7 +266,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
 
           {currentVideoInfo && (
             <div className="w-full flex justify-center my-4">
-              <div className="w-full max-w-3xl aspect-video rounded-xl overflow-hidden shadow-sm bg-black border border-gray-200">
+              <div className="w-full max-w-3xl aspect-video rounded-xl overflow-hidden shadow-sm bg-black border border-slate-200">
                 {currentVideoInfo.type === 'direct' ? (
                   <video src={currentVideoInfo.embedUrl} controls className="w-full h-full" />
                 ) : (
@@ -283,46 +283,48 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
           )}
 
           {navPath.length > 0 && (
-            <div className="mt-8 pt-5 border-t border-gray-100 flex items-center justify-between gap-4">
+            <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between gap-4">
               <button
                 type="button"
                 onClick={handleGoBack}
-                className="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
+                className="px-5 py-3 text-base font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 active:scale-95 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft className="w-5 h-5" />
                 <span>Atrás</span>
               </button>
             </div>
           )}
         </div>
       ) : (
-        /* Opciones en Cuadrícula Responsiva (Grid de Tarjetas Clicables) */
+        /* Opciones en Cuadrícula Responsiva (Grid de Tarjetas Clicables de Alto Contraste) */
         <div>
           {currentNode && (
-            <h4 className="text-sm font-semibold text-gray-900 mb-2 px-0.5">
+            <h4 className="text-base font-bold text-slate-900 mb-3 px-1">
               {currentNode.title}
             </h4>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4 mt-2">
             {currentOptions.map((node) => (
               <button
                 key={node.id}
                 type="button"
                 onClick={() => handleSelectNode(node)}
-                className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-500 hover:bg-blue-50 transition-all flex items-center justify-between group cursor-pointer text-left"
+                className="bg-white border-2 border-slate-200 hover:border-blue-500 hover:bg-blue-50/40 active:bg-blue-50 active:border-blue-500 p-5 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-all active:scale-[0.98] group cursor-pointer text-left min-h-[72px]"
               >
-                <span className="text-gray-800 font-semibold text-base group-hover:text-blue-700 transition-colors">
+                <span className="text-base sm:text-lg font-semibold text-slate-800 group-hover:text-blue-700 leading-snug transition-colors pr-3">
                   {node.title}
                 </span>
-                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-all group-hover:translate-x-1 shrink-0 ml-3" />
+                <div className="w-10 h-10 rounded-xl bg-slate-100 group-hover:bg-blue-600 group-hover:text-white text-slate-500 flex items-center justify-center shrink-0 transition-colors shadow-2xs">
+                  <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+                </div>
               </button>
             ))}
           </div>
 
           {currentOptions.length === 0 && (
-            <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-center mt-4">
-              <p className="text-xs text-gray-500">No hay más opciones disponibles.</p>
+            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 text-center mt-4">
+              <p className="text-sm font-medium text-slate-500">No hay más opciones disponibles.</p>
             </div>
           )}
         </div>

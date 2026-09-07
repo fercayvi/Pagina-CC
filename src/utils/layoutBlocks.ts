@@ -57,7 +57,7 @@ export function ensureServiceLayoutBlocks(service: Partial<Service>): LayoutBloc
   const blocks: LayoutBlock[] = [];
 
   // 1. Aviso de alerta previo
-  if (service.alertNotice && service.alertNotice.trim().length > 0) {
+  if (typeof service.alertNotice === 'string' && service.alertNotice.trim().length > 0) {
     blocks.push({
       id: generateBlockId('alt'),
       type: 'alert',
@@ -68,7 +68,7 @@ export function ensureServiceLayoutBlocks(service: Partial<Service>): LayoutBloc
   }
 
   // 2. Imagen / Infografía previa
-  if (service.imageUrl && service.imageUrl.trim().length > 0) {
+  if (typeof service.imageUrl === 'string' && service.imageUrl.trim().length > 0) {
     blocks.push({
       id: generateBlockId('med'),
       type: 'media',
@@ -80,7 +80,7 @@ export function ensureServiceLayoutBlocks(service: Partial<Service>): LayoutBloc
   }
 
   // 3. Video explicativo previo
-  if (service.videoUrl && service.videoUrl.trim().length > 0) {
+  if (typeof service.videoUrl === 'string' && service.videoUrl.trim().length > 0) {
     blocks.push({
       id: generateBlockId('med'),
       type: 'media',
@@ -92,7 +92,7 @@ export function ensureServiceLayoutBlocks(service: Partial<Service>): LayoutBloc
   }
 
   // 4. Formatos PDF / Documentos previos
-  if (service.pdfUrl && service.pdfUrl.trim().length > 0) {
+  if (typeof service.pdfUrl === 'string' && service.pdfUrl.trim().length > 0) {
     blocks.push({
       id: generateBlockId('med'),
       type: 'media',
@@ -148,7 +148,7 @@ export function ensureServiceLayoutBlocks(service: Partial<Service>): LayoutBloc
       id: generateBlockId('faq'),
       type: 'faq',
       title: 'Preguntas Frecuentes',
-      items: service.faqs.map(f => ({ q: f.question, a: f.answer }))
+      items: service.faqs.map(f => ({ q: f.question || '', a: f.answer || '' }))
     });
   }
 
