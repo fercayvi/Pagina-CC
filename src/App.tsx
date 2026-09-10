@@ -21,6 +21,7 @@ export default function App() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
   const [isImageZoomed, setIsImageZoomed] = useState<boolean>(false);
+  const [unreadNewsCount, setUnreadNewsCount] = useState<number>(0);
 
   // 100% Offline / LocalStorage State Initialization
   const [services, setServices] = useState<(Service & { hidden?: boolean })[]>(() => {
@@ -256,15 +257,20 @@ export default function App() {
                 />
               ) : (
                 <>
+                  {/* TopBar with Navigation & Admin Lock Button */}
+                  <TopBar 
+                    setShowAdminLogin={setIsLoginModalOpen}
+                    currentTab={currentTab}
+                    setCurrentTab={(tab) => {
+                      setCurrentTab(tab);
+                      setSelectedService(null);
+                    }}
+                    unreadNewsCount={unreadNewsCount}
+                  />
+
                   {/* TAB 1: INICIO */}
                   {currentTab === 'inicio' && (
                     <div className="space-y-4 animate-fadeIn">
-                      
-                      {/* TopBar with Title & Admin Lock Button */}
-                      <TopBar 
-                        setShowAdminLogin={setIsLoginModalOpen}
-                      />
-
                       {/* Banner Informativo (Recordatorio de Módulo) */}
                       <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 sm:p-3.5 flex items-start sm:items-center gap-2.5 shadow-xs my-1">
                         <MapPin className="text-blue-600 shrink-0 mt-0.5 sm:mt-0" size={18} />
@@ -281,15 +287,24 @@ export default function App() {
                         onSelectCategory={setSelectedCategory}
                         categories={categories}
                       />
-
                     </div>
                   )}
 
                   {/* TAB 2: NOTICIAS */}
-                  {currentTab === 'noticias' && <NewsTab newsList={news} />}
+                  {currentTab === 'noticias' && (
+                    <NewsTab 
+                      newsList={news} 
+                      onUnreadCountChange={setUnreadNewsCount}
+                    />
+                  )}
 
                   {/* TAB 3: ASISTENTE */}
-                  {currentTab === 'asistente' && <AsistenteTab user={user} contactInfo={contactInfo} />}
+                  {currentTab === 'asistente' && (
+                    <AsistenteTab 
+                      user={user} 
+                      contactInfo={contactInfo} 
+                    />
+                  )}
                 </>
               )
             )}
@@ -305,6 +320,7 @@ export default function App() {
                 setCurrentTab(tab);
                 setSelectedService(null);
               }} 
+              unreadNewsCount={unreadNewsCount}
             />
           )}
 

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -34,7 +34,10 @@ import {
   FolderGit2,
   ChevronRight,
   Info,
-  ListOrdered
+  ListOrdered,
+  Undo2,
+  Redo2,
+  Compass
 } from 'lucide-react';
 import { ServiceNode, ServiceNodeContentData, ContentBlock } from '../types';
 import { MediaUploadField } from './MediaUploadField';
@@ -358,6 +361,80 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
   const [nodes, setNodes, onNodesChange] = useNodesState<DecisionNodeType>(initialGraph.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialGraph.edges);
 
+  // History State for Undo/Redo (Reducción de carga cognitiva y prevención de errores)
+  interface HistoryStep {
+    nodes: DecisionNodeType[];
+    edges: Edge[];
+  }
+  const [history, setHistory] = useState<HistoryStep[]>([
+    { nodes: initialGraph.nodes, edges: initialGraph.edges }
+  ]);
+  const [historyIndex, setHistoryIndex] = useState<number>(0);
+  const isHistoryActionRef = React.useRef<boolean>(false);
+  const [showMinimap, setShowMinimap] = useState<boolean>(true);
+
+  const pushHistorySnapshot = useCallback((newNodes: DecisionNodeType[], newEdges: Edge[]) => {
+    if (isHistoryActionRef.current) {
+      isHistoryActionRef.current = false;
+      return;
+    }
+    setHistory((prev) => {
+      const trimmed = prev.slice(0, historyIndex + 1);
+      return [...trimmed, { nodes: newNodes, edges: newEdges }].slice(-30);
+    });
+    setHistoryIndex((prev) => Math.min(prev + 1, 29));
+  }, [historyIndex]);
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+
+  const handleUndo = useCallback(() => {
+    if (historyIndex > 0) {
+      const prevIdx = historyIndex - 1;
+      const target = history[prevIdx];
+      isHistoryActionRef.current = true;
+      setNodes(target.nodes);
+      setEdges(target.edges);
+      setHistoryIndex(prevIdx);
+    }
+  }, [historyIndex, history, setNodes, setEdges]);
+
+  const handleRedo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const nextIdx = historyIndex + 1;
+      const target = history[nextIdx];
+      isHistoryActionRef.current = true;
+      setNodes(target.nodes);
+      setEdges(target.edges);
+      setHistoryIndex(nextIdx);
+    }
+  }, [historyIndex, history, setNodes, setEdges]);
+
+  // Atajos de teclado: Ctrl+Z para Deshacer, Ctrl+Y o Ctrl+Shift+Z para Rehacer
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        if (e.shiftKey) {
+          e.preventDefault();
+          handleRedo();
+        } else {
+          e.preventDefault();
+          handleUndo();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleUndo, handleRedo]);
+
   // Selected node ID in the canvas
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(
     initialGraph.nodes.length > 0 ? initialGraph.nodes[0].id : null
@@ -374,8 +451,8 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
   // Handle new connection between handles
   const onConnect = useCallback(
     (params: Connection) => {
-      setEdges((eds) =>
-        addEdge(
+      setEdges((eds) => {
+        const nextEdges = addEdge(
           {
             ...params,
             type: 'smoothstep',
@@ -384,10 +461,12 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
             markerEnd: { type: MarkerType.ArrowClosed, color: '#3b82f6' },
           } as Edge,
           eds
-        )
-      );
+        );
+        pushHistorySnapshot(nodes, nextEdges);
+        return nextEdges;
+      });
     },
-    [setEdges]
+    [setEdges, pushHistorySnapshot, nodes]
   );
 
   // Click on a node: select it for the properties sidebar
@@ -473,10 +552,13 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
       markerEnd: { type: MarkerType.ArrowClosed, color: '#3b82f6' }
     };
 
-    setNodes((nds) => [...nds, newNode]);
-    setEdges((eds) => [...eds, newEdge]);
+    const nextNodes = [...nodes, newNode];
+    const nextEdges = [...edges, newEdge];
+    setNodes(nextNodes);
+    setEdges(nextEdges);
+    pushHistorySnapshot(nextNodes, nextEdges);
     setSelectedNodeId(newId);
-  }, [selectedNode, edges, setNodes, setEdges]);
+  }, [selectedNode, edges, nodes, setNodes, setEdges, pushHistorySnapshot]);
 
   // Add a new root node
   const handleAddRootNode = useCallback(() => {
@@ -495,20 +577,25 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
       }
     };
 
-    setNodes((nds) => [...nds, newNode]);
+    const nextNodes = [...nodes, newNode];
+    setNodes(nextNodes);
+    pushHistorySnapshot(nextNodes, edges);
     setSelectedNodeId(newId);
-  }, [nodes, setNodes]);
+  }, [nodes, edges, setNodes, pushHistorySnapshot]);
 
   // Delete the selected node
   const handleDeleteSelectedNode = useCallback(() => {
     if (!selectedNodeId) return;
 
     // Remove node
-    setNodes((nds) => nds.filter((n) => n.id !== selectedNodeId));
+    const nextNodes = nodes.filter((n) => n.id !== selectedNodeId);
     // Remove any connected edges
-    setEdges((eds) => eds.filter((e) => e.source !== selectedNodeId && e.target !== selectedNodeId));
+    const nextEdges = edges.filter((e) => e.source !== selectedNodeId && e.target !== selectedNodeId);
+    setNodes(nextNodes);
+    setEdges(nextEdges);
+    pushHistorySnapshot(nextNodes, nextEdges);
     setSelectedNodeId(null);
-  }, [selectedNodeId, setNodes, setEdges]);
+  }, [selectedNodeId, nodes, edges, setNodes, setEdges, pushHistorySnapshot]);
 
   // Auto-arrange layout
   const handleAutoArrange = useCallback(() => {
@@ -516,7 +603,8 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
     const arranged = treeToFlow(currentTree);
     setNodes(arranged.nodes);
     setEdges(arranged.edges);
-  }, [nodes, edges, setNodes, setEdges]);
+    pushHistorySnapshot(arranged.nodes, arranged.edges);
+  }, [nodes, edges, setNodes, setEdges, pushHistorySnapshot]);
 
   // Step Blocks state and helpers for 'step' nodes
   const stepBlocks: ContentBlock[] = useMemo(() => {
@@ -659,8 +747,43 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
           </div>
         </div>
 
-        {/* Right: Canvas Tools */}
+        {/* Right: Canvas Tools with Undo / Redo */}
         <div className="flex items-center gap-2">
+          {/* Undo / Redo Group */}
+          <div className="flex items-center bg-gray-100 rounded-xl p-1 border border-gray-200 shadow-2xs">
+            <button
+              type="button"
+              onClick={handleUndo}
+              disabled={!canUndo}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                canUndo
+                  ? 'text-gray-700 hover:text-blue-700 hover:bg-white shadow-2xs'
+                  : 'text-gray-400 opacity-40 cursor-not-allowed'
+              }`}
+              title="Deshacer último cambio (Ctrl + Z)"
+            >
+              <Undo2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Deshacer</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleRedo}
+              disabled={!canRedo}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                canRedo
+                  ? 'text-gray-700 hover:text-blue-700 hover:bg-white shadow-2xs'
+                  : 'text-gray-400 opacity-40 cursor-not-allowed'
+              }`}
+              title="Rehacer cambio (Ctrl + Y o Ctrl + Shift + Z)"
+            >
+              <Redo2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Rehacer</span>
+            </button>
+          </div>
+
+          <div className="h-5 w-px bg-gray-200 hidden sm:block" />
+
           <button
             type="button"
             onClick={handleAutoArrange}
@@ -708,17 +831,46 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
           >
             <Background variant={BackgroundVariant.Dots} gap={20} size={1.5} color="#cbd5e1" />
             <Controls className="bg-white border border-gray-200 rounded-xl shadow-xs p-1" />
-            <MiniMap
-              nodeColor={(n) => (n.data?.nodeType === 'step' ? '#9333ea' : n.data?.nodeType === 'content' ? '#10b981' : '#3b82f6')}
-              className="bg-white/90 border border-gray-200 rounded-xl overflow-hidden shadow-xs"
-              zoomable
-              pannable
-            />
+
+            {/* Structured Minimap Widget in Bottom Corner */}
+            <Panel position="bottom-right" className="m-3">
+              <div className="bg-white/95 backdrop-blur-xs border border-slate-200/90 rounded-2xl shadow-md overflow-hidden transition-all max-w-[220px]">
+                <div className="flex items-center justify-between px-3 py-1.5 bg-slate-100/90 border-b border-slate-200 text-[11px] font-bold text-slate-700">
+                  <span className="flex items-center gap-1.5">
+                    <Compass className="w-3.5 h-3.5 text-blue-600" />
+                    Minimapa
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowMinimap(!showMinimap)}
+                    className="text-[10px] text-slate-500 hover:text-slate-800 px-1.5 py-0.5 rounded hover:bg-slate-200 cursor-pointer transition-colors"
+                  >
+                    {showMinimap ? 'Ocultar' : 'Mostrar'}
+                  </button>
+                </div>
+                
+                {showMinimap && (
+                  <div className="p-2 space-y-1.5 bg-slate-50/50">
+                    <MiniMap
+                      nodeColor={(n) => (n.data?.nodeType === 'step' ? '#9333ea' : n.data?.nodeType === 'content' ? '#10b981' : '#3b82f6')}
+                      className="!relative !m-0 !w-44 !h-28 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-inner"
+                      zoomable
+                      pannable
+                    />
+                    <div className="flex items-center justify-between text-[9px] text-slate-500 font-bold px-1 pt-1 border-t border-slate-200/60">
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Opción</span>
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span> Paso</span>
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Fin</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Panel>
 
             {/* Quick helper badge on canvas */}
             <Panel position="bottom-center" className="bg-white/90 backdrop-blur-xs border border-gray-200 px-3 py-1.5 rounded-full shadow-xs text-xs text-gray-500 font-medium flex items-center gap-2">
               <Info className="w-3.5 h-3.5 text-blue-600" />
-              <span>Haz clic en cualquier nodo para editarlo o crear una rama hija</span>
+              <span>Haz clic en cualquier nodo para editarlo • Usa Ctrl+Z para deshacer</span>
             </Panel>
           </ReactFlow>
         </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import DOMPurify from 'dompurify';
 import { 
   Type, 
   AlertTriangle, 
@@ -43,73 +44,77 @@ export function getEmbedVideoInfo(url?: string | null): { type: 'youtube' | 'vim
   return { type: 'iframe', embedUrl: cleanUrl };
 }
 
-// Simple text formatter supporting bold **text**, bullet points, and newlines
-function FormattedTextBlock({ content }: { content: string }) {
+// Converts legacy markdown (such as **bold** and *italic*) or raw text with newlines to clean HTML if not already HTML
+function prepareHtmlContent(content: string): string {
+  if (!content || typeof content !== 'string') return '';
+  const trimmed = content.trim();
+  if (!trimmed) return '';
+
+  // Check if content already contains HTML tags
+  const hasHtmlTags = /<[a-z][\s\S]*>/i.test(content);
+
+  if (!hasHtmlTags) {
+    // Process markdown-like formatting for backwards compatibility
+    const paragraphs = content.split(/\n\n+/);
+    const htmlParas = paragraphs.map(para => {
+      const lines = para.split('\n');
+      const htmlLines = lines.map(line => {
+        let l = line
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+        
+        // Bullet
+        if (l.trim().startsWith('•') || l.trim().startsWith('- ') || l.trim().startsWith('* ')) {
+          const clean = l.trim().replace(/^[•\-\*]\s*/, '');
+          const bolded = clean.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+          return `<li>${bolded}</li>`;
+        }
+
+        // Bold
+        l = l.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        // Italic
+        l = l.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+        return l;
+      });
+
+      if (htmlLines.some(l => l.startsWith('<li>'))) {
+        return `<ul class="list-disc pl-5 my-1.5 space-y-1">${htmlLines.join('')}</ul>`;
+      }
+
+      return `<p class="my-1 leading-relaxed">${htmlLines.join('<br>')}</p>`;
+    });
+
+    return htmlParas.join('');
+  }
+
+  return content;
+}
+
+// Safe rich text formatter supporting direct HTML, bold, italics, bullets, newlines, and strict spacing
+function FormattedTextBlock({ content, alignClass = '' }: { content: string; alignClass?: string }) {
   if (!content || typeof content !== 'string') return null;
 
-  // Split into paragraphs by double newlines
-  const paragraphs = content.split(/\n\n+/);
+  const rawHtml = prepareHtmlContent(content);
+  if (!rawHtml.trim()) return null;
+
+  const cleanHtml = DOMPurify.sanitize(rawHtml, {
+    ALLOWED_TAGS: [
+      'b', 'strong', 'i', 'em', 'u', 's', 'strike', 'p', 'br', 'ul', 'ol', 'li',
+      'span', 'div', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre'
+    ],
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style']
+  });
 
   return (
-    <div className="space-y-3 text-base md:text-lg text-slate-700 leading-relaxed">
-      {paragraphs.map((para, pIdx) => {
-        const lines = para.split('\n');
-        return (
-          <div key={pIdx} className="space-y-1.5">
-            {lines.map((line, lIdx) => {
-              const trimmed = (line || '').trim();
-              const isBullet = trimmed.startsWith('•') || trimmed.startsWith('- ') || trimmed.startsWith('* ');
-              const cleanLine = isBullet ? trimmed.replace(/^[•\-\*]\s*/, '') : trimmed;
-
-              // Parse bold **text**
-              const parts = cleanLine.split(/(\*\*[^*]+\*\*)/g);
-              const renderedContent = parts.map((part, i) => {
-                if (part.startsWith('**') && part.endsWith('**')) {
-                  return <strong key={i} className="font-bold text-slate-900">{part.slice(2, -2)}</strong>;
-                }
-                return part;
-              });
-
-              if (isBullet) {
-                return (
-                  <div key={lIdx} className="flex items-start gap-2.5 pl-1 py-0.5">
-                    <span className="w-2 h-2 rounded-full bg-blue-600 mt-2.5 shrink-0" />
-                    <span className="flex-1">{renderedContent}</span>
-                  </div>
-                );
-              }
-
-              // Check if line looks like numbered item e.g. "1. Step"
-              const numMatch = cleanLine.match(/^(\d+[\.\)])\s*(.*)/);
-              if (numMatch) {
-                const numParts = numMatch[2].split(/(\*\*[^*]+\*\*)/g);
-                return (
-                  <div key={lIdx} className="flex items-start gap-3 pl-1 py-0.5">
-                    <span className="w-6 h-6 rounded-lg bg-blue-100 text-blue-800 font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">
-                      {numMatch[1].replace(/[\.\)]/, '')}
-                    </span>
-                    <span className="flex-1 mt-0.5">
-                      {numParts.map((p, i) => {
-                        if (p.startsWith('**') && p.endsWith('**')) {
-                          return <strong key={i} className="font-bold text-slate-900">{p.slice(2, -2)}</strong>;
-                        }
-                        return p;
-                      })}
-                    </span>
-                  </div>
-                );
-              }
-
-              return (
-                <p key={lIdx} className="leading-relaxed">
-                  {renderedContent}
-                </p>
-              );
-            })}
-          </div>
-        );
-      })}
-    </div>
+    <div
+      style={{
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word',
+      }}
+      className={`text-slate-700 leading-relaxed whitespace-pre-wrap break-words ${alignClass} [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5 [&>p]:my-1.5 [&>p:first-child]:mt-0 [&>p:last-child]:mb-0 [&_strong]:font-bold [&_strong]:text-slate-900 [&_b]:font-bold [&_b]:text-slate-900`}
+      dangerouslySetInnerHTML={{ __html: cleanHtml }}
+    />
   );
 }
 
@@ -196,18 +201,29 @@ export const LayoutBlocksRenderer: React.FC<LayoutBlocksRendererProps> = ({
       {blocks.map((block, index) => {
         // ==================== 1. TEXT BLOCK ====================
         if (block.type === 'text') {
+          const alignClass = block.align === 'center' ? 'text-center' : block.align === 'right' ? 'text-right' : 'text-left';
+          const styleClass = block.style === 'lead' ? 'text-base sm:text-lg font-medium text-slate-800' : block.style === 'heading' ? 'text-lg sm:text-xl font-bold text-slate-900' : 'text-sm sm:text-base';
+
           return (
             <div 
               key={block.id || `text-${index}`}
-              className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm space-y-3.5"
+              className={`bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-3.5 ${alignClass}`}
             >
               {block.title && (
-                <h3 className="text-base sm:text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+                <h3 className={`text-base sm:text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2 ${block.align === 'center' ? 'justify-center' : block.align === 'right' ? 'justify-end' : ''}`}>
                   <FileText className="w-5 h-5 text-blue-600 shrink-0" />
                   <span>{block.title}</span>
                 </h3>
               )}
-              <FormattedTextBlock content={block.content} />
+              <div 
+                style={{
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                }}
+                className={`${styleClass} whitespace-pre-wrap break-words`}
+              >
+                <FormattedTextBlock content={block.content} alignClass={alignClass} />
+              </div>
             </div>
           );
         }
@@ -277,10 +293,13 @@ export const LayoutBlocksRenderer: React.FC<LayoutBlocksRendererProps> = ({
 
           // IMAGE
           if (mediaType === 'image') {
+            const alignClass = block.alignment === 'left' ? 'mr-auto' : block.alignment === 'right' ? 'ml-auto' : 'mx-auto';
+            const sizeClass = block.size === 'small' ? 'max-w-xs' : block.size === 'medium' ? 'max-w-md' : 'w-full';
+
             return (
               <div 
                 key={block.id || `media-${index}`}
-                className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 space-y-3"
+                className={`bg-white border border-slate-200 rounded-2xl shadow-xs p-4 sm:p-5 space-y-3 ${sizeClass} ${alignClass}`}
               >
                 {block.title && (
                   <h3 className="text-base sm:text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
@@ -298,7 +317,7 @@ export const LayoutBlocksRenderer: React.FC<LayoutBlocksRendererProps> = ({
                     <img 
                       src={block.url} 
                       alt={block.title || 'Contenido multimedia'} 
-                      className="w-full h-auto max-w-full rounded-xl object-contain shadow-xs mx-auto max-h-[500px]" 
+                      className="w-full h-auto max-w-full rounded-xl object-contain shadow-2xs mx-auto max-h-[500px]" 
                     />
                     <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-2 text-white text-sm font-bold pointer-events-none backdrop-blur-xs">
                       <ZoomIn className="w-5 h-5" />
@@ -412,6 +431,49 @@ export const LayoutBlocksRenderer: React.FC<LayoutBlocksRendererProps> = ({
               </div>
             );
           }
+        }
+
+        // ==================== 5. COLUMNS / CONTAINER BLOCK ====================
+        if (block.type === 'columns') {
+          const colsCount = block.columnsCount || block.columns?.length || 2;
+          let gridClass = 'grid-cols-1 md:grid-cols-2';
+          if (colsCount === 3) {
+            gridClass = 'grid-cols-1 md:grid-cols-3';
+          } else if (block.layout === '1-2') {
+            gridClass = 'grid-cols-1 md:grid-cols-3';
+          } else if (block.layout === '2-1') {
+            gridClass = 'grid-cols-1 md:grid-cols-3';
+          }
+
+          return (
+            <div 
+              key={block.id || `cols-${index}`}
+              className="space-y-3"
+            >
+              {block.title && (
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 border-b border-slate-100 pb-2">
+                  {block.title}
+                </h3>
+              )}
+              <div className={`grid ${gridClass} gap-4 sm:gap-6 items-start`}>
+                {block.columns.map((col, colIdx) => {
+                  let colSpan = '';
+                  if (block.layout === '1-2' && colIdx === 1) colSpan = 'md:col-span-2';
+                  if (block.layout === '2-1' && colIdx === 0) colSpan = 'md:col-span-2';
+
+                  return (
+                    <div key={col.id || `col-${colIdx}`} className={`space-y-4 ${colSpan}`}>
+                      <LayoutBlocksRenderer 
+                        blocks={col.blocks}
+                        onOpenLightbox={onOpenLightbox}
+                        serviceTitle={serviceTitle}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
         }
 
         return null;

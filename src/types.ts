@@ -65,6 +65,8 @@ export interface TextLayoutBlock {
   type: 'text';
   title?: string;
   content: string;
+  align?: 'left' | 'center' | 'right';
+  style?: 'normal' | 'lead' | 'heading';
 }
 
 export interface AlertLayoutBlock {
@@ -94,13 +96,30 @@ export interface MediaLayoutBlock {
   url: string;
   mediaType?: 'image' | 'video' | 'pdf';
   caption?: string;
+  alignment?: 'left' | 'center' | 'right';
+  size?: 'small' | 'medium' | 'full';
+}
+
+export interface ColumnSlot {
+  id: string;
+  blocks: LayoutBlock[];
+}
+
+export interface ColumnsLayoutBlock {
+  id: string;
+  type: 'columns';
+  title?: string;
+  columnsCount: number;
+  layout?: 'equal' | '1-2' | '2-1';
+  columns: ColumnSlot[];
 }
 
 export type LayoutBlock = 
   | TextLayoutBlock 
   | AlertLayoutBlock 
   | FAQLayoutBlock 
-  | MediaLayoutBlock;
+  | MediaLayoutBlock
+  | ColumnsLayoutBlock;
 
 export interface Service {
   id: ServiceId | string;
@@ -111,6 +130,7 @@ export interface Service {
   category: 'Nómina y Pagos' | 'Tarjetas y Créditos' | 'Control y Asistencia' | string;
   fullDescription?: string;
   hidden?: boolean;
+  status?: 'active' | 'maintenance' | 'inactive';
 
   // Árbol de decisiones dinámico (Divulgación progresiva)
   decisionTree?: ServiceNode[];

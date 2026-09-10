@@ -4,7 +4,7 @@ import {
   HelpCircle, Edit3, Save, Plus, Trash2, X, AlertCircle, Check,
   Image as ImageIcon, Video, FileDown, Eye, EyeOff, AlertTriangle,
   ExternalLink, Download, Layers, Sparkles, GripVertical, ChevronUp, ChevronDown, Sliders, Info, ListOrdered,
-  Maximize2, Minimize2, ZoomIn, LayoutGrid, Type
+  Maximize2, Minimize2, ZoomIn, LayoutGrid, Type, Columns
 } from 'lucide-react';
 import { Service, UserProfile, FAQ, StepItem, ServiceFAQ, ServiceAttachment, CategoryConfig } from '../types';
 import { getDefaultServiceDetails, defaultCategories } from '../data';
@@ -70,47 +70,47 @@ function FAQAccordion({
       <div className="space-y-3">
         {items && items.length > 0 ? (
           items.map((faq, idx) => (
-            <div key={idx} className="bg-slate-50 p-3.5 rounded-xl border border-blue-200/80 space-y-2.5 relative shadow-2xs">
-              <div className="flex items-center justify-between gap-2 border-b border-slate-200/70 pb-1.5">
-                <span className="text-[10px] font-extrabold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-md">
+            <div key={idx} className="bg-slate-50 p-4 rounded-xl border border-blue-200/80 space-y-3 relative shadow-2xs">
+              <div className="flex items-center justify-between gap-2 border-b border-slate-200/70 pb-2">
+                <span className="text-xs font-bold text-blue-700 bg-blue-100/80 px-2.5 py-0.5 rounded-md">
                   FAQ #{idx + 1}
                 </span>
                 <button
                   type="button"
                   onClick={() => onRemoveFAQ && onRemoveFAQ(idx)}
-                  className="text-rose-500 hover:text-rose-700 p-1 hover:bg-rose-50 rounded-lg transition-colors flex items-center gap-1 text-[11px] font-medium"
+                  className="text-rose-500 hover:text-rose-700 p-1.5 hover:bg-rose-50 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-semibold cursor-pointer"
                   title="Eliminar pregunta"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Eliminar</span>
+                  <span>Eliminar</span>
                 </button>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Pregunta:</label>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Pregunta:</label>
                 <input
                   type="text"
                   value={faq.question}
                   onChange={(e) => onUpdateFAQ && onUpdateFAQ(idx, 'question', e.target.value)}
                   placeholder="Pregunta frecuente (ej. ¿Cuándo se solicita el trámite?)"
-                  className="w-full px-3 py-1.5 text-xs font-bold border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+                  className="w-full px-3.5 py-2 text-sm font-semibold border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 min-h-[42px]"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Respuesta:</label>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Respuesta:</label>
                 <textarea
                   rows={2}
                   value={faq.answer}
                   onChange={(e) => onUpdateFAQ && onUpdateFAQ(idx, 'answer', e.target.value)}
                   placeholder="Explicación detallada de la respuesta..."
-                  className="w-full px-3 py-1.5 text-xs font-normal border border-slate-300 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+                  className="w-full px-3.5 py-2 text-sm font-normal border border-slate-300 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                 />
               </div>
             </div>
           ))
         ) : (
-          <p className="text-xs text-slate-400 italic text-center py-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+          <p className="text-sm text-slate-400 italic text-center py-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
             No hay preguntas registradas. Haz clic abajo para agregar una.
           </p>
         )}
@@ -118,7 +118,7 @@ function FAQAccordion({
         <button
           type="button"
           onClick={onAddFAQ}
-          className="w-full py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition-all border border-blue-200/80 flex items-center justify-center gap-1.5 shadow-2xs"
+          className="w-full py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition-all border border-blue-200/80 flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer min-h-[42px]"
         >
           <Plus className="w-4 h-4" />
           <span>Agregar Pregunta Frecuente</span>
@@ -136,13 +136,13 @@ function FAQAccordion({
       {items.map((faq, idx) => {
         const isOpen = openIndex === idx;
         return (
-          <div key={idx} className="bg-white border border-slate-200 rounded-xl overflow-hidden transition-all">
+          <div key={idx} className="bg-white border border-slate-200 rounded-xl overflow-hidden transition-all shadow-2xs">
             <button
               onClick={() => toggle(idx)}
-              className="w-full text-left p-3.5 flex gap-3 items-center justify-between hover:bg-slate-50 transition-colors focus:outline-none"
+              className="w-full text-left p-4 flex gap-3 items-center justify-between hover:bg-slate-50 transition-colors focus:outline-none cursor-pointer min-h-[46px]"
             >
-              <div className="text-xs font-bold text-slate-800 flex gap-2 items-start flex-1 pr-2">
-                <span className={`text-[10px] font-extrabold rounded-md px-1.5 py-0.5 shrink-0 transition-colors ${
+              <div className="text-sm font-bold text-slate-800 flex gap-2.5 items-start flex-1 pr-2">
+                <span className={`text-xs font-extrabold rounded-md px-2 py-0.5 shrink-0 transition-colors ${
                   isOpen ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
                 }`}>FAQ</span>
                 <span className="mt-0.5 leading-snug">{faq.question}</span>
@@ -155,7 +155,7 @@ function FAQAccordion({
             </button>
             
             {isOpen && (
-              <div className="px-4 pb-3.5 text-xs text-slate-600 leading-relaxed border-t border-slate-100 bg-slate-50/60 animate-fadeIn pt-3">
+              <div className="px-4 pb-4 text-sm text-slate-700 leading-relaxed border-t border-slate-100 bg-slate-50/70 animate-fadeIn pt-3 font-normal">
                 {faq.answer}
               </div>
             )}
@@ -872,7 +872,7 @@ export default function ServiceDetail({
                       value={draft.shortDesc}
                       onChange={(e) => setDraft({ ...draft, shortDesc: e.target.value })}
                       placeholder="Resumen para la tarjeta..."
-                      className="w-full text-xs font-medium text-slate-800 border border-slate-300 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                      className="w-full text-sm font-normal text-slate-800 border border-slate-300 rounded-xl px-3.5 py-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 min-h-[42px]"
                     />
                   </div>
 
@@ -883,7 +883,7 @@ export default function ServiceDetail({
                       value={draft.fullDescription || ''}
                       onChange={(e) => setDraft({ ...draft, fullDescription: e.target.value })}
                       placeholder="Explicación detallada del trámite..."
-                      className="w-full text-xs font-medium text-slate-800 border border-slate-300 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                      className="w-full text-sm font-normal text-slate-800 border border-slate-300 rounded-xl px-3.5 py-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20"
                     />
                   </div>
                 </div>
@@ -1021,13 +1021,20 @@ export default function ServiceDetail({
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                         <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 flex flex-col items-center justify-center text-center">
                           <Type className="w-4 h-4 text-blue-600 mb-1" />
                           <span className="text-[11px] font-bold text-slate-700">
                             {draft.layoutBlocks.filter(b => b.type === 'text').length}
                           </span>
                           <span className="text-[10px] text-slate-400">Texto</span>
+                        </div>
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 flex flex-col items-center justify-center text-center">
+                          <Columns className="w-4 h-4 text-indigo-600 mb-1" />
+                          <span className="text-[11px] font-bold text-slate-700">
+                            {draft.layoutBlocks.filter(b => b.type === 'columns').length}
+                          </span>
+                          <span className="text-[10px] text-slate-400">Columnas</span>
                         </div>
                         <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 flex flex-col items-center justify-center text-center">
                           <AlertTriangle className="w-4 h-4 text-amber-500 mb-1" />
@@ -1107,18 +1114,18 @@ export default function ServiceDetail({
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="px-4 py-2 text-xs font-bold text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-xl transition-all border border-slate-700 cursor-pointer active:scale-95"
+                  className="px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-bold text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-xl transition-all border border-slate-700 cursor-pointer active:scale-95 min-h-[44px]"
                 >
                   Cancelar
                 </button>
                 <button
                   type="button"
                   onClick={handleSaveEdit}
-                  className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition-all flex items-center gap-1.5 shadow-md cursor-pointer active:scale-95"
+                  className="px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition-all flex items-center gap-2 shadow-md cursor-pointer active:scale-95 min-h-[44px]"
                 >
                   <Save className="w-4 h-4" />
                   <span>Guardar Cambios</span>
@@ -1133,36 +1140,38 @@ export default function ServiceDetail({
         <div className="space-y-4">
           
           {/* Header Card */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-2">
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-3">
             <div className="flex items-center justify-between gap-2">
               <button 
                 onClick={onBack}
-                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs flex items-center gap-1.5 active:scale-95 transition-all shrink-0 border border-slate-300 shadow-2xs cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs sm:text-sm flex items-center gap-1.5 active:scale-95 transition-all shrink-0 border border-slate-300 shadow-2xs cursor-pointer min-h-[42px]"
               >
                 <ChevronLeft className="w-4 h-4 text-slate-700" />
                 <span>Volver</span>
               </button>
-              <span className="text-[10px] font-extrabold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md uppercase tracking-wider border border-blue-200/60">
+              <span className="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-lg uppercase tracking-wider border border-blue-200/60">
                 {draft.category}
               </span>
             </div>
 
-            <div className="flex items-center gap-2.5 pt-1">
+            <div className="flex items-center gap-3 pt-1">
               {draft.cardImage && typeof draft.cardImage === 'string' && draft.cardImage.trim().length > 0 ? (
                 <img 
                   src={draft.cardImage} 
                   alt={draft.title || 'Foto'} 
-                  className="w-10 h-10 rounded-xl object-cover shadow-2xs border border-slate-200 shrink-0" 
+                  className="w-12 h-12 rounded-xl object-cover shadow-2xs border border-slate-200 shrink-0" 
                 />
               ) : (
-                React.createElement(SERVICE_ICON_MAP[draft.iconName || draft.icon || 'FileText'] || FileText, {
-                  className: "w-6 h-6 text-blue-600 shrink-0"
-                })
+                <div className="bg-blue-50 text-blue-600 rounded-xl p-2.5 shrink-0 flex items-center justify-center border border-blue-100">
+                  {React.createElement(SERVICE_ICON_MAP[draft.iconName || draft.icon || 'FileText'] || FileText, {
+                    className: "w-6 h-6"
+                  })}
+                </div>
               )}
-              <h1 className="text-lg sm:text-xl font-bold text-slate-900 font-display">{draft.title}</h1>
+              <h1 className="text-lg sm:text-2xl font-bold text-slate-900 font-display">{draft.title}</h1>
             </div>
 
-            <p className="text-xs text-slate-600 font-medium leading-relaxed pt-1">
+            <p className="text-sm sm:text-base text-slate-700 font-normal leading-relaxed pt-1">
               {draft.fullDescription || draft.shortDesc}
             </p>
           </div>

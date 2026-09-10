@@ -1,18 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, ZoomIn, ZoomOut, RotateCcw, Download, ExternalLink, Maximize2 } from 'lucide-react';
+import { X, ZoomIn, ZoomOut, RotateCcw, Download, ExternalLink, Maximize2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ImageLightboxModalProps {
   isOpen: boolean;
   imageUrl: string | null;
   title?: string;
   onClose: () => void;
+  onPrev?: () => void;
+  onNext?: () => void;
+  hasPrev?: boolean;
+  hasNext?: boolean;
 }
 
 export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
   isOpen,
   imageUrl,
   title,
-  onClose
+  onClose,
+  onPrev,
+  onNext,
+  hasPrev = false,
+  hasNext = false
 }) => {
   const [zoom, setZoom] = useState<number>(1);
 
@@ -23,7 +31,7 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
     }
   }, [isOpen, imageUrl]);
 
-  // Keyboard navigation (ESC to close, +/- for zoom)
+  // Keyboard navigation (ESC to close, +/- for zoom, ArrowLeft/ArrowRight for gallery navigation)
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       onClose();
@@ -33,8 +41,16 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
       setZoom((prev) => Math.max(prev - 0.25, 0.5));
     } else if (e.key === '0') {
       setZoom(1);
+    } else if (e.key === 'ArrowLeft') {
+      if (onPrev) {
+        onPrev();
+      }
+    } else if (e.key === 'ArrowRight') {
+      if (onNext) {
+        onNext();
+      }
     }
-  }, [onClose]);
+  }, [onClose, onPrev, onNext]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -140,11 +156,27 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
 
       {/* Main Image Stage (Smart Fitted & Centered with Zoom Support) */}
       <div 
-        className={`flex-1 flex items-center justify-center p-4 ${zoom > 1 ? 'overflow-auto' : 'overflow-hidden'} custom-scrollbar`}
+        className={`flex-1 flex items-center justify-center p-4 relative ${zoom > 1 ? 'overflow-auto' : 'overflow-hidden'} custom-scrollbar`}
         onClick={(e) => {
           if (e.target === e.currentTarget) onClose();
         }}
       >
+        {/* Previous Image Button */}
+        {onPrev && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPrev();
+            }}
+            disabled={!hasPrev}
+            className="absolute left-4 z-20 p-3 rounded-full bg-slate-900/80 hover:bg-slate-800 text-white disabled:opacity-30 disabled:hover:bg-slate-900/80 transition-all border border-slate-700 shadow-xl cursor-pointer"
+            title="Imagen anterior (←)"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+        )}
+
         <div 
           className="transition-transform duration-150 ease-out origin-center flex items-center justify-center m-auto"
           style={{ transform: `scale(${zoom})` }}
@@ -156,11 +188,27 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
             className="max-h-[calc(100vh-120px)] w-auto max-w-full object-contain mx-auto rounded-lg shadow-2xl border border-slate-700/60 cursor-default bg-slate-900/40"
           />
         </div>
+
+        {/* Next Image Button */}
+        {onNext && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onNext();
+            }}
+            disabled={!hasNext}
+            className="absolute right-4 z-20 p-3 rounded-full bg-slate-900/80 hover:bg-slate-800 text-white disabled:opacity-30 disabled:hover:bg-slate-900/80 transition-all border border-slate-700 shadow-xl cursor-pointer"
+            title="Siguiente imagen (→)"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        )}
       </div>
 
       {/* Bottom status bar */}
       <div className="bg-slate-900/95 border-t border-slate-800 px-4 py-2 text-center text-[11px] text-slate-400 shrink-0">
-        💡 <strong>Tip:</strong> Puedes usar las teclas <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300">+</kbd> y <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300">-</kbd> para hacer zoom, o presionar <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300">Esc</kbd> para cerrar.
+        💡 <strong>Tip:</strong> Puedes usar las flechas <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300">←</kbd> <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300">→</kbd> para navegar, <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300">+</kbd> y <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300">-</kbd> para zoom, o <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300">Esc</kbd> para cerrar.
       </div>
     </div>
   );

@@ -107,18 +107,18 @@ function SortableServiceItem({ service, onToggleHide, onEdit, onDelete, onRename
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white border rounded-2xl p-4 shadow-2xs flex flex-col justify-between text-left transition-all ${
+      className={`bg-white border rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col justify-between text-left transition-all ${
         isDragging
           ? 'z-50 shadow-2xl scale-105 border-blue-400 rotate-1 bg-white opacity-95 transition-all'
-          : `transition-transform duration-200 ${
-              service.hidden ? 'opacity-60 border-slate-200 bg-slate-50' : 'border-slate-200/90 hover:border-slate-300'
+          : `transition-all duration-150 ${
+              service.hidden ? 'opacity-60 border-slate-200 bg-slate-50/50' : 'border-slate-200/90 hover:border-slate-300 hover:shadow-xs'
             }`
       }`}
     >
       {/* Top Header: Icon Left, Drag Handle Right */}
       <div>
-        <div className="flex items-center justify-between w-full mb-3">
-          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 font-bold flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden">
+        <div className="flex items-center justify-between w-full mb-3.5">
+          <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-700 font-bold flex items-center justify-center shrink-0 border border-slate-200/80 overflow-hidden shadow-2xs">
             {service.cardImage ? (
               <img src={service.cardImage} alt={service.title} className="w-full h-full object-cover" />
             ) : (
@@ -130,7 +130,7 @@ function SortableServiceItem({ service, onToggleHide, onEdit, onDelete, onRename
             type="button"
             {...attributes}
             {...listeners}
-            className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md p-2 transition-colors touch-none border-none bg-transparent"
+            className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl p-2 transition-colors touch-none border-none bg-transparent min-w-[40px] min-h-[40px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             title="Arrastrar para reordenar"
           >
             <GripVertical className="w-5 h-5" />
@@ -138,9 +138,9 @@ function SortableServiceItem({ service, onToggleHide, onEdit, onDelete, onRename
         </div>
 
         {/* Card Content */}
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {isEditingTitle ? (
-            <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
               <input
                 type="text"
                 value={titleValue}
@@ -153,21 +153,21 @@ function SortableServiceItem({ service, onToggleHide, onEdit, onDelete, onRename
                   }
                 }}
                 autoFocus
-                className="w-full text-xs font-bold text-slate-900 bg-blue-50/50 border border-blue-400 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-600/30"
+                className="w-full text-sm font-bold text-slate-900 bg-blue-50/50 border border-blue-400 rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/30 min-h-[40px]"
               />
               <button
                 type="button"
                 onClick={handleSaveTitle}
-                className="p-1 rounded-md bg-blue-600 text-white hover:bg-blue-700 shrink-0"
+                className="p-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 shrink-0 min-h-[40px] min-w-[40px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500/30 active:scale-95 transition-all shadow-xs cursor-pointer"
                 title="Guardar nuevo nombre de la tarjeta"
               >
-                <Check className="w-3.5 h-3.5" />
+                <Check className="w-4 h-4" />
               </button>
             </div>
           ) : (
-            <div className="group/title flex items-center justify-between gap-1">
+            <div className="group/title flex items-center justify-between gap-1.5">
               <h4 
-                className="text-sm font-bold text-slate-900 line-clamp-1 flex-1 cursor-pointer hover:text-blue-600 transition-colors" 
+                className="text-sm sm:text-base font-bold text-slate-900 line-clamp-1 flex-1 cursor-pointer hover:text-blue-600 transition-colors leading-snug" 
                 title={`${service.title} (Haz clic para cambiar nombre)`}
                 onClick={() => setIsEditingTitle(true)}
               >
@@ -176,38 +176,38 @@ function SortableServiceItem({ service, onToggleHide, onEdit, onDelete, onRename
               <button
                 type="button"
                 onClick={() => setIsEditingTitle(true)}
-                className="opacity-0 group-hover/title:opacity-100 p-1 text-slate-400 hover:text-blue-600 rounded transition-opacity"
+                className="opacity-0 group-hover/title:opacity-100 p-2 text-slate-400 hover:text-blue-600 rounded-lg transition-all focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer min-w-[32px] min-h-[32px] flex items-center justify-center"
                 title="Cambiar nombre de la tarjeta"
               >
-                <Edit3 className="w-3 h-3" />
+                <Edit3 className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
-          <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-500 line-clamp-2 leading-relaxed">
             {service.shortDesc}
           </p>
         </div>
       </div>
 
       {/* Footer Actions */}
-      <div className="border-t border-slate-100 mt-4 pt-4 flex items-center justify-between gap-1.5">
+      <div className="border-t border-slate-100 mt-4 pt-3.5 flex items-center justify-between gap-2">
         <button
           onClick={() => onToggleHide(service.id)}
-          className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 border cursor-pointer ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border cursor-pointer min-h-[38px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.98] ${
             service.hidden 
               ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' 
-              : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 hover:text-slate-900'
+              : 'bg-slate-100 text-slate-600 border-slate-200/80 hover:bg-slate-200 hover:text-slate-900'
           }`}
           title={service.hidden ? 'Hacer visible' : 'Ocultar trámite'}
         >
-          {service.hidden ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+          {service.hidden ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
           <span>{service.hidden ? 'Mostrar' : 'Ocultar'}</span>
         </button>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => onEdit(service)}
-            className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+            className="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-700 border border-blue-200/80 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer min-h-[38px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.98]"
           >
             <Edit3 className="w-3.5 h-3.5" />
             <span>Editar</span>
@@ -218,7 +218,7 @@ function SortableServiceItem({ service, onToggleHide, onEdit, onDelete, onRename
               e.stopPropagation();
               onDelete(service.id, service.title);
             }}
-            className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl transition-colors cursor-pointer"
+            className="p-2.5 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-600 border border-rose-200/80 rounded-xl transition-colors cursor-pointer min-h-[38px] min-w-[38px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-rose-500/20 active:scale-[0.98]"
             title="Eliminar trámite"
           >
             <Trash2 className="w-4 h-4" />
@@ -680,9 +680,9 @@ export default function AdminPanel({
       )}
 
       {/* Top Header Dashboard Bar */}
-      <div className="bg-slate-900 text-white rounded-2xl p-4 shadow-sm border border-slate-800 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <h1 className="text-lg font-semibold text-white">
+      <div className="bg-slate-900 text-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-800 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2.5">
+          <h1 className="text-base sm:text-lg font-bold text-white tracking-tight">
             <span>Panel de Administración</span>
           </h1>
         </div>
@@ -690,7 +690,7 @@ export default function AdminPanel({
         <button
           id="btn-admin-logout"
           onClick={onLogout}
-          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl text-xs font-bold transition-all border border-slate-700 flex items-center gap-2 active:scale-95 shadow-2xs cursor-pointer"
+          className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 hover:text-white rounded-xl text-xs sm:text-sm font-semibold transition-all border border-slate-700 flex items-center gap-2 min-h-[40px] active:scale-[0.98] shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-500/40"
         >
           <LogOut className="w-4 h-4 text-rose-400" />
           <span>Cerrar Sesión</span>
@@ -698,13 +698,13 @@ export default function AdminPanel({
       </div>
 
       {/* Navigation Sub-Tabs */}
-      <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-2xs">
+      <div className="flex items-center gap-1.5 sm:gap-2 bg-white p-1.5 rounded-2xl border border-slate-200/90 shadow-2xs">
         <button
           id="admin-tab-tramites"
           onClick={() => setActiveTab('tramites')}
-          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 min-h-[42px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.98] cursor-pointer ${
             activeTab === 'tramites'
-              ? 'bg-slate-900 text-white shadow-2xs'
+              ? 'bg-slate-900 text-white shadow-xs'
               : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           }`}
         >
@@ -715,9 +715,9 @@ export default function AdminPanel({
         <button
           id="admin-tab-categorias"
           onClick={() => setActiveTab('categorias')}
-          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 min-h-[42px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.98] cursor-pointer ${
             activeTab === 'categorias'
-              ? 'bg-slate-900 text-white shadow-2xs'
+              ? 'bg-slate-900 text-white shadow-xs'
               : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           }`}
         >
@@ -728,9 +728,9 @@ export default function AdminPanel({
         <button
           id="admin-tab-noticias"
           onClick={() => setActiveTab('noticias')}
-          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 min-h-[42px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.98] cursor-pointer ${
             activeTab === 'noticias'
-              ? 'bg-slate-900 text-white shadow-2xs'
+              ? 'bg-slate-900 text-white shadow-xs'
               : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           }`}
         >
@@ -741,9 +741,9 @@ export default function AdminPanel({
         <button
           id="admin-tab-contacto"
           onClick={() => setActiveTab('contacto')}
-          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 min-h-[42px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.98] cursor-pointer ${
             activeTab === 'contacto'
-              ? 'bg-slate-900 text-white shadow-2xs'
+              ? 'bg-slate-900 text-white shadow-xs'
               : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           }`}
         >
@@ -755,12 +755,12 @@ export default function AdminPanel({
       {/* VIEW A: GESTIONAR TRÁMITES */}
       {activeTab === 'tramites' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs">
             <div>
-              <h3 className="text-sm font-bold text-slate-900 font-display">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 font-display">
                 Catálogo de Trámites
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
                 Organiza, edita o cambia la visibilidad de los trámites disponibles en el kiosco.
               </p>
             </div>
@@ -769,7 +769,7 @@ export default function AdminPanel({
                 id="btn-edit-categories-shortcut"
                 type="button"
                 onClick={() => setActiveTab('categorias')}
-                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl transition-all border border-slate-200/80 flex items-center gap-2 cursor-pointer min-h-[40px] focus:outline-none focus:ring-2 focus:ring-slate-400/20 active:scale-[0.98]"
                 title="Personalizar nombres de las 4 tarjetas principales"
               >
                 <LayoutGrid className="w-4 h-4 text-blue-600" />
@@ -778,7 +778,7 @@ export default function AdminPanel({
               <button
                 id="btn-add-service"
                 onClick={handleOpenNewServiceModal}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-2xs flex items-center gap-1.5 active:scale-95 cursor-pointer"
+                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-semibold rounded-xl transition-all shadow-xs flex items-center gap-2 active:scale-[0.98] cursor-pointer min-h-[40px] focus:outline-none focus:ring-2 focus:ring-blue-500/30"
               >
                 <Plus className="w-4 h-4" />
                 <span>Nuevo Trámite</span>
@@ -796,7 +796,7 @@ export default function AdminPanel({
               items={services.map((s) => s.id)}
               strategy={rectSortingStrategy}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-4.5">
                 {services.map((service) => (
                   <SortableServiceItem
                     key={service.id}
@@ -816,19 +816,19 @@ export default function AdminPanel({
       {/* VIEW B: GESTIONAR NOTICIAS */}
       {activeTab === 'noticias' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs">
             <div>
-              <h3 className="text-sm font-bold text-slate-900 font-display">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 font-display">
                 Boletín de Noticias Internas
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
                 Publica y edita comunicados y avisos para el personal de la planta.
               </p>
             </div>
             <button
               id="btn-add-news"
               onClick={handleOpenNewNewsModal}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-2xs flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
+              className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-semibold rounded-xl transition-all shadow-xs flex items-center gap-2 shrink-0 active:scale-[0.98] cursor-pointer min-h-[40px] focus:outline-none focus:ring-2 focus:ring-blue-500/30"
             >
               <Plus className="w-4 h-4" />
               <span>Publicar Nueva Noticia</span>
@@ -840,36 +840,36 @@ export default function AdminPanel({
             {news.map((item) => (
               <div
                 key={item.id}
-                className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs hover:border-slate-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4"
               >
-                <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 font-bold flex items-center justify-center shrink-0 border border-blue-100 mt-0.5">
+                <div className="flex items-start gap-3.5 flex-1 min-w-0">
+                  <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 font-bold flex items-center justify-center shrink-0 border border-blue-100/80 mt-0.5 shadow-2xs">
                     <Newspaper className="w-5 h-5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     {item.date && (
                       <div className="mb-1">
-                        <span className="text-[10px] text-slate-400 font-medium">
+                        <span className="text-xs text-slate-500 font-medium">
                           {item.date}
                         </span>
                       </div>
                     )}
-                    <h4 className="text-sm font-bold text-slate-900 truncate">
+                    <h4 className="text-sm sm:text-base font-bold text-slate-900 truncate leading-snug">
                       {item.title}
                     </h4>
-                    <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
+                    <p className="text-sm text-slate-600 line-clamp-2 mt-1 leading-relaxed">
                       {item.summary}
                     </p>
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-1.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                <div className="flex items-center gap-2 shrink-0 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-slate-100">
                   <button
                     onClick={() => handleOpenEditNewsModal(item)}
-                    className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                    className="px-4 py-2 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-700 border border-blue-200/80 rounded-xl text-xs sm:text-sm font-bold transition-colors flex items-center gap-1.5 cursor-pointer min-h-[40px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.98]"
                   >
-                    <Edit3 className="w-3.5 h-3.5" />
+                    <Edit3 className="w-4 h-4" />
                     <span>Editar</span>
                   </button>
 
@@ -878,7 +878,7 @@ export default function AdminPanel({
                       e.stopPropagation();
                       handleDeleteNews(item.id, item.title);
                     }}
-                    className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl transition-colors cursor-pointer"
+                    className="p-2.5 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-600 border border-rose-200/80 rounded-xl transition-colors cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-rose-500/20 active:scale-[0.98]"
                     title="Eliminar noticia"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -893,7 +893,7 @@ export default function AdminPanel({
       {/* VIEW C: GESTIONAR CONTACTO */}
       {activeTab === 'contacto' && (
         <div className="space-y-4 animate-fadeIn">
-          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-5">
+          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs space-y-5">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -919,11 +919,11 @@ export default function AdminPanel({
                 showToast('✅ Cambios guardados correctamente');
                 alert('Cambios guardados correctamente');
               }}
-              className="space-y-4"
+              className="space-y-4 sm:space-y-5"
             >
               {/* WhatsApp Input */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <label className="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-emerald-600" />
                   <span>WhatsApp Oficial (Número o Enlace)</span>
                 </label>
@@ -932,26 +932,26 @@ export default function AdminPanel({
                   value={contactForm.whatsapp}
                   onChange={(e) => setContactForm({ ...contactForm, whatsapp: e.target.value })}
                   placeholder="Ej. https://wa.me/525512345678 o 5512345678"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-slate-900"
+                  className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all text-slate-900 min-h-[44px]"
                   required
                 />
-                <p className="text-[11px] text-slate-400">
-                  Aparecerá en el botón de WhatsApp directo en la pestaña de Contacto RH.
+                <p className="text-xs text-slate-500">
+                  Aparecerá en el botón de WhatsApp directo en la pestaña de Contacto.
                 </p>
               </div>
 
               {/* Ubicacion Input */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <label className="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-amber-600" />
-                  <span>Ubicación Física de la Ventanilla</span>
+                  <span>Ubicación Física del Módulo de Servicios al Personal</span>
                 </label>
                 <input
                   type="text"
                   value={contactForm.ubicacion}
                   onChange={(e) => setContactForm({ ...contactForm, ubicacion: e.target.value })}
-                  placeholder="Ej. Planta Baja • Edificio Administrativo (junto al Comedor General)"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-slate-900"
+                  placeholder="Ej. Módulo de Servicios al Personal, ubicado a un lado de Ropería"
+                  className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all text-slate-900 min-h-[44px]"
                   required
                 />
               </div>
@@ -960,7 +960,7 @@ export default function AdminPanel({
               <MediaUploadField
                 type="image"
                 label="Croquis de Ubicación (Opcional)"
-                helperText="Sube una imagen o mapa visual para guiar al personal hacia la ventanilla."
+                helperText="Sube una imagen o mapa visual para guiar al personal hacia el módulo."
                 value={contactForm.croquisUrl || ''}
                 onChange={(url) => setContactForm({ ...contactForm, croquisUrl: url })}
                 idPrefix="contact_croquis"
@@ -968,26 +968,26 @@ export default function AdminPanel({
 
               {/* Horario Input */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <label className="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-2">
                   <Clock className="w-4 h-4 text-purple-600" />
-                  <span>Horario de Atención Presencial</span>
+                  <span>Horario de Atención del Módulo</span>
                 </label>
                 <input
                   type="text"
                   value={contactForm.horario}
                   onChange={(e) => setContactForm({ ...contactForm, horario: e.target.value })}
                   placeholder="Ej. Lunes a Viernes de 8:00 AM a 5:00 PM • Sábados de 8:00 AM a 1:00 PM"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-slate-900"
+                  className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all text-slate-900 min-h-[44px]"
                   required
                 />
               </div>
 
               {/* Save Button */}
-              <div className="pt-3 border-t border-slate-100 flex justify-end">
+              <div className="pt-4 border-t border-slate-100 flex justify-end">
                 <button
                   type="submit"
                   id="btn-save-contact-info"
-                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-md transition-all active:scale-95 cursor-pointer"
+                  className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-bold rounded-xl flex items-center gap-2 shadow-xs transition-all active:scale-[0.98] cursor-pointer min-h-[42px] focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                 >
                   <Save className="w-4 h-4" />
                   <span>Guardar Cambios</span>
@@ -1001,14 +1001,14 @@ export default function AdminPanel({
       {/* VIEW D: PERSONALIZAR TARJETAS DE INICIO / CATEGORÍAS */}
       {activeTab === 'categorias' && (
         <div className="space-y-4 animate-fadeIn">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
+          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
-                <h3 className="text-base font-bold text-slate-900 font-display flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 font-display flex items-center gap-2">
                   <LayoutGrid className="w-5 h-5 text-blue-600" />
                   <span>Personalizar Tarjetas de la Pantalla de Inicio</span>
                 </h3>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs sm:text-sm text-slate-500 mt-1">
                   Modifica los títulos de las 4 tarjetas principales que se muestran en el kiosco. Si renombras una categoría, los trámites asociados se actualizarán automáticamente.
                 </p>
               </div>
@@ -1016,7 +1016,7 @@ export default function AdminPanel({
               <button
                 type="button"
                 onClick={handleResetAllCategories}
-                className="px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 cursor-pointer self-start sm:self-auto shrink-0 flex items-center gap-1.5"
+                className="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all border border-slate-200/80 cursor-pointer self-start sm:self-auto shrink-0 flex items-center gap-2 min-h-[38px] focus:outline-none focus:ring-2 focus:ring-slate-400/20 active:scale-[0.98]"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Restablecer Todo</span>
@@ -1024,7 +1024,7 @@ export default function AdminPanel({
             </div>
 
             <form onSubmit={handleSaveCategories} className="mt-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                 {categoryForms.map((cat, index) => {
                   const count = cat.id === 'all'
                     ? services.filter(s => !s.hidden).length
@@ -1049,9 +1049,9 @@ export default function AdminPanel({
                   return (
                     <div 
                       key={cat.id} 
-                      className="bg-slate-50/60 border border-slate-200/90 rounded-2xl p-4.5 flex flex-col justify-between gap-4 shadow-2xs hover:border-slate-300 transition-all"
+                      className="bg-white border border-slate-200/90 rounded-2xl p-5 flex flex-col justify-between gap-4 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all"
                     >
-                      <div className="flex items-start gap-3.5">
+                      <div className="flex items-start gap-4">
                         {/* Vista previa miniatura de la tarjeta real */}
                         <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center shrink-0 shadow-2xs ${badgeColor}`}>
                           <IconComp className="w-7 h-7" />
@@ -1059,18 +1059,18 @@ export default function AdminPanel({
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
                               Tarjeta #{index + 1} • {cat.id === 'all' ? 'Ver Todos' : 'Filtro por Categoría'}
                             </span>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-white text-slate-600 border border-slate-200">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
                               {count} {count === 1 ? 'trámite' : 'trámites'}
                             </span>
                           </div>
 
-                          <div className="mt-2 space-y-1">
+                          <div className="mt-2.5 space-y-1.5">
                             <label 
                               htmlFor={`input-cat-${cat.id}`} 
-                              className="block text-xs font-bold text-slate-800"
+                              className="block text-xs sm:text-sm font-bold text-slate-800"
                             >
                               Nombre visible en la tarjeta *
                             </label>
@@ -1080,18 +1080,18 @@ export default function AdminPanel({
                               value={cat.label}
                               onChange={(e) => handleCategoryNameChange(cat.id, e.target.value)}
                               placeholder={cat.defaultLabel}
-                              className="w-full px-3 py-2 text-xs font-bold border border-slate-200 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 shadow-2xs"
+                              className="w-full px-3.5 py-2.5 text-sm font-semibold border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 shadow-2xs min-h-[42px]"
                               required
                             />
                           </div>
 
-                          <div className="flex items-center justify-between mt-2 text-[11px] text-slate-500">
+                          <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
                             <span>Predeterminado: <span className="font-semibold text-slate-600">{cat.defaultLabel}</span></span>
                             {cat.label !== cat.defaultLabel && (
                               <button
                                 type="button"
                                 onClick={() => handleResetCategoryName(cat.id)}
-                                className="text-blue-600 hover:text-blue-800 font-bold hover:underline cursor-pointer"
+                                className="text-blue-600 hover:text-blue-800 font-bold hover:underline cursor-pointer focus:outline-none"
                               >
                                 Restablecer
                               </button>
@@ -1101,8 +1101,8 @@ export default function AdminPanel({
                       </div>
 
                       {/* Preview en vivo */}
-                      <div className="pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-xs">
-                        <span className="text-slate-400 font-medium text-[11px]">Vista previa en inicio:</span>
+                      <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs sm:text-sm">
+                        <span className="text-slate-400 font-medium">Vista previa en inicio:</span>
                         <span className="font-bold text-slate-800 truncate max-w-[220px]">
                           {cat.label || <span className="text-slate-400 italic">Sin nombre</span>}
                         </span>
@@ -1113,14 +1113,14 @@ export default function AdminPanel({
               </div>
 
               {/* Tips & Save Button */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200">
-                <p className="text-[11px] text-slate-500">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100">
+                <p className="text-xs text-slate-500">
                   💡 Al guardar, los cambios se reflejarán de inmediato en el Kiosco y se conservarán en este dispositivo.
                 </p>
                 <button
                   type="submit"
                   id="btn-save-categories"
-                  className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95 cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-xs active:scale-[0.98] cursor-pointer min-h-[42px] focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                 >
                   <Save className="w-4 h-4" />
                   <span>Guardar Nombres de Tarjetas</span>
@@ -1155,95 +1155,95 @@ export default function AdminPanel({
             </div>
 
             {/* Internal Modal Tabs */}
-            <div className="bg-slate-100 p-1.5 border-b border-slate-200 flex items-center gap-1 shrink-0 overflow-x-auto">
+            <div className="bg-slate-100 p-2 border-b border-slate-200 flex items-center gap-1.5 shrink-0 overflow-x-auto">
               <button
                 type="button"
                 onClick={() => setServiceModalTab('general')}
-                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap min-h-[38px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
                   serviceModalTab === 'general'
                     ? 'bg-white text-blue-700 shadow-2xs border border-slate-200'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                 }`}
               >
-                <Info className="w-3.5 h-3.5" />
+                <Info className="w-4 h-4" />
                 <span>Información General</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setServiceModalTab('arbol')}
-                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap min-h-[38px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
                   serviceModalTab === 'arbol'
                     ? 'bg-white text-blue-700 shadow-2xs border border-slate-200 font-extrabold'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                 }`}
               >
-                <Layers className="w-3.5 h-3.5 text-blue-600" />
+                <Layers className="w-4 h-4 text-blue-600" />
                 <span>Árbol de Decisión ({editingService.decisionTree?.length || 0})</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setServiceModalTab('pasos')}
-                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap min-h-[38px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
                   serviceModalTab === 'pasos'
                     ? 'bg-white text-blue-700 shadow-2xs border border-slate-200'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                 }`}
               >
-                <ListOrdered className="w-3.5 h-3.5" />
+                <ListOrdered className="w-4 h-4" />
                 <span>Paso a Paso ({editingService.steps?.length || 0})</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setServiceModalTab('requisitos')}
-                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap min-h-[38px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
                   serviceModalTab === 'requisitos'
                     ? 'bg-white text-blue-700 shadow-2xs border border-slate-200'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                 }`}
               >
-                <CheckCircle2 className="w-3.5 h-3.5" />
+                <CheckCircle2 className="w-4 h-4" />
                 <span>Requisitos y Contacto</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setServiceModalTab('multimedia')}
-                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap min-h-[38px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
                   serviceModalTab === 'multimedia'
                     ? 'bg-white text-blue-700 shadow-2xs border border-slate-200'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                 }`}
               >
-                <ImageIcon className="w-3.5 h-3.5" />
+                <ImageIcon className="w-4 h-4" />
                 <span>Archivos y Multimedia</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setServiceModalTab('faqs')}
-                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap min-h-[38px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
                   serviceModalTab === 'faqs'
                     ? 'bg-white text-blue-700 shadow-2xs border border-slate-200'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                 }`}
               >
-                <HelpCircle className="w-3.5 h-3.5" />
+                <HelpCircle className="w-4 h-4" />
                 <span>Preguntas Frecuentes ({editingService.faqs?.length || 0})</span>
               </button>
             </div>
 
             {/* Modal Form Content */}
             <form onSubmit={handleSaveService} className="flex flex-col flex-1 min-h-0">
-              <div className="p-5 overflow-y-auto flex-1 space-y-4">
+              <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-5">
 
                 {/* TAB 1: INFORMACIÓN GENERAL */}
                 {serviceModalTab === 'general' && (
                   <div className="space-y-4 animate-fadeIn">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    <div className="space-y-1.5">
+                      <label className="block text-xs sm:text-sm font-bold text-slate-700">
                         Título del Trámite *
                       </label>
                       <input
@@ -1251,19 +1251,19 @@ export default function AdminPanel({
                         value={editingService.title}
                         onChange={(e) => setEditingService({ ...editingService, title: e.target.value })}
                         placeholder="Ej. Poliza de Seguro Social o Permiso de Falta"
-                        className="w-full px-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 focus:bg-white"
+                        className="w-full px-4 py-2.5 text-sm font-medium border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 min-h-[44px]"
                         required
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    <div className="space-y-1.5">
+                      <label className="block text-xs sm:text-sm font-bold text-slate-700">
                         Módulo / Categoría Oficial *
                       </label>
                       <select
                         value={editingService.category}
                         onChange={(e) => setEditingService({ ...editingService, category: e.target.value as any })}
-                        className="w-full px-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 focus:bg-white"
+                        className="w-full px-4 py-2.5 text-sm font-medium border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 min-h-[44px]"
                       >
                         {categoryForms.filter(c => c.id !== 'all').map((cat) => (
                           <option key={cat.id} value={cat.label}>
@@ -1273,14 +1273,14 @@ export default function AdminPanel({
                       </select>
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    <div className="space-y-1.5">
+                      <label className="block text-xs sm:text-sm font-bold text-slate-700">
                         Ícono de la Tarjeta *
                       </label>
                       <select
                         value={editingService.iconName || editingService.icon || 'FileText'}
                         onChange={(e) => setEditingService({ ...editingService, iconName: e.target.value, icon: e.target.value })}
-                        className="w-full px-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 focus:bg-white"
+                        className="w-full px-4 py-2.5 text-sm font-medium border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 min-h-[44px]"
                       >
                         <option value="Banknote">💵 Billete (Banknote)</option>
                         <option value="FileText">📄 Documento (FileText)</option>
@@ -1299,7 +1299,7 @@ export default function AdminPanel({
                     </div>
 
                     {/* FOTO DE PORTADA / TARJETA */}
-                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                    <div className="p-4 bg-slate-50 border border-slate-200/90 rounded-2xl space-y-2">
                       <MediaUploadField
                         type="image"
                         label="Foto de la Tarjeta / Portada (Opcional)"
@@ -1311,8 +1311,8 @@ export default function AdminPanel({
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    <div className="space-y-1.5">
+                      <label className="block text-xs sm:text-sm font-bold text-slate-700">
                         Descripción Corta (Tarjeta Catálogo) *
                       </label>
                       <textarea
@@ -1320,13 +1320,13 @@ export default function AdminPanel({
                         value={editingService.shortDesc}
                         onChange={(e) => setEditingService({ ...editingService, shortDesc: e.target.value })}
                         placeholder="Resumen para la vista en cuadrícula..."
-                        className="w-full px-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 focus:bg-white"
+                        className="w-full px-4 py-2.5 text-sm font-medium border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 leading-relaxed"
                         required
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    <div className="space-y-1.5">
+                      <label className="block text-xs sm:text-sm font-bold text-slate-700">
                         Descripción Completa (Vista Detalle)
                       </label>
                       <textarea
@@ -1334,7 +1334,7 @@ export default function AdminPanel({
                         value={editingService.fullDescription || ''}
                         onChange={(e) => setEditingService({ ...editingService, fullDescription: e.target.value })}
                         placeholder="Explicación detallada del trámite para el trabajador..."
-                        className="w-full px-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 focus:bg-white"
+                        className="w-full px-4 py-2.5 text-sm font-medium border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 leading-relaxed"
                       />
                     </div>
                   </div>
@@ -1420,34 +1420,34 @@ export default function AdminPanel({
                 {serviceModalTab === 'pasos' && (
                   <div className="space-y-4 animate-fadeIn">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      <span className="text-xs sm:text-sm font-bold text-slate-700">
                         Pasos del Procedimiento ({editingService.steps?.length || 0})
                       </span>
                       <button
                         type="button"
                         onClick={handleAddStep}
-                        className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-xs font-bold transition-all flex items-center gap-1 border border-blue-200"
+                        className="px-3.5 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 border border-blue-200/80 cursor-pointer min-h-[36px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.98]"
                       >
-                        <Plus className="w-3.5 h-3.5" />
+                        <Plus className="w-4 h-4" />
                         <span>Agregar Paso</span>
                       </button>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-3.5">
                       {editingService.steps && editingService.steps.length > 0 ? (
                         editingService.steps.map((step, idx) => (
-                          <div key={idx} className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 relative">
+                          <div key={idx} className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/90 space-y-3 relative shadow-2xs">
                             <div className="flex items-center justify-between gap-2">
-                              <span className="text-[11px] font-extrabold text-white bg-slate-900 px-2 py-0.5 rounded-md">
+                              <span className="text-xs font-bold text-white bg-slate-900 px-2.5 py-1 rounded-md">
                                 Paso {step.num || idx + 1}
                               </span>
                               <button
                                 type="button"
                                 onClick={() => handleRemoveStep(idx)}
-                                className="text-rose-500 hover:text-rose-700 p-1 hover:bg-rose-50 rounded-lg transition-colors"
+                                className="text-rose-500 hover:text-rose-700 p-2 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-rose-500/20"
                                 title="Eliminar paso"
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
 
@@ -1456,7 +1456,7 @@ export default function AdminPanel({
                               value={step.title}
                               onChange={(e) => handleUpdateStep(idx, 'title', e.target.value)}
                               placeholder="Título del paso (ej. Validación con Supervisor)"
-                              className="w-full px-3 py-1.5 text-xs font-bold border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                              className="w-full px-4 py-2 text-sm font-bold border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 min-h-[42px]"
                             />
 
                             <textarea
@@ -1464,12 +1464,12 @@ export default function AdminPanel({
                               value={step.desc}
                               onChange={(e) => handleUpdateStep(idx, 'desc', e.target.value)}
                               placeholder="Descripción detallada de lo que debe realizar el colaborador..."
-                              className="w-full px-3 py-1.5 text-xs font-normal border border-slate-200 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                              className="w-full px-4 py-2.5 text-sm font-normal border border-slate-300 rounded-xl bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 leading-relaxed"
                             />
                           </div>
                         ))
                       ) : (
-                        <p className="text-xs text-slate-400 italic text-center py-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                        <p className="text-xs sm:text-sm text-slate-500 italic text-center py-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                           No se han definido pasos. Haz clic en "Agregar Paso".
                         </p>
                       )}
@@ -1479,46 +1479,46 @@ export default function AdminPanel({
 
                 {/* TAB 3: REQUISITOS Y CONTACTO */}
                 {serviceModalTab === 'requisitos' && (
-                  <div className="space-y-4 animate-fadeIn">
+                  <div className="space-y-5 animate-fadeIn">
                     {/* Lista de Requisitos */}
                     <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      <div className="flex items-center justify-between mb-3">
+                        <label className="block text-xs sm:text-sm font-bold text-slate-700">
                           Requisitos Necesarios
                         </label>
                         <button
                           type="button"
                           onClick={handleAddRequirement}
-                          className="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border border-emerald-200"
+                          className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 border border-emerald-200/80 cursor-pointer min-h-[36px] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 active:scale-[0.98]"
                         >
-                          <Plus className="w-3.5 h-3.5" />
+                          <Plus className="w-4 h-4" />
                           <span>Agregar Requisito</span>
                         </button>
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="space-y-2.5">
                         {editingService.requirements && editingService.requirements.length > 0 ? (
                           editingService.requirements.map((req, idx) => (
-                            <div key={idx} className="flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                            <div key={idx} className="flex items-center gap-2.5">
+                              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
                               <input
                                 type="text"
                                 value={req}
                                 onChange={(e) => handleUpdateRequirement(idx, e.target.value)}
                                 placeholder="Ej. Gafete oficial activo o Identificación INE"
-                                className="flex-1 px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:bg-white"
+                                className="flex-1 px-4 py-2 text-sm font-medium border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 min-h-[42px]"
                               />
                               <button
                                 type="button"
                                 onClick={() => handleRemoveRequirement(idx)}
-                                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-rose-500/20"
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
                           ))
                         ) : (
-                          <p className="text-xs text-slate-400 italic">No hay requisitos registrados.</p>
+                          <p className="text-xs sm:text-sm text-slate-500 italic py-3">No hay requisitos registrados.</p>
                         )}
                       </div>
                     </div>
@@ -1526,50 +1526,50 @@ export default function AdminPanel({
                     <hr className="border-slate-100" />
 
                     {/* Campos de Atención y Ubicación */}
-                    <div className="space-y-3">
-                      <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                    <div className="space-y-4">
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider">
                         Ubicación, Horario y Teléfono
                       </h4>
 
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                          Ubicación de Atención
+                      <div className="space-y-1.5">
+                        <label className="block text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5">
+                          <MapPin className="w-4 h-4 text-slate-500" />
+                          <span>Ubicación de Atención</span>
                         </label>
                         <input
                           type="text"
                           value={editingService.location || ''}
                           onChange={(e) => setEditingService({ ...editingService, location: e.target.value })}
                           placeholder="Ej. Planta Baja • Edificio de Recursos Humanos"
-                          className="w-full px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:bg-white"
+                          className="w-full px-4 py-2.5 text-sm font-medium border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 min-h-[42px]"
                         />
                       </div>
 
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-slate-400" />
-                          Horario de Atención
+                      <div className="space-y-1.5">
+                        <label className="block text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5">
+                          <Clock className="w-4 h-4 text-slate-500" />
+                          <span>Horario de Atención</span>
                         </label>
                         <input
                           type="text"
                           value={editingService.schedule || ''}
                           onChange={(e) => setEditingService({ ...editingService, schedule: e.target.value })}
                           placeholder="Ej. Lunes a Viernes de 8:00 AM a 5:00 PM"
-                          className="w-full px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:bg-white"
+                          className="w-full px-4 py-2.5 text-sm font-medium border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 min-h-[42px]"
                         />
                       </div>
 
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
-                          <Phone className="w-3.5 h-3.5 text-slate-400" />
-                          Teléfono o Extensión de Contacto
+                      <div className="space-y-1.5">
+                        <label className="block text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5">
+                          <Phone className="w-4 h-4 text-slate-500" />
+                          <span>Teléfono o Extensión de Contacto</span>
                         </label>
                         <input
                           type="text"
                           value={editingService.contact || ''}
                           onChange={(e) => setEditingService({ ...editingService, contact: e.target.value })}
                           placeholder="Ej. Atención a Nóminas - Ext. 201"
-                          className="w-full px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:bg-white"
+                          className="w-full px-4 py-2.5 text-sm font-medium border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 min-h-[42px]"
                         />
                       </div>
                     </div>
@@ -1580,11 +1580,11 @@ export default function AdminPanel({
                 {serviceModalTab === 'multimedia' && (
                   <div className="space-y-4 animate-fadeIn">
                     <div className="border-b border-slate-100 pb-2">
-                      <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-2">
                         <ImageIcon className="w-4 h-4 text-blue-600" />
                         <span>Archivos y Multimedia (Subida Local o Enlace URL)</span>
                       </h4>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
+                      <p className="text-xs text-slate-500 mt-1">
                         Carga archivos locales desde tu computadora (conversión Base64 instantánea sin servidor) o ingresa enlaces URL externos.
                       </p>
                     </div>
@@ -1641,34 +1641,34 @@ export default function AdminPanel({
                 {serviceModalTab === 'faqs' && (
                   <div className="space-y-4 animate-fadeIn">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      <span className="text-xs sm:text-sm font-bold text-slate-700">
                         Preguntas Frecuentes ({editingService.faqs?.length || 0})
                       </span>
                       <button
                         type="button"
                         onClick={handleAddFAQ}
-                        className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-xs font-bold transition-all flex items-center gap-1 border border-blue-200"
+                        className="px-3.5 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 border border-blue-200/80 cursor-pointer min-h-[36px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.98]"
                       >
-                        <Plus className="w-3.5 h-3.5" />
+                        <Plus className="w-4 h-4" />
                         <span>Agregar Pregunta</span>
                       </button>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-3.5">
                       {editingService.faqs && editingService.faqs.length > 0 ? (
                         editingService.faqs.map((faq, idx) => (
-                          <div key={idx} className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 relative">
+                          <div key={idx} className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/90 space-y-3 relative shadow-2xs">
                             <div className="flex items-center justify-between gap-2">
-                              <span className="text-[10px] font-extrabold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">
+                              <span className="text-xs font-bold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-md">
                                 FAQ #{idx + 1}
                               </span>
                               <button
                                 type="button"
                                 onClick={() => handleRemoveFAQ(idx)}
-                                className="text-rose-500 hover:text-rose-700 p-1 hover:bg-rose-50 rounded-lg transition-colors"
+                                className="text-rose-500 hover:text-rose-700 p-2 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-rose-500/20"
                                 title="Eliminar pregunta"
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
 
@@ -1677,7 +1677,7 @@ export default function AdminPanel({
                               value={faq.question}
                               onChange={(e) => handleUpdateFAQ(idx, 'question', e.target.value)}
                               placeholder="Pregunta frecuente (ej. ¿Qué pasa si no cobro a tiempo?)"
-                              className="w-full px-3 py-1.5 text-xs font-bold border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                              className="w-full px-4 py-2 text-sm font-bold border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 min-h-[42px]"
                             />
 
                             <textarea
@@ -1685,12 +1685,12 @@ export default function AdminPanel({
                               value={faq.answer}
                               onChange={(e) => handleUpdateFAQ(idx, 'answer', e.target.value)}
                               placeholder="Respuesta detallada..."
-                              className="w-full px-3 py-1.5 text-xs font-normal border border-slate-200 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                              className="w-full px-4 py-2.5 text-sm font-normal border border-slate-300 rounded-xl bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 leading-relaxed"
                             />
                           </div>
                         ))
                       ) : (
-                        <p className="text-xs text-slate-400 italic text-center py-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                        <p className="text-xs sm:text-sm text-slate-500 italic text-center py-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                           No hay preguntas registradas. Haz clic en "Agregar Pregunta".
                         </p>
                       )}
@@ -1701,21 +1701,21 @@ export default function AdminPanel({
               </div>
 
               {/* Modal Footer Controls */}
-              <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2 shrink-0">
-                <div className="text-[11px] text-slate-500 font-medium hidden sm:block">
+              <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
+                <div className="text-xs text-slate-500 font-medium hidden sm:block">
                   Los cambios se actualizarán inmediatamente en el portal.
                 </div>
-                <div className="flex items-center gap-2 ml-auto">
+                <div className="flex items-center gap-2.5 ml-auto">
                   <button
                     type="button"
                     onClick={() => setIsServiceModalOpen(false)}
-                    className="px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-100"
+                    className="px-5 py-2.5 text-xs sm:text-sm font-bold text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-100 cursor-pointer min-h-[42px] focus:outline-none focus:ring-2 focus:ring-slate-400/20"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl flex items-center gap-1.5 shadow-2xs active:scale-95 transition-all"
+                    className="px-6 py-2.5 text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl flex items-center gap-2 shadow-xs active:scale-[0.98] transition-all cursor-pointer min-h-[42px] focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                   >
                     <Save className="w-4 h-4" />
                     <span>Guardar Cambios</span>
@@ -1744,39 +1744,42 @@ export default function AdminPanel({
       {/* --- MODAL FOR ADDING / EDITING NEWS --- */}
       {isNewsModalOpen && editingNews && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-2xl max-w-lg w-full border border-slate-200 shadow-xl overflow-hidden">
-            <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
-              <h3 className="text-sm font-bold">
+          <div className="bg-white rounded-2xl max-w-lg w-full border border-slate-200/90 shadow-xl overflow-hidden">
+            <div className="bg-slate-900 text-white p-4 sm:p-5 flex items-center justify-between">
+              <h3 className="text-base font-bold">
                 {isNewNews ? 'Publicar Nueva Noticia' : 'Editar Noticia'}
               </h3>
-              <button onClick={() => setIsNewsModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button 
+                onClick={() => setIsNewsModalOpen(false)} 
+                className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 active:scale-95 cursor-pointer"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveNews} className="p-5 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Título del Comunicado
+            <form onSubmit={handleSaveNews} className="p-5 sm:p-6 space-y-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs sm:text-sm font-bold text-slate-800">
+                  Título del Comunicado *
                 </label>
                 <input
                   type="text"
                   value={editingNews.title}
                   onChange={(e) => setEditingNews({ ...editingNews, title: e.target.value })}
                   placeholder="Ej. Jornada de Evaluación en Planta"
-                  className="w-full px-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 focus:bg-white"
+                  className="w-full px-4 py-2.5 text-sm font-medium border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 min-h-[44px]"
                   required
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              <div className="space-y-1.5">
+                <label className="block text-xs sm:text-sm font-bold text-slate-800">
                   Categoría
                 </label>
                 <select
                   value={editingNews.category}
                   onChange={(e) => setEditingNews({ ...editingNews, category: e.target.value as any })}
-                  className="w-full px-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 focus:bg-white"
+                  className="w-full px-4 py-2.5 text-sm font-medium border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 min-h-[44px]"
                 >
                   <option value="comunicado">Comunicado Oficial</option>
                   <option value="evento">Evento / Capacitación</option>
@@ -1784,47 +1787,47 @@ export default function AdminPanel({
                 </select>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Resumen Corto
+              <div className="space-y-1.5">
+                <label className="block text-xs sm:text-sm font-bold text-slate-800">
+                  Resumen Corto *
                 </label>
                 <input
                   type="text"
                   value={editingNews.summary}
                   onChange={(e) => setEditingNews({ ...editingNews, summary: e.target.value })}
                   placeholder="Texto visible en la vista previa..."
-                  className="w-full px-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 focus:bg-white"
+                  className="w-full px-4 py-2.5 text-sm font-medium border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 min-h-[44px]"
                   required
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Contenido Completo
+              <div className="space-y-1.5">
+                <label className="block text-xs sm:text-sm font-bold text-slate-800">
+                  Contenido Completo *
                 </label>
                 <textarea
                   rows={4}
                   value={editingNews.content}
                   onChange={(e) => setEditingNews({ ...editingNews, content: e.target.value })}
                   placeholder="Detalle de la noticia..."
-                  className="w-full px-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 focus:bg-white"
+                  className="w-full px-4 py-2.5 text-sm font-medium border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 leading-relaxed"
                   required
                 />
               </div>
 
-              <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+              <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsNewsModalOpen(false)}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200"
+                  className="px-5 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 active:bg-slate-100 cursor-pointer min-h-[42px] focus:outline-none focus:ring-2 focus:ring-slate-400/20 active:scale-[0.98]"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl flex items-center gap-1.5 shadow-2xs"
+                  className="px-6 py-2.5 text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl flex items-center gap-2 shadow-xs active:scale-[0.98] cursor-pointer min-h-[42px] focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                 >
-                  <Save className="w-3.5 h-3.5" />
+                  <Save className="w-4 h-4" />
                   <span>Publicar Noticia</span>
                 </button>
               </div>
@@ -1838,33 +1841,33 @@ export default function AdminPanel({
       {/* --- CUSTOM DELETE CONFIRMATION MODAL --- */}
       {deleteConfirmTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-2xl max-w-sm w-full border border-slate-200 shadow-2xl overflow-hidden p-5 space-y-4 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shrink-0 shadow-2xs">
+          <div className="bg-white rounded-2xl max-w-sm w-full border border-slate-200/90 shadow-2xl overflow-hidden p-6 space-y-4 text-center">
+            <div className="w-13 h-13 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shrink-0 shadow-2xs">
               <Trash2 className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 font-display">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 font-display">
                 ¿Eliminar {deleteConfirmTarget.type === 'service' ? 'Trámite' : 'Noticia'}?
               </h3>
-              <p className="text-xs font-semibold text-slate-600 mt-1 line-clamp-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
+              <p className="text-xs sm:text-sm font-semibold text-slate-700 mt-2 line-clamp-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                 "{deleteConfirmTarget.title}"
               </p>
-              <p className="text-[11px] text-slate-400 mt-2">
+              <p className="text-xs text-slate-500 mt-2">
                 Esta acción eliminará permanentemente el elemento de la lista del portal.
               </p>
             </div>
-            <div className="flex items-center gap-2 pt-2">
+            <div className="flex items-center gap-2.5 pt-2">
               <button
                 type="button"
                 onClick={() => setDeleteConfirmTarget(null)}
-                className="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                className="flex-1 py-2.5 px-4 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer min-h-[44px] focus:outline-none focus:ring-2 focus:ring-slate-400/20 active:scale-[0.98]"
               >
                 Cancelar
               </button>
               <button
                 type="button"
                 onClick={handleConfirmDelete}
-                className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer"
+                className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-xs active:scale-[0.98] cursor-pointer min-h-[44px] focus:outline-none focus:ring-2 focus:ring-rose-500/30"
               >
                 Sí, Eliminar
               </button>

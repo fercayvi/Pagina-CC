@@ -189,6 +189,23 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.kind === 'file') {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          e.stopPropagation();
+          processFile(file);
+          return;
+        }
+      }
+    }
+  };
+
   const handleClear = () => {
     onChange('', '');
     setFileName('');
@@ -211,31 +228,31 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
         </label>
 
         {/* Pestañas de Modo: Subir / URL */}
-        <div className="inline-flex p-0.5 bg-slate-200/80 rounded-xl self-start sm:self-auto border border-slate-300/60">
+        <div className="inline-flex p-0.5 bg-slate-100 rounded-xl self-start sm:self-auto border border-slate-200">
           <button
             type="button"
             id={`${idPrefix}-${type}-mode-upload`}
             onClick={() => setMode('upload')}
-            className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
+            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer min-h-[32px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.98] ${
               mode === 'upload'
                 ? 'bg-white text-blue-700 shadow-2xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Upload className="w-3 h-3" />
+            <Upload className="w-3.5 h-3.5" />
             <span>Subir Archivo (Local)</span>
           </button>
           <button
             type="button"
             id={`${idPrefix}-${type}-mode-url`}
             onClick={() => setMode('url')}
-            className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
+            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer min-h-[32px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.98] ${
               mode === 'url'
                 ? 'bg-white text-blue-700 shadow-2xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Link2 className="w-3 h-3" />
+            <Link2 className="w-3.5 h-3.5" />
             <span>Enlace URL</span>
           </button>
         </div>
@@ -255,11 +272,19 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
 
           {!hasValue ? (
             <div
+              tabIndex={0}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
+              onPaste={handlePaste}
               onClick={() => !isLoading && fileInputRef.current?.click()}
-              className={`p-5 border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  fileInputRef.current?.click();
+                }
+              }}
+              className={`p-5 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/30 ${
                 isLoading
                   ? 'border-blue-300 bg-blue-50/50 cursor-wait'
                   : isDragging 
@@ -267,17 +292,17 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
                   : 'border-slate-300 hover:border-blue-400 bg-white hover:bg-blue-50/30'
               }`}
             >
-              <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-2 shadow-2xs">
+              <div className="w-11 h-11 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-2 shadow-2xs">
                 {isLoading ? (
                   <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
                 ) : (
                   <Upload className="w-5 h-5" />
                 )}
               </div>
-              <p className="text-xs font-bold text-slate-800">
-                {isLoading ? 'Comprimiendo imagen con Canvas...' : 'Haz clic para seleccionar o arrastra la imagen aquí'}
+              <p className="text-xs sm:text-sm font-bold text-slate-800">
+                {isLoading ? 'Comprimiendo imagen con Canvas...' : 'Haz clic para seleccionar, arrastra o presiona Ctrl+V para pegar'}
               </p>
-              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
+              <p className="text-xs text-slate-500 mt-0.5 font-medium">
                 {isLoading ? 'Optimizando a 800px máx (JPG 0.6)...' : getTypeText()}
               </p>
             </div>
@@ -287,7 +312,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
         /* Modo URL Externa */
         <div className="space-y-1.5">
           <div className="relative flex items-center">
-            <Link2 className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
+            <Link2 className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
             <input
               id={`${idPrefix}-${type}-url-input`}
               type="url"
@@ -303,7 +328,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
                   ? 'https://www.youtube.com/watch?v=... o video directo .mp4'
                   : 'https://ejemplo.com/formato_oficial.pdf'
               )}
-              className="w-full pl-8 pr-3 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+              className="w-full pl-9 pr-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 min-h-[42px]"
             />
           </div>
         </div>
@@ -311,48 +336,48 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
 
       {/* Vista previa y estado del elemento cargado */}
       {hasValue && (
-        <div className="p-2.5 bg-white border border-emerald-200/90 rounded-xl shadow-2xs flex items-center justify-between gap-3 animate-fadeIn">
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        <div className="p-3 bg-white border border-emerald-200/90 rounded-xl shadow-2xs flex items-center justify-between gap-3 animate-fadeIn">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             {type === 'image' && (
               <img 
                 src={value} 
                 alt="Vista previa" 
-                className="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0 shadow-2xs" 
+                className="w-11 h-11 rounded-lg object-cover border border-slate-200 shrink-0 shadow-2xs" 
               />
             )}
             {type === 'video' && (
-              <div className="w-10 h-10 rounded-lg bg-blue-900 text-blue-200 flex items-center justify-center shrink-0 shadow-2xs">
+              <div className="w-11 h-11 rounded-lg bg-blue-900 text-blue-200 flex items-center justify-center shrink-0 shadow-2xs">
                 <Video className="w-5 h-5" />
               </div>
             )}
             {type === 'pdf' && (
-              <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center shrink-0 shadow-2xs">
+              <div className="w-11 h-11 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center shrink-0 shadow-2xs">
                 <FileCheck className="w-5 h-5" />
               </div>
             )}
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
-                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[9px] font-extrabold uppercase tracking-wider">
-                  <Check className="w-2.5 h-2.5" />
+                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-extrabold uppercase tracking-wider">
+                  <Check className="w-3 h-3" />
                   {isBase64 ? 'Local Optimizado' : 'Enlace Web'}
                 </span>
-                <span className="text-[10px] text-emerald-700 font-bold">Listo</span>
+                <span className="text-xs text-emerald-700 font-bold">Listo</span>
               </div>
-              <p className="text-xs font-semibold text-slate-800 truncate mt-0.5">
+              <p className="text-xs sm:text-sm font-semibold text-slate-800 truncate mt-0.5">
                 {fileName || (isBase64 ? 'Imagen comprimida para localStorage' : value)}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             {mode === 'upload' && (
               <button
                 type="button"
                 id={`${idPrefix}-${type}-replace-btn`}
                 disabled={isLoading}
                 onClick={() => fileInputRef.current?.click()}
-                className="px-2 py-1 text-[11px] font-bold text-blue-700 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer border border-blue-200/80 disabled:opacity-50"
+                className="px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-50 rounded-xl transition-colors cursor-pointer border border-blue-200/80 disabled:opacity-50 min-h-[34px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.98]"
               >
                 {isLoading ? 'Optimizando...' : 'Cambiar'}
               </button>
@@ -361,7 +386,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
               type="button"
               id={`${idPrefix}-${type}-clear-btn`}
               onClick={handleClear}
-              className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+              className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer min-w-[34px] min-h-[34px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-rose-500/20 active:scale-95"
               title="Quitar recurso y dejar limpio"
             >
               <Trash2 className="w-4 h-4" />
@@ -373,7 +398,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
       {/* Título opcional de botón para PDF */}
       {type === 'pdf' && onTitleChange && (
         <div className="pt-1">
-          <label className="block text-[11px] font-bold text-slate-700 mb-1">
+          <label className="block text-xs font-bold text-slate-700 mb-1">
             Texto o Título del Botón de Descarga
           </label>
           <input
@@ -382,7 +407,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
             value={titleValue || ''}
             onChange={(e) => onTitleChange(e.target.value)}
             placeholder="Ej. Descargar Solicitud de Vacaciones (PDF)"
-            className="w-full px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+            className="w-full px-4 py-2 text-xs sm:text-sm font-medium border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 min-h-[42px]"
           />
         </div>
       )}

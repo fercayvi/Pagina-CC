@@ -1,15 +1,76 @@
-import { LayoutBlock, TextLayoutBlock, AlertLayoutBlock, FAQLayoutBlock, MediaLayoutBlock, Service } from '../types';
+import { 
+  LayoutBlock, 
+  TextLayoutBlock, 
+  AlertLayoutBlock, 
+  FAQLayoutBlock, 
+  MediaLayoutBlock, 
+  ColumnsLayoutBlock, 
+  ColumnSlot, 
+  Service 
+} from '../types';
 
 export function generateBlockId(prefix: string = 'block'): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 }
 
-export function createNewTextBlock(): TextLayoutBlock {
+export function createNewTextBlock(initialContent: string = ''): TextLayoutBlock {
   return {
     id: generateBlockId('txt'),
     type: 'text',
     title: '',
-    content: ''
+    content: initialContent || '',
+    align: 'left',
+    style: 'normal'
+  };
+}
+
+export function createNewColumnsBlock(columnsCount: number = 2, layout: 'equal' | '1-2' | '2-1' = 'equal'): ColumnsLayoutBlock {
+  const columns: ColumnSlot[] = Array.from({ length: columnsCount }, (_, i) => ({
+    id: generateBlockId(`col_${i + 1}`),
+    blocks: []
+  }));
+
+  return {
+    id: generateBlockId('cols'),
+    type: 'columns',
+    columnsCount,
+    layout,
+    columns
+  };
+}
+
+export function createNewImageBlock(): MediaLayoutBlock {
+  return {
+    id: generateBlockId('img'),
+    type: 'media',
+    mediaType: 'image',
+    title: '',
+    url: '',
+    caption: '',
+    alignment: 'center',
+    size: 'full'
+  };
+}
+
+export function createNewVideoBlock(): MediaLayoutBlock {
+  return {
+    id: generateBlockId('vid'),
+    type: 'media',
+    mediaType: 'video',
+    title: 'Video Tutorial Explicativo',
+    url: '',
+    caption: ''
+  };
+}
+
+export function createNewPdfBlock(): MediaLayoutBlock {
+  return {
+    id: generateBlockId('pdf'),
+    type: 'media',
+    mediaType: 'pdf',
+    title: 'Descargar Formato Oficial (PDF)',
+    url: '',
+    caption: 'Haz clic para abrir o descargar el documento adjunto'
   };
 }
 
@@ -19,7 +80,7 @@ export function createNewAlertBlock(): AlertLayoutBlock {
     type: 'alert',
     level: 'warning',
     title: 'Aviso Importante',
-    message: ''
+    message: 'Escribe aquí la notificación o advertencia relevante para el personal...'
   };
 }
 
@@ -29,20 +90,13 @@ export function createNewFAQBlock(): FAQLayoutBlock {
     type: 'faq',
     title: 'Preguntas Frecuentes',
     items: [
-      { q: '', a: '' }
+      { q: '¿Cuál es el tiempo de respuesta estimado?', a: 'El trámite se procesa habitualmente en un lapso de 24 a 48 horas hábiles.' }
     ]
   };
 }
 
 export function createNewMediaBlock(): MediaLayoutBlock {
-  return {
-    id: generateBlockId('med'),
-    type: 'media',
-    mediaType: 'image',
-    title: '',
-    url: '',
-    caption: ''
-  };
+  return createNewImageBlock();
 }
 
 /**
