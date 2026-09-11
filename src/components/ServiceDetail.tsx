@@ -434,6 +434,15 @@ export default function ServiceDetail({
   const [mobileViewMode, setMobileViewMode] = useState<'editor' | 'preview'>('editor');
   const [lightboxImage, setLightboxImage] = useState<{ url: string; title?: string } | null>(null);
 
+  // Reset scroll to top whenever the service changes or is opened
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    const scrollContainer = document.getElementById('phone-main-scrollable-content');
+    if (scrollContainer) {
+      scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [service?.id]);
+
   // Sync lightbox state with parent component
   useEffect(() => {
     onLightboxToggle?.(Boolean(lightboxImage && lightboxImage.url));

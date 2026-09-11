@@ -8,11 +8,14 @@ import HomeTab from './components/HomeTab';
 import ServiceDetail from './components/ServiceDetail';
 import NewsTab from './components/NewsTab';
 import AsistenteTab from './components/AsistenteTab';
+import SearchTab from './components/SearchTab';
 import AdminPanel from './components/AdminPanel';
 import AdminLoginModal from './components/AdminLoginModal';
+import ScrollProgressBar from './components/ScrollProgressBar';
 
 export default function App() {
-  const [currentTab, setCurrentTab] = useState<'inicio' | 'noticias' | 'asistente'>('inicio');
+  const [currentTab, setCurrentTab] = useState<'inicio' | 'buscar' | 'noticias' | 'asistente'>('inicio');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedService, setSelectedService] = useState<(Service & { hidden?: boolean }) | null>(null);
   const [serviceEditMode, setServiceEditMode] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -27,7 +30,21 @@ export default function App() {
   const [services, setServices] = useState<(Service & { hidden?: boolean })[]>(() => {
     try {
       const saved = localStorage.getItem('cc-services-cms-v1');
-      return saved ? JSON.parse(saved) : initialServices;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.map((s: Service) => {
+            if (!s.tags || s.tags.length === 0) {
+              const defaultMatch = initialServices.find(init => init.id === s.id);
+              if (defaultMatch && defaultMatch.tags) {
+                return { ...s, tags: defaultMatch.tags };
+              }
+            }
+            return s;
+          });
+        }
+      }
+      return initialServices;
     } catch (e) {
       console.error('Error al cargar trámites desde localStorage:', e);
       return initialServices;
@@ -191,6 +208,11 @@ export default function App() {
   };
 
   const handleSelectService = (service: Service & { hidden?: boolean }, startEditing: boolean = false) => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    const scrollContainer = document.getElementById('phone-main-scrollable-content');
+    if (scrollContainer) {
+      scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
+    }
     setSelectedService(service);
     setServiceEditMode(startEditing);
   };
@@ -266,6 +288,22 @@ export default function App() {
                       setSelectedService(null);
                     }}
                     unreadNewsCount={unreadNewsCount}
+                    searchQuery={searchQuery}
+                    onSearch={(query) => {
+                      setSearchQuery(query);
+                      setCurrentTab('buscar');
+                      setSelectedService(null);
+                    }}
+                    onGoHome={() => {
+                      window.scrollTo({ top: 0, behavior: 'instant' });
+                      const scrollContainer = document.getElementById('phone-main-scrollable-content');
+                      if (scrollContainer) {
+                        scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
+                      }
+                      setSelectedService(null);
+                      setServiceEditMode(false);
+                      setCurrentTab('inicio');
+                    }}
                   />
 
                   {/* TAB 1: INICIO */}
@@ -288,6 +326,17 @@ export default function App() {
                         categories={categories}
                       />
                     </div>
+                  )}
+
+                  {/* TAB: BÚSQUEDA GLOBAL */}
+                  {currentTab === 'buscar' && (
+                    <SearchTab 
+                      services={services}
+                      searchQuery={searchQuery}
+                      onSearchQueryChange={setSearchQuery}
+                      onSelectService={(service) => handleSelectService(service, false)}
+                      categories={categories}
+                    />
                   )}
 
                   {/* TAB 2: NOTICIAS */}
@@ -333,6 +382,9 @@ export default function App() {
         onClose={() => setIsLoginModalOpen(false)}
         onLoginSuccess={() => setIsAdminLoggedIn(true)}
       />
+
+      {/* Global Scroll Progress Bar */}
+      <ScrollProgressBar className={isImageZoomed ? 'hidden' : ''} />
 
     </div>
   );

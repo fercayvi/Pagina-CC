@@ -131,6 +131,7 @@ export interface Service {
   fullDescription?: string;
   hidden?: boolean;
   status?: 'active' | 'maintenance' | 'inactive';
+  tags?: string[];
 
   // Árbol de decisiones dinámico (Divulgación progresiva)
   decisionTree?: ServiceNode[];
