@@ -137,20 +137,6 @@ export default function TopBar({
 
             <button
               type="button"
-              id="desktop-nav-buscar"
-              onClick={() => setCurrentTab('buscar')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${
-                currentTab === 'buscar'
-                  ? 'bg-white text-blue-700 shadow-xs scale-102'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-              }`}
-            >
-              <Search className="w-4 h-4" strokeWidth={currentTab === 'buscar' ? 2.5 : 2} />
-              <span>Buscar</span>
-            </button>
-
-            <button
-              type="button"
               id="desktop-nav-noticias"
               onClick={() => setCurrentTab('noticias')}
               className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${
