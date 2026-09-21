@@ -36,7 +36,10 @@ import {
   GitBranch,
   Code,
   Copy,
-  Download
+  Download,
+  FileJson,
+  AlertTriangle,
+  Upload
 } from 'lucide-react';
 import {
   DndContext,
@@ -259,6 +262,8 @@ export default function AdminPanel({
 }: AdminPanelProps) {
   const [activeTab, setActiveTab] = useState<'tramites' | 'categorias' | 'noticias' | 'contacto' | 'sincronizar'>('tramites');
   const [isCopied, setIsCopied] = useState<boolean>(false);
+  const [isJsonCopied, setIsJsonCopied] = useState<boolean>(false);
+  const [importJsonText, setImportJsonText] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
 
   // Categories Form State
@@ -411,6 +416,101 @@ export default function AdminPanel({
     } catch (err) {
       console.error('Error al copiar al portapapeles:', err);
       showToast('No se pudo copiar automáticamente. Puedes seleccionar el texto manualmente.');
+    }
+  };
+
+  // Generador de respaldo JSON crudo
+  const generateRawJsonBackup = (): string => {
+    let categoriesData: any[] = [];
+    let servicesData: any[] = [];
+
+    try {
+      const rawCategories = localStorage.getItem('cc-categories') || localStorage.getItem('activeCategories');
+      if (rawCategories) {
+        const parsed = JSON.parse(rawCategories);
+        categoriesData = Array.isArray(parsed) ? parsed : [];
+      } else if (categoryForms && categoryForms.length > 0) {
+        categoriesData = categoryForms;
+      }
+    } catch (e) {
+      console.error('Error leyendo categorías para respaldo:', e);
+      categoriesData = categoryForms || [];
+    }
+
+    try {
+      const rawServices = localStorage.getItem('cc-services-cms-v1') || localStorage.getItem('allServices') || localStorage.getItem('services');
+      if (rawServices) {
+        const parsed = JSON.parse(rawServices);
+        servicesData = Array.isArray(parsed) ? parsed : [];
+      } else if (services && services.length > 0) {
+        servicesData = services;
+      }
+    } catch (e) {
+      console.error('Error leyendo servicios para respaldo:', e);
+      servicesData = services || [];
+    }
+
+    const backupObj = {
+      categories: categoriesData,
+      services: servicesData,
+    };
+
+    return JSON.stringify(backupObj, null, 2);
+  };
+
+  const handleCopyRawJson = async () => {
+    try {
+      const jsonStr = generateRawJsonBackup();
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(jsonStr);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = jsonStr;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setIsJsonCopied(true);
+      showToast('¡Respaldo JSON copiado al portapapeles!');
+      setTimeout(() => setIsJsonCopied(false), 2500);
+    } catch (err) {
+      console.error('Error al copiar respaldo JSON:', err);
+      showToast('No se pudo copiar automáticamente.');
+    }
+  };
+
+  const handleRestoreData = () => {
+    if (!importJsonText.trim()) {
+      alert('Por favor pega el código JSON de respaldo antes de restaurar.');
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(importJsonText);
+      if (!parsed || typeof parsed !== 'object' || (!parsed.categories && !parsed.services)) {
+        alert('Formato de datos inválido');
+        return;
+      }
+
+      if (parsed.categories && Array.isArray(parsed.categories)) {
+        localStorage.setItem('cc-categories', JSON.stringify(parsed.categories));
+      }
+      if (parsed.services && Array.isArray(parsed.services)) {
+        localStorage.setItem('cc-services-cms-v1', JSON.stringify(parsed.services));
+      }
+      if (parsed.news && Array.isArray(parsed.news)) {
+        localStorage.setItem('cc-news', JSON.stringify(parsed.news));
+      }
+      if (parsed.contact && typeof parsed.contact === 'object') {
+        localStorage.setItem('portalContactInfo', JSON.stringify(parsed.contact));
+      }
+
+      alert('Datos restaurados con éxito');
+      window.location.reload();
+    } catch (err) {
+      console.error('Error al parsear JSON:', err);
+      alert('Formato de datos inválido');
     }
   };
 
@@ -1246,83 +1346,194 @@ export default function AdminPanel({
         </div>
       )}
 
-      {/* VIEW E: SINCRONIZAR / EXPORTAR DATOS A SRC/DATA.TS */}
+      {/* VIEW E: SINCRONIZAR Y RESPALDOS LOCALES */}
       {activeTab === 'sincronizar' && (
-        <div className="space-y-4 animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
-              <div>
-                <h3 className="text-base sm:text-lg font-bold text-slate-900 font-display flex items-center gap-2.5">
-                  <Code className="w-5 h-5 text-blue-600" />
-                  <span>Exportar Datos a Código Fuente</span>
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
-                  Copia este código y reemplaza el contenido de tu archivo <code className="px-1.5 py-0.5 rounded bg-slate-100 font-mono text-slate-700 text-xs font-semibold">src/data.ts</code> para que los cambios se reflejen en tu despliegue (ej. Vercel).
+        <div className="space-y-6 animate-fadeIn">
+          {/* Header principal de la pestaña */}
+          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 font-display flex items-center gap-2.5">
+                <Code className="w-5 h-5 text-blue-600" />
+                <span>Gestor de Sincronización y Respaldos</span>
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
+                Exporta el código fuente para actualizar tu repositorio en <code className="px-1.5 py-0.5 rounded bg-slate-100 font-mono text-slate-700 text-xs font-semibold">src/data.ts</code> o gestiona respaldos JSON para restaurar en este navegador.
+              </p>
+            </div>
+          </div>
+
+          {/* Dos Columnas / Secciones Claras */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            
+            {/* SECCIÓN A: EXPORTAR A CÓDIGO FUENTE (SRC/DATA.TS) */}
+            <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-slate-100 pb-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-blue-50 text-blue-700 font-bold text-xs flex items-center justify-center border border-blue-200">
+                      A
+                    </span>
+                    <h4 className="text-sm sm:text-base font-bold text-slate-900 font-display">
+                      Exportar a Código (src/data.ts)
+                    </h4>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Copia este código y reemplaza el contenido de tu archivo <code className="px-1.5 py-0.5 rounded bg-slate-100 font-mono text-slate-700 text-xs font-semibold">src/data.ts</code> para que los cambios se reflejen en tu despliegue (ej. Vercel).
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  id="btn-copy-source-code"
+                  onClick={handleCopyCode}
+                  className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-xs shrink-0 active:scale-[0.98] cursor-pointer min-h-[40px] ${
+                    isCopied
+                      ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  {isCopied ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>¡Copiado!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      <span>Copiar al Portapapeles</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Bloque de Código de Solo Lectura con Estilo Oscuro */}
+              <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner">
+                <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-b border-slate-800 text-xs font-mono text-slate-400">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                    <span>src/data.ts</span>
+                  </span>
+                  <span className="text-[11px] text-slate-500">TypeScript • Solo lectura</span>
+                </div>
+                <textarea
+                  readOnly
+                  value={generateSourceCode()}
+                  onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+                  rows={14}
+                  className="w-full p-4 font-mono text-xs leading-relaxed text-slate-200 bg-transparent resize-y focus:outline-none focus:ring-0 selection:bg-blue-800 selection:text-white"
+                  spellCheck={false}
+                />
+              </div>
+
+              <p className="text-xs text-slate-400">
+                * Haz clic dentro del código para seleccionarlo todo rápidamente si prefieres copiar con <kbd className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700 font-mono text-[10px]">Ctrl+C</kbd>.
+              </p>
+            </div>
+
+            {/* SECCIÓN B: RESPALDO E IMPORTACIÓN JSON */}
+            <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs space-y-5">
+              <div className="border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-700 font-bold text-xs flex items-center justify-center border border-indigo-200">
+                    B
+                  </span>
+                  <h4 className="text-sm sm:text-base font-bold text-slate-900 font-display flex items-center gap-2">
+                    <FileJson className="w-4 h-4 text-indigo-600" />
+                    <span>Respaldo e Importación JSON</span>
+                  </h4>
+                </div>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  Exporta una copia cruda de tus categorías y trámites en formato JSON o pega un respaldo previo para sobrescribir y restaurar datos.
                 </p>
               </div>
 
-              {/* Botón Grande de Copiar al Portapapeles */}
-              <button
-                type="button"
-                id="btn-copy-source-code"
-                onClick={handleCopyCode}
-                className={`px-5 py-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-xs shrink-0 active:scale-[0.98] cursor-pointer min-h-[44px] ${
-                  isCopied
-                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                }`}
-              >
-                {isCopied ? (
-                  <>
-                    <Check className="w-4 h-4" />
-                    <span>¡Copiado al Portapapeles!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4" />
-                    <span>Copiar al Portapapeles</span>
-                  </>
-                )}
-              </button>
-            </div>
+              {/* Subsección 1: Copiar Respaldo JSON Crudo */}
+              <div className="p-4 bg-slate-50 border border-slate-200/90 rounded-xl space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h5 className="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                      <Download className="w-4 h-4 text-blue-600" />
+                      <span>Exportar Respaldo JSON Crudo</span>
+                    </h5>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Genera el objeto literal <code className="text-slate-700 font-mono font-semibold">{`{ categories, services }`}</code>.
+                    </p>
+                  </div>
 
-            {/* Bloque de Código de Solo Lectura con Estilo Oscuro */}
-            <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner">
-              <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-b border-slate-800 text-xs font-mono text-slate-400">
-                <span className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-                  <span>src/data.ts</span>
-                </span>
-                <span className="text-[11px] text-slate-500">TypeScript • Solo lectura</span>
+                  <button
+                    type="button"
+                    id="btn-copy-raw-json"
+                    onClick={handleCopyRawJson}
+                    className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-xs shrink-0 active:scale-[0.98] cursor-pointer min-h-[40px] ${
+                      isJsonCopied
+                        ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                        : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                    }`}
+                  >
+                    {isJsonCopied ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>¡Respaldo Copiado!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        <span>Copiar Respaldo JSON</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-              <textarea
-                readOnly
-                value={generateSourceCode()}
-                onClick={(e) => (e.target as HTMLTextAreaElement).select()}
-                rows={18}
-                className="w-full p-4 sm:p-5 font-mono text-xs sm:text-sm leading-relaxed text-slate-200 bg-transparent resize-y focus:outline-none focus:ring-0 selection:bg-blue-800 selection:text-white"
-                spellCheck={false}
-              />
+
+              {/* Subsección 2: Importar y Sobrescribir Datos */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                    <Upload className="w-4 h-4 text-amber-600" />
+                    <span>Restaurar / Sobrescribir Datos</span>
+                  </label>
+                  {importJsonText.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => setImportJsonText('')}
+                      className="text-xs text-slate-400 hover:text-slate-600 font-medium"
+                    >
+                      Limpiar campo
+                    </button>
+                  )}
+                </div>
+
+                <textarea
+                  value={importJsonText}
+                  onChange={(e) => setImportJsonText(e.target.value)}
+                  placeholder="Pega aquí tu código de respaldo JSON..."
+                  rows={8}
+                  className="w-full p-3.5 bg-slate-50/70 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition-all resize-y shadow-inner"
+                  spellCheck={false}
+                />
+
+                {/* Advertencia de Sobrescritura */}
+                <div className="p-3 bg-amber-50 border border-amber-200/80 rounded-xl flex items-start gap-2.5 text-xs text-amber-900">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <p className="leading-relaxed">
+                    <strong>Atención:</strong> Al hacer clic en "Restaurar Datos", se sobrescribirán las categorías y trámites actuales en tu almacenamiento local (<code className="font-mono font-semibold">localStorage</code>) y la página se recargará de inmediato.
+                  </p>
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button
+                    type="button"
+                    id="btn-restore-json-data"
+                    onClick={handleRestoreData}
+                    className="w-full sm:w-auto px-6 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-xs active:scale-[0.98] cursor-pointer min-h-[42px] focus:outline-none focus:ring-2 focus:ring-rose-500/30"
+                  >
+                    <AlertTriangle className="w-4 h-4" />
+                    <span>Restaurar Datos</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* Mensaje de ayuda y botón alternativo */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-              <p className="text-xs text-slate-400">
-                * Haz clic dentro del código para seleccionarlo todo rápidamente si prefieres copiar con <kbd className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700 font-mono text-[10px]">Ctrl+C</kbd> o <kbd className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700 font-mono text-[10px]">Cmd+C</kbd>.
-              </p>
-              <button
-                type="button"
-                onClick={handleCopyCode}
-                className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-xs shrink-0 active:scale-[0.98] cursor-pointer min-h-[40px] ${
-                  isCopied
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-900 hover:bg-slate-800 text-white'
-                }`}
-              >
-                {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                <span>{isCopied ? '¡Copiado!' : 'Copiar al Portapapeles'}</span>
-              </button>
-            </div>
           </div>
         </div>
       )}
