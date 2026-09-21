@@ -33,7 +33,10 @@ import {
   Image as ImageIcon,
   Video,
   FileDown,
-  GitBranch
+  GitBranch,
+  Code,
+  Copy,
+  Download
 } from 'lucide-react';
 import {
   DndContext,
@@ -254,7 +257,8 @@ export default function AdminPanel({
   onUpdateCategories,
   onLogout
 }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'tramites' | 'categorias' | 'noticias' | 'contacto'>('tramites');
+  const [activeTab, setActiveTab] = useState<'tramites' | 'categorias' | 'noticias' | 'contacto' | 'sincronizar'>('tramites');
+  const [isCopied, setIsCopied] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string>('');
 
   // Categories Form State
@@ -349,6 +353,65 @@ export default function AdminPanel({
   const showToast = (msg: string) => {
     setSuccessMessage(msg);
     setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  // Generador de código para sincronización y exportación a src/data.ts
+  const generateSourceCode = (): string => {
+    let categoriesData: any[] = [];
+    let servicesData: any[] = [];
+
+    try {
+      const rawCategories = localStorage.getItem('cc-categories') || localStorage.getItem('activeCategories');
+      if (rawCategories) {
+        const parsed = JSON.parse(rawCategories);
+        categoriesData = Array.isArray(parsed) ? parsed : [];
+      } else if (categoryForms && categoryForms.length > 0) {
+        categoriesData = categoryForms;
+      }
+    } catch (e) {
+      console.error('Error leyendo categorías de localStorage:', e);
+      categoriesData = [];
+    }
+
+    try {
+      const rawServices = localStorage.getItem('cc-services-cms-v1') || localStorage.getItem('allServices') || localStorage.getItem('services');
+      if (rawServices) {
+        const parsed = JSON.parse(rawServices);
+        servicesData = Array.isArray(parsed) ? parsed : [];
+      } else if (services && services.length > 0) {
+        servicesData = services;
+      }
+    } catch (e) {
+      console.error('Error leyendo servicios de localStorage:', e);
+      servicesData = [];
+    }
+
+    const categoriesJson = JSON.stringify(categoriesData, null, 2);
+    const servicesJson = JSON.stringify(servicesData, null, 2);
+
+    return `import { CategoryConfig, ServiceConfig } from './types';\n\nexport const activeCategories: CategoryConfig[] = ${categoriesJson};\n\nexport const allServices: ServiceConfig[] = ${servicesJson};\n`;
+  };
+
+  const handleCopyCode = async () => {
+    try {
+      const code = generateSourceCode();
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(code);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = code;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setIsCopied(true);
+      showToast('¡Código copiado al portapapeles!');
+      setTimeout(() => setIsCopied(false), 2500);
+    } catch (err) {
+      console.error('Error al copiar al portapapeles:', err);
+      showToast('No se pudo copiar automáticamente. Puedes seleccionar el texto manualmente.');
+    }
   };
 
   // --- CATEGORY HANDLERS ---
@@ -764,6 +827,19 @@ export default function AdminPanel({
           <Building2 className="w-4 h-4" />
           <span>Contacto</span>
         </button>
+
+        <button
+          id="admin-tab-sincronizar"
+          onClick={() => setActiveTab('sincronizar')}
+          className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 min-h-[42px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.98] cursor-pointer ${
+            activeTab === 'sincronizar'
+              ? 'bg-slate-900 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          }`}
+        >
+          <Code className="w-4 h-4" />
+          <span>Sincronizar</span>
+        </button>
       </div>
 
       {/* VIEW A: GESTIONAR TRÁMITES */}
@@ -1166,6 +1242,87 @@ export default function AdminPanel({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW E: SINCRONIZAR / EXPORTAR DATOS A SRC/DATA.TS */}
+      {activeTab === 'sincronizar' && (
+        <div className="space-y-4 animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 font-display flex items-center gap-2.5">
+                  <Code className="w-5 h-5 text-blue-600" />
+                  <span>Exportar Datos a Código Fuente</span>
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
+                  Copia este código y reemplaza el contenido de tu archivo <code className="px-1.5 py-0.5 rounded bg-slate-100 font-mono text-slate-700 text-xs font-semibold">src/data.ts</code> para que los cambios se reflejen en tu despliegue (ej. Vercel).
+                </p>
+              </div>
+
+              {/* Botón Grande de Copiar al Portapapeles */}
+              <button
+                type="button"
+                id="btn-copy-source-code"
+                onClick={handleCopyCode}
+                className={`px-5 py-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-xs shrink-0 active:scale-[0.98] cursor-pointer min-h-[44px] ${
+                  isCopied
+                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
+              >
+                {isCopied ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>¡Copiado al Portapapeles!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    <span>Copiar al Portapapeles</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Bloque de Código de Solo Lectura con Estilo Oscuro */}
+            <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner">
+              <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-b border-slate-800 text-xs font-mono text-slate-400">
+                <span className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                  <span>src/data.ts</span>
+                </span>
+                <span className="text-[11px] text-slate-500">TypeScript • Solo lectura</span>
+              </div>
+              <textarea
+                readOnly
+                value={generateSourceCode()}
+                onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+                rows={18}
+                className="w-full p-4 sm:p-5 font-mono text-xs sm:text-sm leading-relaxed text-slate-200 bg-transparent resize-y focus:outline-none focus:ring-0 selection:bg-blue-800 selection:text-white"
+                spellCheck={false}
+              />
+            </div>
+
+            {/* Mensaje de ayuda y botón alternativo */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+              <p className="text-xs text-slate-400">
+                * Haz clic dentro del código para seleccionarlo todo rápidamente si prefieres copiar con <kbd className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700 font-mono text-[10px]">Ctrl+C</kbd> o <kbd className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700 font-mono text-[10px]">Cmd+C</kbd>.
+              </p>
+              <button
+                type="button"
+                onClick={handleCopyCode}
+                className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-xs shrink-0 active:scale-[0.98] cursor-pointer min-h-[40px] ${
+                  isCopied
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-slate-900 hover:bg-slate-800 text-white'
+                }`}
+              >
+                {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span>{isCopied ? '¡Copiado!' : 'Copiar al Portapapeles'}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

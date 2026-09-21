@@ -180,6 +180,8 @@ export interface Service {
   showAlertNotice?: boolean;
 }
 
+export type ServiceConfig = Service;
+
 export interface FAQ {
   question: string;
   answer: string;
