@@ -352,6 +352,20 @@ export default function AdminPanel({
   };
 
   // --- CATEGORY HANDLERS ---
+  const handleToggleHideCategory = (id: string) => {
+    const updated = categoryForms.map(c => c.id === id ? { ...c, hidden: !c.hidden } : c);
+    setCategoryForms(updated);
+    try {
+      localStorage.setItem('cc-categories', JSON.stringify(updated));
+    } catch (err) {
+      console.error('Error guardando cc-categories en localStorage:', err);
+    }
+    if (onUpdateCategories) {
+      onUpdateCategories(updated);
+    }
+    showToast('Estado de visibilidad de la tarjeta actualizado.');
+  };
+
   const handleCategoryNameChange = (id: string, newLabel: string) => {
     setCategoryForms(prev => prev.map(c => c.id === id ? { ...c, label: newLabel } : c));
   };
@@ -1049,7 +1063,9 @@ export default function AdminPanel({
                   return (
                     <div 
                       key={cat.id} 
-                      className="bg-white border border-slate-200/90 rounded-2xl p-5 flex flex-col justify-between gap-4 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all"
+                      className={`bg-white border rounded-2xl p-5 flex flex-col justify-between gap-4 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all ${
+                        cat.hidden ? 'opacity-65 border-slate-200 bg-slate-50/50' : 'border-slate-200/90'
+                      }`}
                     >
                       <div className="flex items-start gap-4">
                         {/* Vista previa miniatura de la tarjeta real */}
@@ -1058,13 +1074,36 @@ export default function AdminPanel({
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                              Tarjeta #{index + 1} • {cat.id === 'all' ? 'Ver Todos' : 'Filtro por Categoría'}
-                            </span>
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
-                              {count} {count === 1 ? 'trámite' : 'trámites'}
-                            </span>
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                                Tarjeta #{index + 1} • {cat.id === 'all' ? 'Ver Todos' : 'Filtro por Categoría'}
+                              </span>
+                              {cat.hidden && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                  Oculto
+                                </span>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                                {count} {count === 1 ? 'trámite' : 'trámites'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleToggleHideCategory(cat.id)}
+                                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.98] ${
+                                  cat.hidden 
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' 
+                                    : 'bg-slate-100 text-slate-600 border-slate-200/80 hover:bg-slate-200 hover:text-slate-900'
+                                }`}
+                                title={cat.hidden ? 'Hacer visible tarjeta' : 'Ocultar tarjeta'}
+                              >
+                                {cat.hidden ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                                <span>{cat.hidden ? 'Mostrar' : 'Ocultar'}</span>
+                              </button>
+                            </div>
                           </div>
 
                           <div className="mt-2.5 space-y-1.5">

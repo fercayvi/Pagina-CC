@@ -30,6 +30,8 @@ import {
   AlertLayoutBlock, 
   FAQLayoutBlock, 
   ColumnsLayoutBlock,
+  ButtonLayoutBlock,
+  DividerLayoutBlock,
   ColumnSlot
 } from '../../types';
 import { InlineTextBlock } from './InlineTextBlock';
@@ -181,15 +183,56 @@ const NestedColumnDroppable: React.FC<{
                 {/* Image inside column */}
                 {childBlock.type === 'media' && (() => {
                   const m = childBlock as MediaLayoutBlock;
+                  const alignClass = m.alignment === 'left' ? 'mr-auto' : m.alignment === 'right' ? 'ml-auto' : 'mx-auto';
+                  const widthStyle = m.widthPercent ? { width: `${m.widthPercent}%` } : undefined;
                   return m.url ? (
-                    <img 
-                      src={m.url} 
-                      alt={m.title || 'Foto'} 
-                      className="w-full rounded-lg object-contain max-h-48 mx-auto" 
-                    />
+                    <div className={`${alignClass}`} style={widthStyle}>
+                      <img 
+                        src={m.url} 
+                        alt={m.title || 'Foto'} 
+                        className="w-full rounded-lg object-contain max-h-48 mx-auto" 
+                      />
+                    </div>
                   ) : (
                     <div className="p-4 bg-slate-50 border border-dashed border-slate-200 rounded-lg text-center text-xs text-slate-400">
                       Sin imagen (haz clic para configurar)
+                    </div>
+                  );
+                })()}
+
+                {/* Button inside column */}
+                {childBlock.type === 'button' && (() => {
+                  const btn = childBlock as ButtonLayoutBlock;
+                  const alignClass = btn.align === 'center' ? 'text-center' : btn.align === 'right' ? 'text-right' : 'text-left';
+                  const btnStyle = btn.style === 'secondary'
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs';
+                  return (
+                    <div className={alignClass}>
+                      <a
+                        href={btn.url || '#'}
+                        onClick={(e) => {
+                          if (!previewMode) e.preventDefault();
+                        }}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${btnStyle}`}
+                      >
+                        <span>{btn.label || 'Botón de Acción'}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  );
+                })()}
+
+                {/* Divider inside column */}
+                {childBlock.type === 'divider' && (() => {
+                  const div = childBlock as DividerLayoutBlock;
+                  const spacingClass = div.spacing === 'small' ? 'my-2' : div.spacing === 'large' ? 'my-5' : 'my-3';
+                  const borderStyle = div.lineStyle === 'dashed' ? 'border-dashed' : 'border-solid';
+                  return (
+                    <div className={`w-full ${spacingClass}`}>
+                      <hr className={`border-t border-slate-200 ${borderStyle}`} />
                     </div>
                   );
                 })()}
@@ -396,8 +439,14 @@ export const PageBuilderCanvas: React.FC<PageBuilderCanvasProps> = ({
                     gridClass = 'grid-cols-1 md:grid-cols-3';
                   }
 
+                  const hasBg = Boolean(colBlock.backgroundColor && colBlock.backgroundColor !== 'transparent');
+                  const containerStyle = hasBg ? { backgroundColor: colBlock.backgroundColor } : undefined;
+
                   return (
-                    <div className="space-y-3">
+                    <div 
+                      style={containerStyle}
+                      className={`space-y-3 transition-colors ${hasBg ? 'p-4 rounded-2xl border border-slate-200/80 shadow-2xs' : ''}`}
+                    >
                       {!previewMode && (
                         <div className="flex items-center justify-between text-xs text-slate-500 font-bold border-b border-slate-100 pb-1.5">
                           <span className="flex items-center gap-1 text-indigo-700">
@@ -451,10 +500,14 @@ export const PageBuilderCanvas: React.FC<PageBuilderCanvasProps> = ({
 
                   if (mediaType === 'image') {
                     const alignClass = media.alignment === 'left' ? 'mr-auto' : media.alignment === 'right' ? 'ml-auto' : 'mx-auto';
-                    const sizeClass = media.size === 'small' ? 'max-w-xs' : media.size === 'medium' ? 'max-w-md' : 'w-full';
+                    const widthStyle = media.widthPercent ? { width: `${media.widthPercent}%` } : undefined;
+                    const sizeClass = !media.widthPercent ? (media.size === 'small' ? 'max-w-xs' : media.size === 'medium' ? 'max-w-md' : 'w-full') : '';
 
                     return (
-                      <div className={`space-y-2 ${sizeClass} ${alignClass}`}>
+                      <div 
+                        className={`space-y-2 ${sizeClass} ${alignClass}`}
+                        style={widthStyle}
+                      >
                         {media.title && (
                           <h4 className="text-sm font-bold text-slate-800">{media.title}</h4>
                         )}
@@ -563,6 +616,45 @@ export const PageBuilderCanvas: React.FC<PageBuilderCanvasProps> = ({
                           </div>
                         ))}
                       </div>
+                    </div>
+                  );
+                })()}
+
+                {/* ==================== 6. BUTTON BLOCK ==================== */}
+                {block.type === 'button' && (() => {
+                  const btn = block as ButtonLayoutBlock;
+                  const alignClass = btn.align === 'center' ? 'text-center' : btn.align === 'right' ? 'text-right' : 'text-left';
+                  const btnStyle = btn.style === 'secondary'
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs';
+
+                  return (
+                    <div className={alignClass}>
+                      <a
+                        href={btn.url || '#'}
+                        onClick={(e) => {
+                          if (!previewMode) e.preventDefault();
+                        }}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${btnStyle}`}
+                      >
+                        <span>{btn.label || 'Botón de Acción'}</span>
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </div>
+                  );
+                })()}
+
+                {/* ==================== 7. DIVIDER BLOCK ==================== */}
+                {block.type === 'divider' && (() => {
+                  const div = block as DividerLayoutBlock;
+                  const spacingClass = div.spacing === 'small' ? 'my-3' : div.spacing === 'large' ? 'my-8' : 'my-5';
+                  const borderStyle = div.lineStyle === 'dashed' ? 'border-dashed' : 'border-solid';
+
+                  return (
+                    <div className={`w-full ${spacingClass}`}>
+                      <hr className={`border-t border-slate-200 ${borderStyle}`} />
                     </div>
                   );
                 })()}

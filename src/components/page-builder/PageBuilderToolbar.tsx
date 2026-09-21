@@ -11,12 +11,14 @@ import {
   FileDown, 
   GripVertical, 
   Plus,
-  Sparkles
+  Sparkles,
+  MousePointerClick,
+  Minus
 } from 'lucide-react';
 
 export interface BlockTemplateItem {
   id: string;
-  type: 'text' | 'image' | 'video' | 'columns-2' | 'columns-3' | 'alert' | 'faq' | 'pdf';
+  type: 'text' | 'image' | 'video' | 'columns-2' | 'columns-3' | 'alert' | 'faq' | 'pdf' | 'button' | 'divider';
   label: string;
   category: 'básicos' | 'multimedia' | 'estructuras' | 'componentes';
   description: string;
@@ -33,6 +35,15 @@ export const AVAILABLE_BLOCKS: BlockTemplateItem[] = [
     description: 'Edición directa inline en el lienzo con formato',
     icon: Type,
     color: 'text-blue-600 bg-blue-50 border-blue-100'
+  },
+  {
+    id: 'tpl-divider',
+    type: 'divider',
+    category: 'básicos',
+    label: 'Línea Divisora',
+    description: 'Separador visual horizontal con estilo y espaciado',
+    icon: Minus,
+    color: 'text-slate-600 bg-slate-100 border-slate-200'
   },
   {
     id: 'tpl-columns-2',
@@ -78,6 +89,15 @@ export const AVAILABLE_BLOCKS: BlockTemplateItem[] = [
     description: 'Botón para abrir o descargar formato oficial',
     icon: FileDown,
     color: 'text-cyan-600 bg-cyan-50 border-cyan-100'
+  },
+  {
+    id: 'tpl-button',
+    type: 'button',
+    category: 'componentes',
+    label: 'Botón de Acción',
+    description: 'Enlace o llamada a la acción con estilo primario o secundario',
+    icon: MousePointerClick,
+    color: 'text-blue-600 bg-blue-50 border-blue-100'
   },
   {
     id: 'tpl-alert',

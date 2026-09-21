@@ -14,7 +14,8 @@ import {
   ChevronUp, 
   ZoomIn, 
   Download,
-  FileText
+  FileText,
+  ExternalLink
 } from 'lucide-react';
 import { LayoutBlock } from '../types';
 
@@ -294,11 +295,13 @@ export const LayoutBlocksRenderer: React.FC<LayoutBlocksRendererProps> = ({
           // IMAGE
           if (mediaType === 'image') {
             const alignClass = block.alignment === 'left' ? 'mr-auto' : block.alignment === 'right' ? 'ml-auto' : 'mx-auto';
-            const sizeClass = block.size === 'small' ? 'max-w-xs' : block.size === 'medium' ? 'max-w-md' : 'w-full';
+            const widthStyle = block.widthPercent ? { width: `${block.widthPercent}%` } : undefined;
+            const sizeClass = !block.widthPercent ? (block.size === 'small' ? 'max-w-xs' : block.size === 'medium' ? 'max-w-md' : 'w-full') : '';
 
             return (
               <div 
                 key={block.id || `media-${index}`}
+                style={widthStyle}
                 className={`bg-white border border-slate-200 rounded-2xl shadow-xs p-4 sm:p-5 space-y-3 ${sizeClass} ${alignClass}`}
               >
                 {block.title && (
@@ -445,10 +448,14 @@ export const LayoutBlocksRenderer: React.FC<LayoutBlocksRendererProps> = ({
             gridClass = 'grid-cols-1 md:grid-cols-3';
           }
 
+          const hasBg = Boolean(block.backgroundColor && block.backgroundColor !== 'transparent');
+          const containerStyle = hasBg ? { backgroundColor: block.backgroundColor } : undefined;
+
           return (
             <div 
               key={block.id || `cols-${index}`}
-              className="space-y-3"
+              style={containerStyle}
+              className={`space-y-3 ${hasBg ? 'p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs' : ''}`}
             >
               {block.title && (
                 <h3 className="text-base sm:text-lg font-bold text-slate-900 border-b border-slate-100 pb-2">
@@ -472,6 +479,40 @@ export const LayoutBlocksRenderer: React.FC<LayoutBlocksRendererProps> = ({
                   );
                 })}
               </div>
+            </div>
+          );
+        }
+
+        // ==================== 6. BUTTON BLOCK ====================
+        if (block.type === 'button') {
+          const alignClass = block.align === 'center' ? 'text-center' : block.align === 'right' ? 'text-right' : 'text-left';
+          const btnStyle = block.style === 'secondary'
+            ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
+            : 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs';
+
+          return (
+            <div key={block.id || `btn-${index}`} className={`my-2 ${alignClass}`}>
+              <a
+                href={block.url || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-xs hover:shadow-md cursor-pointer ${btnStyle}`}
+              >
+                <span>{block.label || 'Botón de Acción'}</span>
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </div>
+          );
+        }
+
+        // ==================== 7. DIVIDER BLOCK ====================
+        if (block.type === 'divider') {
+          const spacingClass = block.spacing === 'small' ? 'my-3' : block.spacing === 'large' ? 'my-8' : 'my-5';
+          const borderStyle = block.lineStyle === 'dashed' ? 'border-dashed' : 'border-solid';
+
+          return (
+            <div key={block.id || `div-${index}`} className={`w-full ${spacingClass}`}>
+              <hr className={`border-t border-slate-200 ${borderStyle}`} />
             </div>
           );
         }

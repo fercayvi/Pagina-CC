@@ -57,6 +57,8 @@ export interface CategoryConfig {
   defaultLabel: string;
   iconName: string;
   colorScheme: string;
+  highlights?: string[];
+  hidden?: boolean;
 }
 
 // ==================== BLOCK BUILDER TYPES ====================
@@ -98,6 +100,23 @@ export interface MediaLayoutBlock {
   caption?: string;
   alignment?: 'left' | 'center' | 'right';
   size?: 'small' | 'medium' | 'full';
+  widthPercent?: number;
+}
+
+export interface ButtonLayoutBlock {
+  id: string;
+  type: 'button';
+  label: string;
+  url: string;
+  style: 'primary' | 'secondary';
+  align: 'left' | 'center' | 'right';
+}
+
+export interface DividerLayoutBlock {
+  id: string;
+  type: 'divider';
+  lineStyle: 'solid' | 'dashed';
+  spacing: 'small' | 'medium' | 'large';
 }
 
 export interface ColumnSlot {
@@ -111,6 +130,7 @@ export interface ColumnsLayoutBlock {
   title?: string;
   columnsCount: number;
   layout?: 'equal' | '1-2' | '2-1';
+  backgroundColor?: string;
   columns: ColumnSlot[];
 }
 
@@ -119,7 +139,9 @@ export type LayoutBlock =
   | AlertLayoutBlock 
   | FAQLayoutBlock 
   | MediaLayoutBlock
-  | ColumnsLayoutBlock;
+  | ColumnsLayoutBlock
+  | ButtonLayoutBlock
+  | DividerLayoutBlock;
 
 export interface Service {
   id: ServiceId | string;

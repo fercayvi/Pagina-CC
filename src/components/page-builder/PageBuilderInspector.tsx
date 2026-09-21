@@ -21,7 +21,10 @@ import {
   Plus,
   Info,
   Layers,
-  Sparkles
+  Sparkles,
+  ExternalLink,
+  Minus,
+  Palette
 } from 'lucide-react';
 import { 
   LayoutBlock, 
@@ -29,7 +32,9 @@ import {
   MediaLayoutBlock, 
   AlertLayoutBlock, 
   FAQLayoutBlock, 
-  ColumnsLayoutBlock 
+  ColumnsLayoutBlock,
+  ButtonLayoutBlock,
+  DividerLayoutBlock
 } from '../../types';
 import { MediaUploadField } from '../MediaUploadField';
 
@@ -169,6 +174,8 @@ export const PageBuilderInspector: React.FC<PageBuilderInspectorProps> = ({
             {blockType === 'columns' && <Columns className="w-4 h-4" />}
             {blockType === 'alert' && <AlertTriangle className="w-4 h-4" />}
             {blockType === 'faq' && <HelpCircle className="w-4 h-4" />}
+            {blockType === 'button' && <ExternalLink className="w-4 h-4" />}
+            {blockType === 'divider' && <Minus className="w-4 h-4" />}
           </div>
           <div className="min-w-0">
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block leading-none">
@@ -180,6 +187,8 @@ export const PageBuilderInspector: React.FC<PageBuilderInspectorProps> = ({
               {blockType === 'columns' && 'Contenedor Multicolumna'}
               {blockType === 'alert' && 'Aviso Destacado'}
               {blockType === 'faq' && 'Preguntas Frecuentes'}
+              {blockType === 'button' && 'Botón de Acción'}
+              {blockType === 'divider' && 'Línea Divisoria'}
             </h3>
           </div>
         </div>
@@ -360,35 +369,25 @@ export const PageBuilderInspector: React.FC<PageBuilderInspectorProps> = ({
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Tamaño en Pantalla</label>
-                    <div className="grid grid-cols-3 gap-1 bg-white p-1 rounded-xl border border-slate-200">
-                      <button
-                        type="button"
-                        onClick={() => onUpdateBlock({ ...mediaBlock, size: 'small' })}
-                        className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                          mediaBlock.size === 'small' ? 'bg-blue-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-50'
-                        }`}
-                      >
-                        Chico
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onUpdateBlock({ ...mediaBlock, size: 'medium' })}
-                        className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                          mediaBlock.size === 'medium' ? 'bg-blue-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-50'
-                        }`}
-                      >
-                        Mediano
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onUpdateBlock({ ...mediaBlock, size: 'full' })}
-                        className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                          mediaBlock.size === 'full' || !mediaBlock.size ? 'bg-blue-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-50'
-                        }`}
-                      >
-                        Completo
-                      </button>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700">Ancho de la Imagen</label>
+                      <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
+                        {mediaBlock.widthPercent || (mediaBlock.size === 'small' ? 30 : mediaBlock.size === 'medium' ? 60 : 100)}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={10}
+                      max={100}
+                      step={5}
+                      value={mediaBlock.widthPercent || (mediaBlock.size === 'small' ? 30 : mediaBlock.size === 'medium' ? 60 : 100)}
+                      onChange={(e) => onUpdateBlock({ ...mediaBlock, widthPercent: Number(e.target.value) })}
+                      className="w-full accent-blue-600 cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[10px] text-slate-400 font-medium">
+                      <span>10%</span>
+                      <span>50%</span>
+                      <span>100%</span>
                     </div>
                   </div>
                 </>
@@ -491,6 +490,45 @@ export const PageBuilderInspector: React.FC<PageBuilderInspectorProps> = ({
                       <span className="w-5 h-3 bg-blue-300 rounded-xs" />
                     </div>
                   </button>
+                </div>
+              </div>
+
+              {/* Background Color for Column Container */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <Palette className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Color de Fondo del Contenedor</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={colsBlock.backgroundColor && colsBlock.backgroundColor !== 'transparent' ? colsBlock.backgroundColor : '#f8fafc'}
+                    onChange={(e) => onUpdateBlock({ ...colsBlock, backgroundColor: e.target.value })}
+                    className="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0"
+                    title="Seleccionar color personalizado"
+                  />
+                  <div className="flex-1 flex items-center gap-1.5 flex-wrap">
+                    {[
+                      { label: 'Transparente', value: 'transparent' },
+                      { label: 'Gris', value: '#f8fafc' },
+                      { label: 'Azul', value: '#eff6ff' },
+                      { label: 'Índigo', value: '#eef2ff' },
+                      { label: 'Ámbar', value: '#fffbeb' },
+                    ].map((preset) => (
+                      <button
+                        key={preset.value}
+                        type="button"
+                        onClick={() => onUpdateBlock({ ...colsBlock, backgroundColor: preset.value })}
+                        className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                          (colsBlock.backgroundColor || 'transparent') === preset.value
+                            ? 'border-blue-600 text-blue-700 bg-blue-50 shadow-2xs'
+                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -652,6 +690,169 @@ export const PageBuilderInspector: React.FC<PageBuilderInspectorProps> = ({
                       />
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ==================== 6. BUTTON PROPERTIES ==================== */}
+        {blockType === 'button' && (() => {
+          const btnBlock = selectedBlock as ButtonLayoutBlock;
+          return (
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700">Texto del Botón</label>
+                <input
+                  type="text"
+                  value={btnBlock.label || ''}
+                  onChange={(e) => onUpdateBlock({ ...btnBlock, label: e.target.value })}
+                  placeholder="Ej. Iniciar Trámite Digital"
+                  className="w-full px-3 py-2 text-xs font-medium border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700">Enlace o URL de Destino</label>
+                <input
+                  type="url"
+                  value={btnBlock.url || ''}
+                  onChange={(e) => onUpdateBlock({ ...btnBlock, url: e.target.value })}
+                  placeholder="https://ejemplo.gob.mx/portal"
+                  className="w-full px-3 py-2 text-xs font-medium border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700">Estilo del Botón</label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => onUpdateBlock({ ...btnBlock, style: 'primary' })}
+                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      btnBlock.style === 'primary' || !btnBlock.style
+                        ? 'bg-blue-600 text-white border-blue-700 shadow-2xs'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>Primario (Azul)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onUpdateBlock({ ...btnBlock, style: 'secondary' })}
+                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      btnBlock.style === 'secondary'
+                        ? 'bg-slate-800 text-white border-slate-900 shadow-2xs'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>Secundario (Gris)</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700">Alineación en Pantalla</label>
+                <div className="grid grid-cols-3 gap-1 bg-white p-1 rounded-xl border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => onUpdateBlock({ ...btnBlock, align: 'left' })}
+                    className={`py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                      btnBlock.align === 'left' || !btnBlock.align ? 'bg-blue-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <AlignLeft className="w-3.5 h-3.5" />
+                    <span>Izq</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onUpdateBlock({ ...btnBlock, align: 'center' })}
+                    className={`py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                      btnBlock.align === 'center' ? 'bg-blue-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <AlignCenter className="w-3.5 h-3.5" />
+                    <span>Centro</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onUpdateBlock({ ...btnBlock, align: 'right' })}
+                    className={`py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                      btnBlock.align === 'right' ? 'bg-blue-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <AlignRight className="w-3.5 h-3.5" />
+                    <span>Der</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ==================== 7. DIVIDER PROPERTIES ==================== */}
+        {blockType === 'divider' && (() => {
+          const divBlock = selectedBlock as DividerLayoutBlock;
+          return (
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700">Tipo de Trazo</label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => onUpdateBlock({ ...divBlock, lineStyle: 'solid' })}
+                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      divBlock.lineStyle === 'solid' || !divBlock.lineStyle
+                        ? 'bg-blue-600 text-white border-blue-700 shadow-2xs'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>Línea Continua</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onUpdateBlock({ ...divBlock, lineStyle: 'dashed' })}
+                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      divBlock.lineStyle === 'dashed'
+                        ? 'bg-blue-600 text-white border-blue-700 shadow-2xs'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>Línea Discontinua</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700">Espaciado Vertical</label>
+                <div className="grid grid-cols-3 gap-1 bg-white p-1 rounded-xl border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => onUpdateBlock({ ...divBlock, spacing: 'small' })}
+                    className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      divBlock.spacing === 'small' ? 'bg-blue-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    Pequeño
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onUpdateBlock({ ...divBlock, spacing: 'medium' })}
+                    className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      divBlock.spacing === 'medium' || !divBlock.spacing ? 'bg-blue-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    Medio
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onUpdateBlock({ ...divBlock, spacing: 'large' })}
+                    className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      divBlock.spacing === 'large' ? 'bg-blue-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    Grande
+                  </button>
                 </div>
               </div>
             </div>

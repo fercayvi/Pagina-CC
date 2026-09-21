@@ -7,7 +7,8 @@ import {
   AlignLeft, 
   AlignCenter, 
   AlignRight, 
-  FileText 
+  FileText,
+  Link as LinkIcon
 } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { TextLayoutBlock } from '../../types';
@@ -157,6 +158,31 @@ export const InlineTextBlock: React.FC<InlineTextBlockProps> = ({
     updateActiveFormats();
   };
 
+  const handleInsertLink = () => {
+    if (readOnly) return;
+    if (contentRef.current) {
+      contentRef.current.focus();
+    }
+    const inputUrl = window.prompt('Introduce la dirección web (URL) para el hipervínculo:', 'https://');
+    if (inputUrl === null) return;
+    const trimmed = inputUrl.trim();
+    if (!trimmed || trimmed === 'https://' || trimmed === 'http://') {
+      document.execCommand('unlink', false);
+    } else {
+      const finalUrl = trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('mailto:') || trimmed.startsWith('tel:')
+        ? trimmed
+        : `https://${trimmed}`;
+      document.execCommand('createLink', false, finalUrl);
+    }
+
+    if (contentRef.current) {
+      const rawHtml = contentRef.current.innerHTML;
+      const cleanHtml = normalizeHtmlContent(rawHtml);
+      onChange({ ...block, content: cleanHtml });
+    }
+    updateActiveFormats();
+  };
+
   const handleAlign = (align: 'left' | 'center' | 'right') => {
     onChange({ ...block, align });
   };
@@ -240,6 +266,15 @@ export const InlineTextBlock: React.FC<InlineTextBlockProps> = ({
             title="Cursiva (Ctrl+I)"
           >
             <Italic className="w-3.5 h-3.5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={handleInsertLink}
+            className="p-1.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors cursor-pointer"
+            title="Insertar o editar hipervínculo"
+          >
+            <LinkIcon className="w-3.5 h-3.5" />
           </button>
 
           <button

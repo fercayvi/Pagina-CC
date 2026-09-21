@@ -60,8 +60,9 @@ export default function NewsTab({ newsList, onUnreadCountChange }: NewsTabProps)
   return (
     <div id="news-tab-container" className="space-y-4">
       {/* Header with Title and Mark all as read button */}
-      <div className="flex items-center justify-between gap-3 px-1">
-        <div className="flex items-center gap-2">
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <Bell className="w-4 h-4 text-blue-600 shrink-0" />
           <h3 className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wider">
             Comunicados Oficiales y Avisos
           </h3>
@@ -76,7 +77,7 @@ export default function NewsTab({ newsList, onUnreadCountChange }: NewsTabProps)
           <button
             type="button"
             onClick={markAllAsRead}
-            className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors py-1 px-2.5 rounded-lg hover:bg-blue-50 cursor-pointer"
+            className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors py-1.5 px-3 rounded-lg hover:bg-blue-50 cursor-pointer border border-blue-100"
           >
             <CheckCheck className="w-3.5 h-3.5" />
             <span>Marcar todas como leídas</span>

@@ -6,28 +6,32 @@ export const defaultCategories: CategoryConfig[] = [
     label: 'Todos los trámites',
     defaultLabel: 'Todos los trámites',
     iconName: 'LayoutGrid',
-    colorScheme: 'indigo'
+    colorScheme: 'indigo',
+    highlights: ['Catálogo completo', 'Búsqueda rápida', 'Todos los servicios']
   },
   {
     id: 'nomina',
     label: 'Nómina y Pagos',
     defaultLabel: 'Nómina y Pagos',
     iconName: 'Wallet',
-    colorScheme: 'emerald'
+    colorScheme: 'emerald',
+    highlights: ['Días de pago', 'Recibos CIF', 'Aclaraciones']
   },
   {
     id: 'tarjetas',
     label: 'Tarjetas y Créditos',
     defaultLabel: 'Tarjetas y Créditos',
     iconName: 'CreditCard',
-    colorScheme: 'violet'
+    colorScheme: 'violet',
+    highlights: ['Vales Edenred', 'Caja de Ahorro Odessa', 'Infonavit / Fonacot']
   },
   {
     id: 'control',
     label: 'Control y Asistencia',
     defaultLabel: 'Control y Asistencia',
     iconName: 'CalendarClock',
-    colorScheme: 'amber'
+    colorScheme: 'amber',
+    highlights: ['Reloj checador', 'Incapacidades IMSS', 'Consulta de saldo']
   }
 ];
 

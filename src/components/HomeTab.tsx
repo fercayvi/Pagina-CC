@@ -121,40 +121,125 @@ export default function HomeTab({
     ).length;
   };
 
+  // Obtención dinámica y en tiempo real de los primeros trámites activos de la categoría (Nivel 1)
+  const getCategoryPreviewItems = (
+    cat: CategoryConfig
+  ): Array<{ title: string; service?: Service & { hidden?: boolean } }> => {
+    // Si la categoría es "Todos los trámites" (id === 'all'), no se muestran viñetas (tarjeta limpia)
+    if (
+      cat.id === 'all' || 
+      cat.label === 'Todos los trámites' || 
+      cat.defaultLabel === 'Todos los trámites'
+    ) {
+      return [];
+    }
+
+    // Filtrar los trámites activos (!s.hidden) que correspondan a esta categoría
+    const matchedServices = services.filter((s) => {
+      if (s.hidden) return false;
+      return (
+        s.category === cat.label ||
+        s.category === cat.defaultLabel ||
+        s.category === cat.id
+      );
+    });
+
+    if (matchedServices.length > 0) {
+      // Tomamos los primeros 3 trámites activos con su objeto de servicio
+      return matchedServices.slice(0, 3).map((s) => ({
+        title: s.title,
+        service: s,
+      }));
+    }
+
+    return [];
+  };
+
+  // Filtrar categorías visibles (Nivel 1)
+  const visibleCategories = useMemo(() => {
+    return activeCategories.filter((cat) => !cat.hidden);
+  }, [activeCategories]);
+
+  // Clases de cuadrícula dinámicas según la cantidad de categorías visibles
+  let gridColsClass = 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4';
+  if (visibleCategories.length === 3) {
+    gridColsClass = 'grid-cols-1 sm:grid-cols-3';
+  } else if (visibleCategories.length === 2) {
+    gridColsClass = 'grid-cols-1 sm:grid-cols-2 max-w-4xl mx-auto';
+  } else if (visibleCategories.length === 1) {
+    gridColsClass = 'grid-cols-1 max-w-sm mx-auto';
+  }
+
   return (
     <div className="w-full">
       {/* 1. VISTA INICIAL (NIVEL 1 - 4 TARJETAS PRINCIPALES) */}
       {selectedCategory === null ? (
         <div className="py-2 animate-fadeIn">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-            {activeCategories.map((cat) => {
+          <div className={`grid ${gridColsClass} gap-4 sm:gap-6`}>
+            {visibleCategories.map((cat) => {
               const IconComponent = CATEGORY_ICON_MAP[cat.iconName] || LayoutGrid;
-              const colorStyles = CATEGORY_COLOR_MAP[cat.colorScheme] || CATEGORY_COLOR_MAP.indigo;
-              const count = getCategoryCount(cat);
+                const colorStyles = CATEGORY_COLOR_MAP[cat.colorScheme] || CATEGORY_COLOR_MAP.indigo;
+                const count = getCategoryCount(cat);
+                const previewItems = getCategoryPreviewItems(cat);
+                const hasPreview = cat.id !== 'all' && previewItems.length > 0;
 
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  id={`cat-card-${cat.id}`}
-                  onClick={() => handleCategoryChange(cat.id)}
-                  className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-500 transition-all cursor-pointer flex flex-col items-center justify-center p-6 gap-4 text-center aspect-square group active:scale-[0.98]"
-                >
-                  <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border flex items-center justify-center transition-transform group-hover:scale-110 shadow-2xs ${colorStyles.bgLight}`}>
-                    <IconComponent className={`w-8 h-8 sm:w-10 sm:h-10 ${colorStyles.iconColor}`} />
-                  </div>
+                return (
+                  <div
+                    key={cat.id}
+                    role="button"
+                    tabIndex={0}
+                    id={`cat-card-${cat.id}`}
+                    onClick={() => handleCategoryChange(cat.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleCategoryChange(cat.id);
+                      }
+                    }}
+                    className={`bg-white rounded-2xl shadow-xs border border-slate-200/90 hover:shadow-md hover:border-blue-500 hover:ring-2 hover:ring-blue-100/80 transition-all cursor-pointer flex flex-col items-center p-4 sm:p-5 text-center group active:scale-[0.98] min-h-[275px] sm:min-h-[300px] w-full select-none ${
+                      hasPreview ? 'justify-between' : 'justify-center'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center justify-center w-full text-center">
+                      <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border flex items-center justify-center transition-transform group-hover:scale-105 shadow-2xs mb-3 ${colorStyles.bgLight}`}>
+                        <IconComponent className={`w-7 h-7 sm:w-8 sm:h-8 ${colorStyles.iconColor}`} />
+                      </div>
 
-                  <div>
-                    <h3 className="text-base sm:text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug">
-                      {cat.label}
-                    </h3>
-                    <p className="text-xs text-gray-500 font-medium mt-1">
-                      {count} {count === 1 ? 'trámite' : 'trámites'}
-                    </p>
+                      <h3 className="text-sm sm:text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug">
+                        {cat.label}
+                      </h3>
+                      <p className="text-xs text-gray-500 font-medium mt-1">
+                        {count} {count === 1 ? 'trámite' : 'trámites'}
+                      </p>
+                    </div>
+
+                    {/* Previsualización dinámica de trámites principales (Nivel 1) */}
+                    {hasPreview && (
+                      <div className="w-full mt-4 pt-3.5 border-t border-slate-100 flex flex-col gap-1.5 text-left">
+                        {previewItems.map((item, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (item.service) {
+                                onSelectService(item.service);
+                              } else {
+                                handleCategoryChange(cat.id);
+                              }
+                            }}
+                            className="w-full bg-slate-50 hover:bg-blue-100 hover:text-blue-700 text-slate-600 text-xs px-3 py-1.5 rounded-lg flex items-center gap-2 cursor-pointer transition-colors font-medium border border-transparent hover:border-blue-200 text-left"
+                            title={item.title}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300 group-hover:bg-blue-400 shrink-0 transition-colors" />
+                            <span className="truncate leading-tight flex-1">{item.title}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </button>
-              );
-            })}
+                );
+              })}
           </div>
         </div>
       ) : (

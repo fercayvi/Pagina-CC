@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { Service, NewsItem, UserProfile, ContactInfo, CategoryConfig } from './types';
 import { initialServices, initialNews, userProfileData, initialContact, defaultCategories } from './data';
 import BottomNav from './components/BottomNav';
@@ -309,13 +309,42 @@ export default function App() {
                   {/* TAB 1: INICIO */}
                   {currentTab === 'inicio' && (
                     <div className="space-y-4 animate-fadeIn">
-                      {/* Banner Informativo (Recordatorio de Módulo) */}
-                      <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 sm:p-3.5 flex items-start sm:items-center gap-2.5 shadow-xs my-1">
-                        <MapPin className="text-blue-600 shrink-0 mt-0.5 sm:mt-0" size={18} />
-                        <p className="text-xs sm:text-sm text-blue-800 font-medium">
-                          ¿Necesitas ayuda extra? Recuerda que puedes acudir a nuestro módulo de <span className="font-bold">Talento y Cultura</span>, ubicado a un lado de Ropería.
-                        </p>
-                      </div>
+                      {/* Hero Search Bar */}
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          setCurrentTab('buscar');
+                          setSelectedService(null);
+                          window.scrollTo({ top: 0, behavior: 'instant' });
+                          const scrollContainer = document.getElementById('phone-main-scrollable-content');
+                          if (scrollContainer) {
+                            scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
+                          }
+                        }}
+                        className="w-full mt-4 sm:mt-6 mb-6 relative flex items-center"
+                      >
+                        <div className="absolute left-4 sm:left-5 pointer-events-none flex items-center justify-center text-slate-400">
+                          <Search className="w-5 h-5 sm:w-6 sm:h-6" />
+                        </div>
+                        <input
+                          type="text"
+                          id="hero-search-input"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Ej. Vacaciones, recibos de nómina, vales, incapacidad..."
+                          className="w-full pl-12 sm:pl-14 pr-12 py-3.5 sm:py-4 bg-slate-50 focus:bg-white text-base sm:text-lg text-slate-800 placeholder:text-slate-400 font-medium rounded-2xl border border-slate-200 shadow-md hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all"
+                        />
+                        {searchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setSearchQuery('')}
+                            className="absolute right-4 p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200/60 transition-colors cursor-pointer"
+                            title="Borrar búsqueda"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                      </form>
 
                       {/* Navegación por Niveles (Drill-Down de Trámites) */}
                       <HomeTab

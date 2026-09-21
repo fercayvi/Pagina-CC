@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   DndContext,
   DragEndEvent,
@@ -20,7 +20,8 @@ import {
   Layers, 
   Sparkles,
   LayoutGrid,
-  Undo2
+  Undo2,
+  Redo2
 } from 'lucide-react';
 import { 
   LayoutBlock, 
@@ -28,7 +29,9 @@ import {
   AlertLayoutBlock, 
   FAQLayoutBlock, 
   MediaLayoutBlock, 
-  ColumnsLayoutBlock 
+  ColumnsLayoutBlock,
+  ButtonLayoutBlock,
+  DividerLayoutBlock
 } from '../types';
 import { 
   createNewTextBlock, 
@@ -37,7 +40,9 @@ import {
   createNewImageBlock,
   createNewVideoBlock,
   createNewPdfBlock,
-  createNewColumnsBlock 
+  createNewColumnsBlock,
+  createNewButtonBlock,
+  createNewDividerBlock
 } from '../utils/layoutBlocks';
 import { PageBuilderToolbar, BlockTemplateItem, AVAILABLE_BLOCKS } from './page-builder/PageBuilderToolbar';
 import { PageBuilderInspector } from './page-builder/PageBuilderInspector';
@@ -72,6 +77,97 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
     })
   );
 
+  // History State for Undo/Redo
+  const [history, setHistory] = useState<LayoutBlock[][]>([blocks]);
+  const [historyIndex, setHistoryIndex] = useState<number>(0);
+  const isHistoryActionRef = useRef<boolean>(false);
+  const historyDebounceTimerRef = useRef<any>(null);
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+
+  const handleUndo = useCallback(() => {
+    if (historyIndex > 0) {
+      const prevIdx = historyIndex - 1;
+      const target = history[prevIdx];
+      isHistoryActionRef.current = true;
+      setHistoryIndex(prevIdx);
+      onChange(target);
+    }
+  }, [historyIndex, history, onChange]);
+
+  const handleRedo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const nextIdx = historyIndex + 1;
+      const target = history[nextIdx];
+      isHistoryActionRef.current = true;
+      setHistoryIndex(nextIdx);
+      onChange(target);
+    }
+  }, [historyIndex, history, onChange]);
+
+  // Keyboard shortcuts: Ctrl+Z / Cmd+Z for Undo, Ctrl+Y / Ctrl+Shift+Z / Cmd+Shift+Z for Redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        if (e.shiftKey) {
+          e.preventDefault();
+          handleRedo();
+        } else {
+          e.preventDefault();
+          handleUndo();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleUndo, handleRedo]);
+
+  const updateBlocksWithHistory = useCallback((newBlocks: LayoutBlock[], immediate: boolean = true) => {
+    onChange(newBlocks);
+
+    if (isHistoryActionRef.current) {
+      isHistoryActionRef.current = false;
+      return;
+    }
+
+    if (immediate) {
+      if (historyDebounceTimerRef.current) {
+        clearTimeout(historyDebounceTimerRef.current);
+      }
+      setHistory((prev) => {
+        const trimmed = prev.slice(0, historyIndex + 1);
+        return [...trimmed, newBlocks].slice(-30);
+      });
+      setHistoryIndex((prev) => Math.min(prev + 1, 29));
+    } else {
+      if (historyDebounceTimerRef.current) {
+        clearTimeout(historyDebounceTimerRef.current);
+      }
+      historyDebounceTimerRef.current = setTimeout(() => {
+        setHistory((prev) => {
+          const trimmed = prev.slice(0, historyIndex + 1);
+          return [...trimmed, newBlocks].slice(-30);
+        });
+        setHistoryIndex((prev) => Math.min(prev + 1, 29));
+      }, 500);
+    }
+  }, [historyIndex, onChange]);
+
   // Autosave indicator timer
   useEffect(() => {
     setSaveStatus('saving');
@@ -96,6 +192,10 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
         return createNewVideoBlock();
       case 'pdf':
         return createNewPdfBlock();
+      case 'button':
+        return createNewButtonBlock();
+      case 'divider':
+        return createNewDividerBlock();
       case 'alert':
         return createNewAlertBlock();
       case 'faq':
@@ -110,7 +210,7 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
     const newBlock = instantiateBlock(type);
     const updated = [...blocks];
     updated.splice(index, 0, newBlock);
-    onChange(updated);
+    updateBlocksWithHistory(updated, true);
     setSelectedBlockId(newBlock.id);
     if (window.innerWidth < 1024) setMobileTab('canvas');
   };
@@ -127,7 +227,7 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
     if (topIndex !== -1) {
       const newBlocks = [...blocks];
       newBlocks[topIndex] = updated;
-      onChange(newBlocks);
+      updateBlocksWithHistory(newBlocks, false);
       return;
     }
 
@@ -149,7 +249,7 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
       return b;
     });
 
-    onChange(newBlocks);
+    updateBlocksWithHistory(newBlocks, false);
   };
 
   // Delete block (handles top-level and nested)
@@ -158,7 +258,7 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
 
     // Top-level delete
     if (blocks.some(b => b.id === blockId)) {
-      onChange(blocks.filter(b => b.id !== blockId));
+      updateBlocksWithHistory(blocks.filter(b => b.id !== blockId), true);
       return;
     }
 
@@ -174,51 +274,108 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
       }
       return b;
     });
-    onChange(newBlocks);
+    updateBlocksWithHistory(newBlocks, true);
   };
 
-  // Duplicate block
+  // Duplicate block (recursive: top-level and nested inside columns)
   const handleDuplicateBlock = (blockId: string) => {
-    const target = blocks.find(b => b.id === blockId);
-    if (!target) return;
-
-    const cloned: LayoutBlock = JSON.parse(JSON.stringify(target));
-    cloned.id = `block_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-    if (cloned.type === 'columns') {
-      cloned.columns = cloned.columns.map((c, i) => ({
-        id: `col_${i + 1}_${Date.now()}`,
-        blocks: c.blocks.map(cb => ({
-          ...cb,
-          id: `block_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`
-        }))
-      }));
+    const topIndex = blocks.findIndex(b => b.id === blockId);
+    if (topIndex !== -1) {
+      const target = blocks[topIndex];
+      const cloned: LayoutBlock = JSON.parse(JSON.stringify(target));
+      cloned.id = `block_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      if (cloned.type === 'columns') {
+        cloned.columns = cloned.columns.map((c, i) => ({
+          id: `col_${i + 1}_${Date.now()}`,
+          blocks: c.blocks.map(cb => ({
+            ...cb,
+            id: `block_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`
+          }))
+        }));
+      }
+      const newBlocks = [...blocks];
+      newBlocks.splice(topIndex + 1, 0, cloned);
+      updateBlocksWithHistory(newBlocks, true);
+      setSelectedBlockId(cloned.id);
+      return;
     }
 
-    const index = blocks.findIndex(b => b.id === blockId);
-    const newBlocks = [...blocks];
-    newBlocks.splice(index + 1, 0, cloned);
-    onChange(newBlocks);
-    setSelectedBlockId(cloned.id);
+    // Check inside columns
+    let clonedId: string | null = null;
+    const newBlocks = blocks.map(b => {
+      if (b.type === 'columns') {
+        const colBlock = b as ColumnsLayoutBlock;
+        const updatedCols = colBlock.columns.map(col => {
+          const childIndex = col.blocks.findIndex(cb => cb.id === blockId);
+          if (childIndex !== -1) {
+            const target = col.blocks[childIndex];
+            const cloned: LayoutBlock = JSON.parse(JSON.stringify(target));
+            cloned.id = `block_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+            clonedId = cloned.id;
+            const newColBlocks = [...col.blocks];
+            newColBlocks.splice(childIndex + 1, 0, cloned);
+            return { ...col, blocks: newColBlocks };
+          }
+          return col;
+        });
+        return { ...colBlock, columns: updatedCols };
+      }
+      return b;
+    });
+
+    if (clonedId) {
+      updateBlocksWithHistory(newBlocks, true);
+      setSelectedBlockId(clonedId);
+    }
   };
 
-  // Move block up or down
+  // Move block up or down (recursive: top-level and nested inside columns)
   const handleMoveBlock = (blockId: string, direction: 'up' | 'down') => {
-    const index = blocks.findIndex(b => b.id === blockId);
-    if (index === -1) return;
+    const topIndex = blocks.findIndex(b => b.id === blockId);
+    if (topIndex !== -1) {
+      const newIndex = direction === 'up' ? topIndex - 1 : topIndex + 1;
+      if (newIndex < 0 || newIndex >= blocks.length) return;
 
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= blocks.length) return;
+      const newBlocks = [...blocks];
+      const [moved] = newBlocks.splice(topIndex, 1);
+      newBlocks.splice(newIndex, 0, moved);
+      updateBlocksWithHistory(newBlocks, true);
+      return;
+    }
 
-    const newBlocks = [...blocks];
-    const [moved] = newBlocks.splice(index, 1);
-    newBlocks.splice(newIndex, 0, moved);
-    onChange(newBlocks);
+    // Check inside columns
+    let movedAny = false;
+    const newBlocks = blocks.map(b => {
+      if (b.type === 'columns') {
+        const colBlock = b as ColumnsLayoutBlock;
+        const updatedCols = colBlock.columns.map(col => {
+          const childIndex = col.blocks.findIndex(cb => cb.id === blockId);
+          if (childIndex !== -1) {
+            const newChildIndex = direction === 'up' ? childIndex - 1 : childIndex + 1;
+            if (newChildIndex >= 0 && newChildIndex < col.blocks.length) {
+              const newColBlocks = [...col.blocks];
+              const [moved] = newColBlocks.splice(childIndex, 1);
+              newColBlocks.splice(newChildIndex, 0, moved);
+              movedAny = true;
+              return { ...col, blocks: newColBlocks };
+            }
+          }
+          return col;
+        });
+        return { ...colBlock, columns: updatedCols };
+      }
+      return b;
+    });
+
+    if (movedAny) {
+      updateBlocksWithHistory(newBlocks, true);
+    }
   };
 
   // Clear all blocks
   const handleClearCanvas = () => {
     if (window.confirm('¿Deseas vaciar todos los bloques del lienzo? Esta acción no se puede deshacer.')) {
-      onChange([]);
+      updateBlocksWithHistory([], true);
       setSelectedBlockId(null);
     }
   };
@@ -258,6 +415,11 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
 
       // 1. Dropped into a specific column inside a container
       if (over.data.current?.isColumnDrop) {
+        // Validation: Prevent nesting column containers inside another column
+        if (templateType === 'columns-2' || templateType === 'columns-3' || templateType === 'columns') {
+          return;
+        }
+
         const { parentBlockId, columnId } = over.data.current;
         const newBlock = instantiateBlock(templateType);
 
@@ -275,7 +437,7 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
           return b;
         });
 
-        onChange(updated);
+        updateBlocksWithHistory(updated, true);
         setSelectedBlockId(newBlock.id);
         return;
       }
@@ -363,6 +525,38 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
               >
                 <Smartphone className="w-3.5 h-3.5" />
                 <span className="text-[11px]">Móvil</span>
+              </button>
+            </div>
+
+            {/* Undo / Redo controls */}
+            <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+              <button
+                type="button"
+                onClick={handleUndo}
+                disabled={!canUndo}
+                className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
+                  canUndo
+                    ? 'text-slate-700 hover:text-slate-900 hover:bg-white cursor-pointer active:scale-95 shadow-2xs'
+                    : 'text-slate-300 cursor-not-allowed'
+                }`}
+                title="Deshacer (Ctrl+Z)"
+              >
+                <Undo2 className="w-3.5 h-3.5" />
+                <span className="text-[11px] hidden xl:inline">Deshacer</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleRedo}
+                disabled={!canRedo}
+                className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
+                  canRedo
+                    ? 'text-slate-700 hover:text-slate-900 hover:bg-white cursor-pointer active:scale-95 shadow-2xs'
+                    : 'text-slate-300 cursor-not-allowed'
+                }`}
+                title="Rehacer (Ctrl+Y / Ctrl+Shift+Z)"
+              >
+                <Redo2 className="w-3.5 h-3.5" />
+                <span className="text-[11px] hidden xl:inline">Rehacer</span>
               </button>
             </div>
 

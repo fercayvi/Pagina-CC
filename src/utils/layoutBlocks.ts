@@ -5,6 +5,8 @@ import {
   FAQLayoutBlock, 
   MediaLayoutBlock, 
   ColumnsLayoutBlock, 
+  ButtonLayoutBlock,
+  DividerLayoutBlock,
   ColumnSlot, 
   Service 
 } from '../types';
@@ -35,6 +37,7 @@ export function createNewColumnsBlock(columnsCount: number = 2, layout: 'equal' 
     type: 'columns',
     columnsCount,
     layout,
+    backgroundColor: 'white',
     columns
   };
 }
@@ -48,7 +51,27 @@ export function createNewImageBlock(): MediaLayoutBlock {
     url: '',
     caption: '',
     alignment: 'center',
-    size: 'full'
+    widthPercent: 100
+  };
+}
+
+export function createNewButtonBlock(): ButtonLayoutBlock {
+  return {
+    id: generateBlockId('btn'),
+    type: 'button',
+    label: 'Consultar Información',
+    url: 'https://',
+    style: 'primary',
+    align: 'center'
+  };
+}
+
+export function createNewDividerBlock(): DividerLayoutBlock {
+  return {
+    id: generateBlockId('div'),
+    type: 'divider',
+    lineStyle: 'solid',
+    spacing: 'medium'
   };
 }
 
