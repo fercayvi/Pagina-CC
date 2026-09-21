@@ -214,7 +214,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
         {currentNode && currentNode.nodeType === 'step' ? (
           <div className="space-y-5 animate-fadeIn">
             <div className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-full bg-purple-50 text-purple-700 border border-purple-200 font-bold flex items-center justify-center text-sm shrink-0">
+              <span className="w-8 h-8 rounded-full bg-purple-600 text-white font-extrabold shadow-sm flex items-center justify-center text-sm shrink-0">
                 {navPath.length}
               </span>
               <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-200">
@@ -224,7 +224,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
             </div>
 
             {currentNode.title && (
-              <h3 className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
                 {currentNode.title}
               </h3>
             )}
@@ -309,7 +309,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
               </span>
             </div>
 
-            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
               {currentNode.title}
             </h3>
 
@@ -380,36 +380,36 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
         ) : (
           /* ==================== VISTA 3: PREGUNTA Y OPCIONES ==================== */
           <div className="animate-fadeIn">
-            {/* Pregunta Principal con círculo de paso discreto a la izquierda */}
+            {/* Pregunta Principal con círculo de paso con peso visual */}
             <div className="flex items-start gap-3 sm:gap-4 mb-6">
-              <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-50 text-blue-600 border border-blue-200/60 font-bold flex items-center justify-center text-sm shrink-0 mt-0.5">
+              <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-600 text-white font-extrabold shadow-sm flex items-center justify-center text-sm shrink-0 mt-0.5">
                 {navPath.length + 1}
               </span>
               <div className="flex-1 min-w-0">
-                <h3 className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
                   {currentNode ? currentNode.title : '¿Qué necesitas consultar o resolver?'}
                 </h3>
-                <p className="text-sm text-slate-500 mt-1 font-medium">
+                <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
                   Elige una de las siguientes opciones para continuar con la guía:
                 </p>
               </div>
             </div>
 
-            {/* Grid de opciones moderno sin etiquetas técnicas */}
+            {/* Grid de opciones moderno con fondo sutil y hover dinámico */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
               {currentOptions.map((node) => (
                 <button
                   key={node.id}
                   type="button"
                   onClick={() => handleSelectNode(node)}
-                  className="bg-white border border-slate-200 hover:border-blue-500 hover:shadow-md hover:-translate-y-0.5 p-5 rounded-2xl flex items-center justify-between transition-all group cursor-pointer text-left min-h-[76px]"
+                  className="bg-slate-50 border border-slate-200 hover:bg-white hover:border-blue-500 hover:shadow-md hover:-translate-y-0.5 p-4 sm:p-5 rounded-2xl flex items-center justify-between transition-all group cursor-pointer text-left min-h-[72px]"
                 >
-                  <div className="pr-3">
-                    <span className="text-base sm:text-lg font-bold text-slate-800 group-hover:text-blue-600 leading-snug transition-colors">
+                  <div className="pr-3 flex-1 min-w-0">
+                    <span className="text-sm sm:text-base font-bold text-slate-800 group-hover:text-blue-600 leading-snug transition-colors">
                       {node.title}
                     </span>
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-slate-50 group-hover:bg-blue-600 group-hover:text-white text-slate-400 flex items-center justify-center shrink-0 transition-colors shadow-2xs">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-100 group-hover:bg-blue-600 group-hover:text-white text-slate-400 flex items-center justify-center shrink-0 transition-colors shadow-2xs">
                     <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
                   </div>
                 </button>

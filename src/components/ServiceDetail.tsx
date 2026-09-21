@@ -340,34 +340,30 @@ function LivePreviewPanel({
             {/* Modal Body: Full Trámite Render */}
             <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
               
-              {/* Header Card */}
-              <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-extrabold text-blue-700 bg-blue-50 px-3 py-1 rounded-md uppercase tracking-wider border border-blue-200/60">
-                    {draft.category || 'Categoría'}
-                  </span>
+              {/* Header Bar (Navbar Compacto Superior) */}
+              <div className="bg-white border border-slate-200/90 rounded-2xl px-4 sm:px-5 py-3 sm:py-4 shadow-2xs flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    {draft.cardImage && typeof draft.cardImage === 'string' && draft.cardImage.trim().length > 0 ? (
+                      <img 
+                        src={draft.cardImage} 
+                        alt={draft.title || 'Foto'} 
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover shadow-2xs border border-slate-200 shrink-0" 
+                      />
+                    ) : (
+                      <div className="bg-blue-50 text-blue-600 rounded-xl p-2 shrink-0 border border-blue-100 flex items-center justify-center">
+                        {React.createElement(SERVICE_ICON_MAP[draft.iconName || draft.icon || 'FileText'] || FileText, {
+                          className: "w-5 h-5 text-blue-600"
+                        })}
+                      </div>
+                    )}
+                    <h1 className="text-base sm:text-lg font-bold text-slate-900 font-display truncate">{draft.title || 'Título sin definir'}</h1>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-3 pt-1">
-                  {draft.cardImage && typeof draft.cardImage === 'string' && draft.cardImage.trim().length > 0 ? (
-                    <img 
-                      src={draft.cardImage} 
-                      alt={draft.title || 'Foto'} 
-                      className="w-12 h-12 rounded-xl object-cover shadow-2xs border border-slate-200 shrink-0" 
-                    />
-                  ) : (
-                    <div className="bg-blue-50 text-blue-600 rounded-xl p-2.5 shrink-0 border border-blue-100">
-                      {React.createElement(SERVICE_ICON_MAP[draft.iconName || draft.icon || 'FileText'] || FileText, {
-                        className: "w-7 h-7 text-blue-600"
-                      })}
-                    </div>
-                  )}
-                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900 font-display">{draft.title || 'Título sin definir'}</h1>
-                </div>
-
-                <p className="text-sm text-slate-600 font-medium leading-relaxed pt-2 border-t border-slate-100">
-                  {draft.fullDescription || draft.shortDesc}
-                </p>
+                <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 sm:px-3 py-1 rounded-lg uppercase tracking-wider border border-blue-200/60 shrink-0">
+                  {draft.category || 'Categoría'}
+                </span>
               </div>
 
               {/* Árbol de Decisión Independiente */}
@@ -1148,41 +1144,41 @@ export default function ServiceDetail({
         /* ==================== NORMAL PUBLIC VIEW MODE (DYNAMIC LAYOUT BLOCKS) ==================== */
         <div className="space-y-4">
           
-          {/* Header Card */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-3">
-            <div className="flex items-center justify-between gap-2">
+          {/* Header Card (Navbar Compacto Superior) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl px-4 sm:px-5 py-3 sm:py-4 shadow-2xs flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
               <button 
                 onClick={onBack}
-                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs sm:text-sm flex items-center gap-1.5 active:scale-95 transition-all shrink-0 border border-slate-300 shadow-2xs cursor-pointer min-h-[42px]"
+                className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs sm:text-sm flex items-center gap-1 active:scale-95 transition-all shrink-0 border border-slate-300 shadow-2xs cursor-pointer min-h-[38px]"
+                title="Volver"
               >
                 <ChevronLeft className="w-4 h-4 text-slate-700" />
                 <span>Volver</span>
               </button>
-              <span className="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-lg uppercase tracking-wider border border-blue-200/60">
-                {draft.category}
-              </span>
+
+              <div className="flex items-center gap-2.5 min-w-0">
+                {draft.cardImage && typeof draft.cardImage === 'string' && draft.cardImage.trim().length > 0 ? (
+                  <img 
+                    src={draft.cardImage} 
+                    alt={draft.title || 'Foto'} 
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover shadow-2xs border border-slate-200 shrink-0" 
+                  />
+                ) : (
+                  <div className="bg-blue-50 text-blue-600 rounded-xl p-2 shrink-0 flex items-center justify-center border border-blue-100">
+                    {React.createElement(SERVICE_ICON_MAP[draft.iconName || draft.icon || 'FileText'] || FileText, {
+                      className: "w-5 h-5 text-blue-600"
+                    })}
+                  </div>
+                )}
+                <h1 className="text-base sm:text-lg font-bold text-slate-900 font-display truncate">
+                  {draft.title}
+                </h1>
+              </div>
             </div>
 
-            <div className="flex items-center gap-3 pt-1">
-              {draft.cardImage && typeof draft.cardImage === 'string' && draft.cardImage.trim().length > 0 ? (
-                <img 
-                  src={draft.cardImage} 
-                  alt={draft.title || 'Foto'} 
-                  className="w-12 h-12 rounded-xl object-cover shadow-2xs border border-slate-200 shrink-0" 
-                />
-              ) : (
-                <div className="bg-blue-50 text-blue-600 rounded-xl p-2.5 shrink-0 flex items-center justify-center border border-blue-100">
-                  {React.createElement(SERVICE_ICON_MAP[draft.iconName || draft.icon || 'FileText'] || FileText, {
-                    className: "w-6 h-6"
-                  })}
-                </div>
-              )}
-              <h1 className="text-lg sm:text-2xl font-bold text-slate-900 font-display">{draft.title}</h1>
-            </div>
-
-            <p className="text-sm sm:text-base text-slate-700 font-normal leading-relaxed pt-1">
-              {draft.fullDescription || draft.shortDesc}
-            </p>
+            <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 sm:px-3 py-1 rounded-lg uppercase tracking-wider border border-blue-200/60 shrink-0">
+              {draft.category}
+            </span>
           </div>
 
           {/* Árbol de Decisión Independiente */}
