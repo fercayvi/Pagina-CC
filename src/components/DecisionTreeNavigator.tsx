@@ -389,27 +389,24 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
                 <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
                   {currentNode ? currentNode.title : '¿Qué necesitas consultar o resolver?'}
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
-                  Elige una de las siguientes opciones para continuar con la guía:
-                </p>
               </div>
             </div>
 
-            {/* Grid de opciones moderno con fondo sutil y hover dinámico */}
+            {/* Grid de opciones con estilo azul por defecto */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
               {currentOptions.map((node) => (
                 <button
                   key={node.id}
                   type="button"
                   onClick={() => handleSelectNode(node)}
-                  className="bg-slate-50 border border-slate-200 hover:bg-white hover:border-blue-500 hover:shadow-md hover:-translate-y-0.5 p-4 sm:p-5 rounded-2xl flex items-center justify-between transition-all group cursor-pointer text-left min-h-[72px]"
+                  className="bg-white border border-blue-300 text-blue-700 hover:bg-blue-50 hover:shadow-md hover:-translate-y-0.5 p-4 sm:p-5 rounded-2xl flex items-center justify-between transition-all group cursor-pointer text-left min-h-[72px] shadow-2xs"
                 >
                   <div className="pr-3 flex-1 min-w-0">
-                    <span className="text-sm sm:text-base font-bold text-slate-800 group-hover:text-blue-600 leading-snug transition-colors">
+                    <span className="text-sm sm:text-base font-bold text-blue-700 leading-snug">
                       {node.title}
                     </span>
                   </div>
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-100 group-hover:bg-blue-600 group-hover:text-white text-slate-400 flex items-center justify-center shrink-0 transition-colors shadow-2xs">
+                  <div className="bg-blue-600 text-white rounded-full p-1 flex items-center justify-center shrink-0 shadow-2xs">
                     <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
                   </div>
                 </button>
