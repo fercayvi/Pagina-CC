@@ -2,13 +2,13 @@ import React, { useState, useRef } from 'react';
 import { 
   ChevronRight, 
   ChevronLeft, 
-  ZoomIn, 
   ArrowLeft, 
   ArrowRight, 
   RotateCcw, 
   CheckCircle2 
 } from 'lucide-react';
-import { ServiceNode } from '../types';
+import { ServiceNode, LayoutBlock } from '../types';
+import { LayoutBlocksRenderer } from './LayoutBlocksRenderer';
 
 interface DecisionTreeNavigatorProps {
   tree: ServiceNode[];
@@ -16,34 +16,76 @@ interface DecisionTreeNavigatorProps {
   serviceTitle?: string;
 }
 
-// Helper to check and extract embed video info
-function getEmbedVideoInfo(url?: string) {
-  if (!url || typeof url !== 'string' || !url.trim()) return null;
-  const cleanUrl = url.trim();
+// Helper de retrocompatibilidad: convierte datos antiguos (contentData) en LayoutBlock[]
+function getNodeBlocks(node: ServiceNode): LayoutBlock[] {
+  if (node.blocks && node.blocks.length > 0) return node.blocks;
+  if (node.contentData?.layoutBlocks && node.contentData.layoutBlocks.length > 0) return node.contentData.layoutBlocks;
 
-  // YouTube match
-  const ytMatch = cleanUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
-  if (ytMatch && ytMatch[1]) {
-    return {
-      type: 'youtube',
-      embedUrl: `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0&modestbranding=1`
-    };
+  const fallback: LayoutBlock[] = [];
+  if (node.contentData?.blocks && node.contentData.blocks.length > 0) {
+    node.contentData.blocks.forEach((b, idx) => {
+      if (b.text) {
+        fallback.push({
+          id: `legacy-txt-${b.id || idx}`,
+          type: 'text',
+          content: b.text,
+          align: 'left',
+          style: 'normal'
+        });
+      }
+      if (b.imageUrl) {
+        fallback.push({
+          id: `legacy-img-${b.id || idx}`,
+          type: 'media',
+          mediaType: 'image',
+          url: b.imageUrl,
+          size: 'full',
+          alignment: 'center'
+        });
+      }
+      if (b.videoUrl) {
+        fallback.push({
+          id: `legacy-vid-${b.id || idx}`,
+          type: 'media',
+          mediaType: 'video',
+          url: b.videoUrl,
+          size: 'full',
+          alignment: 'center'
+        });
+      }
+    });
+  } else if (node.contentData) {
+    if (node.contentData.text) {
+      fallback.push({
+        id: `legacy-txt-${node.id}`,
+        type: 'text',
+        content: node.contentData.text,
+        align: 'left',
+        style: 'normal'
+      });
+    }
+    if (node.contentData.imageUrl) {
+      fallback.push({
+        id: `legacy-img-${node.id}`,
+        type: 'media',
+        mediaType: 'image',
+        url: node.contentData.imageUrl,
+        size: 'full',
+        alignment: 'center'
+      });
+    }
+    if (node.contentData.videoUrl) {
+      fallback.push({
+        id: `legacy-vid-${node.id}`,
+        type: 'media',
+        mediaType: 'video',
+        url: node.contentData.videoUrl,
+        size: 'full',
+        alignment: 'center'
+      });
+    }
   }
-
-  // Vimeo match
-  const vimeoMatch = cleanUrl.match(/(?:vimeo\.com\/)(\d+)/);
-  if (vimeoMatch && vimeoMatch[1]) {
-    return {
-      type: 'vimeo',
-      embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}`
-    };
-  }
-
-  // Direct video file
-  return {
-    type: 'direct',
-    embedUrl: cleanUrl
-  };
+  return fallback;
 }
 
 // Helper to check if a title is generic/empty or placeholder
@@ -114,11 +156,6 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
     setNavPath([]);
     scrollToTop();
   };
-
-  // Video info if current content or step node has video
-  const currentVideoInfo = currentNode && (currentNode.nodeType === 'content' || currentNode.nodeType === 'step')
-    ? getEmbedVideoInfo(currentNode.contentData?.videoUrl) 
-    : null;
 
   // Current options to display if at root or category node
   const currentOptions = currentNode ? (currentNode.children || []) : tree;
@@ -266,68 +303,13 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
             {/* Barra de navegación superior del paso */}
             {renderStepNavigation(true)}
 
-            {/* Renderizado de Bloques de Contenido con espaciado optimizado */}
-            <div className="space-y-4 mb-4">
-              {((currentNode.contentData?.blocks && currentNode.contentData.blocks.length > 0)
-                ? currentNode.contentData.blocks
-                : [
-                    {
-                      id: 'default',
-                      text: currentNode.contentData?.text || '',
-                      imageUrl: currentNode.contentData?.imageUrl || '',
-                      videoUrl: currentNode.contentData?.videoUrl || '',
-                    }
-                  ]
-              ).map((block, index) => {
-                const blockVideo = getEmbedVideoInfo(block.videoUrl);
-                return (
-                  <div key={block.id || `block-${index}`} className="space-y-3">
-                    {block.text && (
-                      <div className="text-base sm:text-lg text-slate-700 leading-relaxed whitespace-pre-line font-normal">
-                        {block.text}
-                      </div>
-                    )}
-
-                    {block.imageUrl && (
-                      <div className="w-full flex justify-center my-3">
-                        <div 
-                          onClick={() => onOpenLightbox && onOpenLightbox(block.imageUrl!, `${currentNode.title} - Imagen ${index + 1}`)}
-                          className="relative group cursor-pointer overflow-hidden rounded-2xl border border-slate-200 inline-block max-w-full bg-slate-50 shadow-2xs hover:shadow-md transition-all"
-                          title="Clic para ampliar imagen"
-                        >
-                          <img 
-                            src={block.imageUrl} 
-                            alt={`${currentNode.title} - Imagen ${index + 1}`} 
-                            className="max-w-full md:max-w-2xl h-auto rounded-2xl object-contain" 
-                          />
-                          <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center gap-2 text-white text-sm font-bold">
-                            <ZoomIn className="w-5 h-5" />
-                            <span>Ampliar</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {blockVideo && (
-                      <div className="w-full flex justify-center my-3">
-                        <div className="w-full max-w-3xl aspect-video rounded-2xl overflow-hidden shadow-xs bg-black border border-slate-200">
-                          {blockVideo.type === 'direct' ? (
-                            <video src={blockVideo.embedUrl} controls className="w-full h-full" />
-                          ) : (
-                            <iframe
-                              src={blockVideo.embedUrl}
-                              title={`${currentNode.title} - Video ${index + 1}`}
-                              className="w-full h-full border-0"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                            />
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+            {/* Renderizado de Bloques Enriquecidos del Page Builder */}
+            <div className="my-4">
+              <LayoutBlocksRenderer 
+                blocks={currentNode.blocks || getNodeBlocks(currentNode)} 
+                onOpenLightbox={onOpenLightbox}
+                serviceTitle={serviceTitle}
+              />
             </div>
 
             {/* Barra de navegación inferior */}
@@ -349,49 +331,14 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
               </h3>
             )}
 
-            {currentNode.contentData?.text && (
-              <div className="text-base sm:text-lg text-slate-700 leading-relaxed whitespace-pre-line font-normal">
-                {currentNode.contentData.text}
-              </div>
-            )}
-
-            {currentNode.contentData?.imageUrl && (
-              <div className="w-full flex justify-center my-3">
-                <div 
-                  onClick={() => onOpenLightbox && onOpenLightbox(currentNode.contentData!.imageUrl!, !isGenericTitle(currentNode.title) ? currentNode.title : 'Resolución')}
-                  className="relative group cursor-pointer overflow-hidden rounded-2xl border border-slate-200 inline-block max-w-full bg-slate-50 shadow-2xs hover:shadow-md transition-all"
-                  title="Clic para ampliar imagen"
-                >
-                  <img 
-                    src={currentNode.contentData.imageUrl} 
-                    alt={!isGenericTitle(currentNode.title) ? currentNode.title : 'Resolución'} 
-                    className="max-w-full md:max-w-2xl h-auto rounded-2xl object-contain" 
-                  />
-                  <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center gap-2 text-white text-sm font-bold">
-                    <ZoomIn className="w-5 h-5" />
-                    <span>Ampliar</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {currentVideoInfo && (
-              <div className="w-full flex justify-center my-3">
-                <div className="w-full max-w-3xl aspect-video rounded-2xl overflow-hidden shadow-xs bg-black border border-slate-200">
-                  {currentVideoInfo.type === 'direct' ? (
-                    <video src={currentVideoInfo.embedUrl} controls className="w-full h-full" />
-                  ) : (
-                    <iframe
-                      src={currentVideoInfo.embedUrl}
-                      title={!isGenericTitle(currentNode.title) ? currentNode.title : 'Video'}
-                      className="w-full h-full border-0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  )}
-                </div>
-              </div>
-            )}
+            {/* Renderizado de Bloques Enriquecidos del Page Builder */}
+            <div className="my-4">
+              <LayoutBlocksRenderer 
+                blocks={currentNode.blocks || getNodeBlocks(currentNode)} 
+                onOpenLightbox={onOpenLightbox}
+                serviceTitle={serviceTitle}
+              />
+            </div>
 
             <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
               <button

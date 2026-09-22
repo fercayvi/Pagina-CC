@@ -37,10 +37,12 @@ import {
   ListOrdered,
   Undo2,
   Redo2,
-  Compass
+  Compass,
+  Edit3,
+  Layers
 } from 'lucide-react';
-import { ServiceNode, ServiceNodeContentData, ContentBlock } from '../types';
-import { MediaUploadField } from './MediaUploadField';
+import { ServiceNode, ServiceNodeContentData, ContentBlock, LayoutBlock } from '../types';
+import { PageBuilderFullScreenEditor } from './PageBuilderFullScreenEditor';
 
 interface DecisionTreeCanvasEditorProps {
   tree: ServiceNode[];
@@ -54,6 +56,7 @@ export interface DecisionNodeData extends Record<string, unknown> {
   title: string;
   nodeType: 'category' | 'content' | 'step';
   contentData: ServiceNodeContentData;
+  blocks?: LayoutBlock[];
 }
 
 export type DecisionNodeType = Node<DecisionNodeData, 'decisionNode'>;
@@ -114,7 +117,8 @@ export function treeToFlow(tree: ServiceNode[]): { nodes: DecisionNodeType[]; ed
       data: {
         title: node.title || 'Nueva Opción',
         nodeType: node.nodeType,
-        contentData: node.contentData ? { ...node.contentData } : { text: '', imageUrl: '', videoUrl: '' }
+        contentData: node.contentData ? { ...node.contentData } : { text: '', imageUrl: '', videoUrl: '' },
+        blocks: node.blocks || node.contentData?.layoutBlocks || []
       }
     });
 
@@ -197,6 +201,7 @@ export function flowToTree(nodes: DecisionNodeType[], edges: Edge[]): ServiceNod
       id: rawNode.id,
       title: data.title || 'Opción',
       nodeType: nodeType,
+      blocks: data.blocks && data.blocks.length > 0 ? data.blocks : undefined,
     };
 
     if (nodeType === 'category' || nodeType === 'step') {
@@ -210,16 +215,22 @@ export function flowToTree(nodes: DecisionNodeType[], edges: Edge[]): ServiceNod
     }
 
     if (nodeType === 'content' || nodeType === 'step') {
-      const blocks = data.contentData?.blocks && data.contentData.blocks.length > 0
-        ? data.contentData.blocks
-        : undefined;
+      const layoutBlocks = data.blocks && data.blocks.length > 0
+        ? data.blocks
+        : data.contentData?.layoutBlocks && data.contentData.layoutBlocks.length > 0
+          ? data.contentData.layoutBlocks
+          : undefined;
 
       serviceNode.contentData = {
-        text: data.contentData?.text || (blocks?.[0]?.text) || '',
-        imageUrl: data.contentData?.imageUrl || (blocks?.[0]?.imageUrl) || '',
-        videoUrl: data.contentData?.videoUrl || (blocks?.[0]?.videoUrl) || '',
-        ...(blocks ? { blocks } : {})
+        text: data.contentData?.text || '',
+        imageUrl: data.contentData?.imageUrl || '',
+        videoUrl: data.contentData?.videoUrl || '',
+        ...(layoutBlocks ? { layoutBlocks } : {})
       };
+
+      if (layoutBlocks) {
+        serviceNode.blocks = layoutBlocks;
+      }
     }
 
     return serviceNode;
@@ -323,11 +334,20 @@ const CustomDecisionNode: React.FC<NodeProps<DecisionNodeType>> = ({
           {(!data.title || data.title.trim() === '' || data.title === '-') ? 'Continuar' : data.title}
         </p>
 
-        {/* Content snippet if content or step node */}
-        {!isCategory && (data.contentData?.blocks?.[0]?.text || data.contentData?.text) && (
-          <p className="text-[11px] text-gray-500 font-normal line-clamp-1 mt-1 italic">
-            "{data.contentData?.blocks?.[0]?.text || data.contentData.text}"
-          </p>
+        {/* Content snippet or blocks count if content or step node */}
+        {!isCategory && (
+          <div className="mt-1.5">
+            {data.blocks && data.blocks.length > 0 ? (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-1.5 py-0.5 rounded-md">
+                <Layers className="w-3 h-3 text-indigo-600" />
+                {data.blocks.length} {data.blocks.length === 1 ? 'bloque' : 'bloques'}
+              </span>
+            ) : (data.contentData?.blocks?.[0]?.text || data.contentData?.text) ? (
+              <p className="text-[11px] text-gray-500 font-normal line-clamp-1 italic">
+                "{data.contentData?.blocks?.[0]?.text || data.contentData.text}"
+              </p>
+            ) : null}
+          </div>
         )}
       </div>
 
@@ -606,98 +626,94 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
     pushHistorySnapshot(arranged.nodes, arranged.edges);
   }, [nodes, edges, setNodes, setEdges, pushHistorySnapshot]);
 
-  // Step Blocks state and helpers for 'step' nodes
-  const stepBlocks: ContentBlock[] = useMemo(() => {
-    if (!selectedNode || selectedNode.data.nodeType !== 'step') return [];
-    if (selectedNode.data.contentData?.blocks && selectedNode.data.contentData.blocks.length > 0) {
-      return selectedNode.data.contentData.blocks;
+  // Full-screen Page Builder Modal state for editing node blocks
+  const [isPageBuilderOpen, setIsPageBuilderOpen] = useState(false);
+
+  // Compute LayoutBlock[] for selectedNode, migrating legacy contentData if needed
+  const selectedNodeBlocks: LayoutBlock[] = useMemo(() => {
+    if (!selectedNode) return [];
+    if (selectedNode.data.blocks && selectedNode.data.blocks.length > 0) {
+      return selectedNode.data.blocks;
     }
-    return [
-      {
-        id: `block_${selectedNode.id}_1`,
-        text: selectedNode.data.contentData?.text || '',
-        imageUrl: selectedNode.data.contentData?.imageUrl || '',
-        videoUrl: selectedNode.data.contentData?.videoUrl || '',
-      },
-    ];
+    if (selectedNode.data.contentData?.layoutBlocks && selectedNode.data.contentData.layoutBlocks.length > 0) {
+      return selectedNode.data.contentData.layoutBlocks;
+    }
+    // Fallback: migrate legacy contentData into LayoutBlock[]
+    const fallback: LayoutBlock[] = [];
+    if (selectedNode.data.contentData?.blocks && selectedNode.data.contentData.blocks.length > 0) {
+      selectedNode.data.contentData.blocks.forEach((b, idx) => {
+        if (b.text) {
+          fallback.push({
+            id: `b_txt_${b.id || idx}`,
+            type: 'text',
+            content: b.text,
+            align: 'left',
+            style: 'normal'
+          });
+        }
+        if (b.imageUrl) {
+          fallback.push({
+            id: `b_img_${b.id || idx}`,
+            type: 'media',
+            mediaType: 'image',
+            url: b.imageUrl,
+            size: 'full',
+            alignment: 'center'
+          });
+        }
+        if (b.videoUrl) {
+          fallback.push({
+            id: `b_vid_${b.id || idx}`,
+            type: 'media',
+            mediaType: 'video',
+            url: b.videoUrl,
+            size: 'full',
+            alignment: 'center'
+          });
+        }
+      });
+    } else if (selectedNode.data.contentData) {
+      if (selectedNode.data.contentData.text) {
+        fallback.push({
+          id: `b_txt_${selectedNode.id}`,
+          type: 'text',
+          content: selectedNode.data.contentData.text,
+          align: 'left',
+          style: 'normal'
+        });
+      }
+      if (selectedNode.data.contentData.imageUrl) {
+        fallback.push({
+          id: `b_img_${selectedNode.id}`,
+          type: 'media',
+          mediaType: 'image',
+          url: selectedNode.data.contentData.imageUrl,
+          size: 'full',
+          alignment: 'center'
+        });
+      }
+      if (selectedNode.data.contentData.videoUrl) {
+        fallback.push({
+          id: `b_vid_${selectedNode.id}`,
+          type: 'media',
+          mediaType: 'video',
+          url: selectedNode.data.contentData.videoUrl,
+          size: 'full',
+          alignment: 'center'
+        });
+      }
+    }
+    return fallback;
   }, [selectedNode]);
 
-  const handleAddBlock = useCallback(() => {
+  const handleSaveNodeBlocks = useCallback((newBlocks: LayoutBlock[]) => {
     if (!selectedNode) return;
-    const currentBlocks: ContentBlock[] = (selectedNode.data.contentData?.blocks && selectedNode.data.contentData.blocks.length > 0)
-      ? [...selectedNode.data.contentData.blocks]
-      : [
-          {
-            id: `block_${selectedNode.id}_1`,
-            text: selectedNode.data.contentData?.text || '',
-            imageUrl: selectedNode.data.contentData?.imageUrl || '',
-            videoUrl: selectedNode.data.contentData?.videoUrl || '',
-          },
-        ];
-
-    const newBlock: ContentBlock = {
-      id: `block_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      text: '',
-      imageUrl: '',
-      videoUrl: '',
-    };
-    const updated = [...currentBlocks, newBlock];
     updateSelectedNodeData({
+      blocks: newBlocks,
       contentData: {
         ...selectedNode.data.contentData,
-        blocks: updated,
-        text: updated[0]?.text || '',
-        imageUrl: updated[0]?.imageUrl || '',
-        videoUrl: updated[0]?.videoUrl || '',
-      },
-    });
-  }, [selectedNode, updateSelectedNodeData]);
-
-  const handleUpdateBlock = useCallback((blockId: string, patch: Partial<ContentBlock>) => {
-    if (!selectedNode) return;
-    const currentBlocks: ContentBlock[] = (selectedNode.data.contentData?.blocks && selectedNode.data.contentData.blocks.length > 0)
-      ? [...selectedNode.data.contentData.blocks]
-      : [
-          {
-            id: blockId,
-            text: selectedNode.data.contentData?.text || '',
-            imageUrl: selectedNode.data.contentData?.imageUrl || '',
-            videoUrl: selectedNode.data.contentData?.videoUrl || '',
-          },
-        ];
-
-    const updated = currentBlocks.map((b) => (b.id === blockId ? { ...b, ...patch } : b));
-    updateSelectedNodeData({
-      contentData: {
-        ...selectedNode.data.contentData,
-        blocks: updated,
-        text: updated[0]?.text || '',
-        imageUrl: updated[0]?.imageUrl || '',
-        videoUrl: updated[0]?.videoUrl || '',
-      },
-    });
-  }, [selectedNode, updateSelectedNodeData]);
-
-  const handleDeleteBlock = useCallback((blockId: string) => {
-    if (!selectedNode) return;
-    const currentBlocks = selectedNode.data.contentData?.blocks || [];
-    const filtered = currentBlocks.filter((b) => b.id !== blockId);
-    const updated = filtered.length > 0 ? filtered : [
-      {
-        id: `block_${Date.now()}`,
-        text: '',
-        imageUrl: '',
-        videoUrl: '',
-      },
-    ];
-    updateSelectedNodeData({
-      contentData: {
-        ...selectedNode.data.contentData,
-        blocks: updated,
-        text: updated[0]?.text || '',
-        imageUrl: updated[0]?.imageUrl || '',
-        videoUrl: updated[0]?.videoUrl || '',
-      },
+        layoutBlocks: newBlocks,
+      }
     });
   }, [selectedNode, updateSelectedNodeData]);
 
@@ -962,25 +978,7 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
 
                   <button
                     type="button"
-                    onClick={() => {
-                      const currentBlocks = (selectedNode.data.contentData?.blocks && selectedNode.data.contentData.blocks.length > 0)
-                        ? selectedNode.data.contentData.blocks
-                        : [
-                            {
-                              id: `block_${selectedNode.id}_1`,
-                              text: selectedNode.data.contentData?.text || '',
-                              imageUrl: selectedNode.data.contentData?.imageUrl || '',
-                              videoUrl: selectedNode.data.contentData?.videoUrl || '',
-                            }
-                          ];
-                      updateSelectedNodeData({
-                        nodeType: 'step',
-                        contentData: {
-                          ...selectedNode.data.contentData,
-                          blocks: currentBlocks,
-                        }
-                      });
-                    }}
+                    onClick={() => updateSelectedNodeData({ nodeType: 'step' })}
                     className={`p-2.5 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
                       selectedNode.data.nodeType === 'step'
                         ? 'border-purple-600 bg-purple-50/50 ring-1 ring-purple-600 text-purple-950 shadow-2xs'
@@ -1016,167 +1014,78 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
                 </div>
               </div>
 
-              {/* 3. Contenido condicional según tipo */}
+              {/* 3. Contenido condicional según tipo: Integración con Page Builder para 'step' y 'content' */}
               <div className="space-y-4">
-                {/* CAMPOS DE CONTENIDO PARA PASO DE TUTORIAL (MÚLTIPLES BLOQUES) */}
-                {selectedNode.data.nodeType === 'step' && (
-                  <div className="pt-2 space-y-4">
+                {(selectedNode.data.nodeType === 'step' || selectedNode.data.nodeType === 'content') && (
+                  <div className="pt-2 space-y-3">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">
-                        Bloques de Contenido del Paso
+                        Contenido del {selectedNode.data.nodeType === 'step' ? 'Paso' : 'Nodo'}
                       </label>
-                      <span className="text-[11px] font-semibold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-md border border-purple-200">
-                        {stepBlocks.length} {stepBlocks.length === 1 ? 'bloque' : 'bloques'}
+                      <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-md border ${
+                        selectedNode.data.nodeType === 'step'
+                          ? 'text-purple-700 bg-purple-50 border-purple-200'
+                          : 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                      }`}>
+                        {selectedNodeBlocks.length} {selectedNodeBlocks.length === 1 ? 'bloque' : 'bloques'}
                       </span>
                     </div>
 
-                    <div className="space-y-4">
-                      {stepBlocks.map((block, index) => (
-                        <div
-                          key={block.id}
-                          className="p-3.5 bg-gray-50/90 border border-gray-200 rounded-xl space-y-3 relative group"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
-                              <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[10px] font-extrabold">
-                                {index + 1}
-                              </span>
-                              Bloque #{index + 1}
-                            </span>
-                            {stepBlocks.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteBlock(block.id)}
-                                className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                                title="Eliminar bloque"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
-
-                          {/* Textarea */}
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-semibold text-gray-600 block">
-                              Texto / Instrucciones
-                            </label>
-                            <textarea
-                              rows={3}
-                              value={block.text || ''}
-                              onChange={(e) => handleUpdateBlock(block.id, { text: e.target.value })}
-                              placeholder="Escribe aquí las instrucciones de esta sección..."
-                              className="w-full p-2.5 bg-white border border-gray-200 rounded-lg text-xs font-normal text-gray-900 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-hidden transition-all leading-relaxed"
-                            />
-                          </div>
-
-                          {/* MediaUploadField Imagen */}
-                          <div className="space-y-1">
-                            <MediaUploadField
-                              type="image"
-                              label="Imagen o Infografía (Opcional)"
-                              value={block.imageUrl || ''}
-                              onChange={(url) => handleUpdateBlock(block.id, { imageUrl: url })}
-                              helperText="Sube una captura o infografía para este bloque."
-                              idPrefix={`step_img_${block.id}`}
-                            />
-                          </div>
-
-                          {/* Enlace de Video */}
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-semibold text-gray-600 flex items-center gap-1.5">
-                              <Video className="w-3.5 h-3.5 text-gray-500" />
-                              Enlace de Video (YouTube, Vimeo o MP4)
-                            </label>
-                            <input
-                              type="url"
-                              value={block.videoUrl || ''}
-                              onChange={(e) => handleUpdateBlock(block.id, { videoUrl: e.target.value })}
-                              placeholder="https://www.youtube.com/watch?v=..."
-                              className="w-full px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-normal text-gray-900 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-hidden transition-all"
-                            />
-                          </div>
+                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3.5">
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200/80 flex items-center justify-center text-blue-600 shrink-0 mt-0.5">
+                          <Layers className="w-5 h-5" />
                         </div>
-                      ))}
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-xs font-bold text-slate-900 leading-tight">
+                            Page Builder Enriquecido
+                          </h4>
+                          <p className="text-[11px] text-slate-500 leading-relaxed mt-0.5">
+                            Diseña este paso con texto formateado, infografías, videos, acordeones FAQ y alertas interactivas.
+                          </p>
+                        </div>
+                      </div>
 
-                      {/* Botón Añadir otro bloque de contenido */}
+                      {/* Resumen visual de bloques existentes */}
+                      {selectedNodeBlocks.length > 0 && (
+                        <div className="bg-white border border-slate-200/80 rounded-xl p-2.5 space-y-1.5 max-h-36 overflow-y-auto">
+                          {selectedNodeBlocks.map((b, idx) => {
+                            const subLabel = 'title' in b && b.title 
+                              ? b.title 
+                              : b.type === 'button' 
+                                ? b.label 
+                                : b.type === 'text' && b.content 
+                                  ? b.content.slice(0, 25) 
+                                  : '';
+                            return (
+                              <div key={b.id || idx} className="flex items-center justify-between text-[11px] text-slate-700 py-0.5 px-1 rounded hover:bg-slate-50">
+                                <span className="font-semibold flex items-center gap-1.5 truncate pr-2">
+                                  <span className="w-4 h-4 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[9px] font-extrabold shrink-0">
+                                    {idx + 1}
+                                  </span>
+                                  <span className="capitalize">{b.type === 'media' ? (b.mediaType === 'video' ? 'Video' : 'Imagen') : b.type}</span>
+                                  {subLabel && <span className="text-slate-400 font-normal truncate">({subLabel})</span>}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-mono shrink-0">#{b.type}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Botón para abrir el Page Builder a pantalla completa */}
                       <button
                         type="button"
-                        onClick={handleAddBlock}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                        onClick={() => setIsPageBuilderOpen(true)}
+                        className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer active:scale-98 ${
+                          selectedNode.data.nodeType === 'step'
+                            ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                            : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                        }`}
                       >
-                        <Plus className="w-4 h-4 text-purple-600" />
-                        <span>+ Añadir otro bloque de contenido</span>
+                        <Edit3 className="w-4 h-4" />
+                        <span>Editar Contenido con Page Builder</span>
                       </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* CAMPOS DE CONTENIDO: Se muestran para 'content' */}
-                {selectedNode.data.nodeType === 'content' && (
-                  <div className="pt-2 space-y-4">
-                    {/* Texto Explicativo */}
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">
-                        Texto Explicativo / Instrucciones
-                      </label>
-                      <textarea
-                        rows={4}
-                        value={selectedNode.data.contentData.text || ''}
-                        onChange={(e) =>
-                          updateSelectedNodeData({
-                            contentData: {
-                              ...selectedNode.data.contentData,
-                              text: e.target.value,
-                            },
-                          })
-                        }
-                        placeholder="Escribe aquí los pasos detallados, requisitos o instrucciones..."
-                        className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-normal text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden transition-all leading-relaxed"
-                      />
-                    </div>
-
-                    {/* Imagen / Infografía */}
-                    <div className="space-y-1.5">
-                      <MediaUploadField
-                        type="image"
-                        label="Imagen o Infografía (Opcional)"
-                        value={selectedNode.data.contentData.imageUrl || ''}
-                        onChange={(url) =>
-                          updateSelectedNodeData({
-                            contentData: {
-                              ...selectedNode.data.contentData,
-                              imageUrl: url,
-                            },
-                          })
-                        }
-                        helperText="Sube una captura del formato o una infografía explicativa."
-                        idPrefix={`node_img_${selectedNode.id}`}
-                      />
-                    </div>
-
-                    {/* Enlace de Video */}
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                        <Video className="w-3.5 h-3.5 text-gray-500" />
-                        Enlace de Video (YouTube, Vimeo o MP4)
-                      </label>
-                      <input
-                        type="url"
-                        value={selectedNode.data.contentData.videoUrl || ''}
-                        onChange={(e) =>
-                          updateSelectedNodeData({
-                            contentData: {
-                              ...selectedNode.data.contentData,
-                              videoUrl: e.target.value,
-                            },
-                          })
-                        }
-                        placeholder="https://www.youtube.com/watch?v=..."
-                        className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-normal text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden transition-all"
-                      />
-                      <p className="text-[11px] text-gray-400">
-                        Opcional. El video se reproducirá directamente en la tarjeta de respuesta.
-                      </p>
                     </div>
                   </div>
                 )}
@@ -1259,6 +1168,18 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
           )}
         </aside>
       </div>
+
+      {/* Fullscreen Page Builder Editor for editing node blocks */}
+      {isPageBuilderOpen && selectedNode && (
+        <PageBuilderFullScreenEditor
+          blocks={selectedNodeBlocks}
+          onChange={(newBlocks) => {
+            handleSaveNodeBlocks(newBlocks);
+          }}
+          onClose={() => setIsPageBuilderOpen(false)}
+          serviceTitle={selectedNode.data.title || serviceTitle || 'Paso del Trámite'}
+        />
+      )}
     </div>
   );
 };

@@ -29,6 +29,7 @@ export interface ServiceNodeContentData {
   imageUrl?: string;
   videoUrl?: string;
   blocks?: ContentBlock[];
+  layoutBlocks?: LayoutBlock[];
 }
 
 export interface ServiceNode {
@@ -37,6 +38,7 @@ export interface ServiceNode {
   nodeType: 'category' | 'content' | 'step'; // categoría = tiene sub-botones; content = respuesta final; step = paso con contenido + botones
   children?: ServiceNode[]; // Opcional, si es category o step
   contentData?: ServiceNodeContentData; // Opcional, si es content o step
+  blocks?: LayoutBlock[]; // Bloques enriquecidos del Page Builder (LayoutBlock[])
 }
 
 export interface ServiceFAQ {
