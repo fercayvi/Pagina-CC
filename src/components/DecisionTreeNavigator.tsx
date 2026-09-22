@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   ChevronRight, 
   ChevronLeft, 
-  ZoomIn,
-  ListOrdered,
-  ArrowLeft,
-  ArrowRight,
-  RotateCcw,
-  CheckCircle2
+  ZoomIn, 
+  ArrowLeft, 
+  ArrowRight, 
+  RotateCcw, 
+  CheckCircle2 
 } from 'lucide-react';
 import { ServiceNode } from '../types';
 
@@ -47,6 +46,17 @@ function getEmbedVideoInfo(url?: string) {
   };
 }
 
+// Helper to check if a title is generic/empty or placeholder
+function isGenericTitle(title?: string): boolean {
+  if (!title) return true;
+  const t = title.trim().toLowerCase();
+  return t === '' || t === '-' || t === 'opción' || t === 'opcion';
+}
+
+function getCleanButtonTitle(title?: string): string {
+  return isGenericTitle(title) ? 'Continuar' : title!.trim();
+}
+
 export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
   tree,
   onOpenLightbox,
@@ -54,6 +64,21 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
 }) => {
   // Navigation stack: array of selected nodes from root to current
   const [navPath, setNavPath] = useState<ServiceNode[]>([]);
+  const topRef = useRef<HTMLDivElement>(null);
+
+  // Determine current active node (null means at root level)
+  const currentNode = navPath.length > 0 ? navPath[navPath.length - 1] : null;
+
+  // Migas de pan filtradas: excluye nodos sin título real, '-', 'Opción' o que comiencen con 'Paso'
+  const visibleHistory = navPath.filter(
+    (node) =>
+      node.title &&
+      node.title.trim() !== '' &&
+      node.title !== '-' &&
+      node.title.toLowerCase().trim() !== 'opción' &&
+      node.title.toLowerCase().trim() !== 'opcion' &&
+      !node.title.trim().startsWith('Paso')
+  );
 
   if (!tree || tree.length === 0) {
     return (
@@ -63,24 +88,31 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
     );
   }
 
-  // Determine current active node (null means at root level)
-  const currentNode = navPath.length > 0 ? navPath[navPath.length - 1] : null;
+  const scrollToTop = () => {
+    setTimeout(() => {
+      topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  };
 
   // Handlers for step-by-step navigation
   const handleSelectNode = (node: ServiceNode) => {
     setNavPath((prev) => [...prev, node]);
+    scrollToTop();
   };
 
   const handleGoBack = () => {
     setNavPath((prev) => prev.slice(0, prev.length - 1));
+    scrollToTop();
   };
 
   const handleJumpToStep = (index: number) => {
     setNavPath((prev) => prev.slice(0, index + 1));
+    scrollToTop();
   };
 
   const handleReset = () => {
     setNavPath([]);
+    scrollToTop();
   };
 
   // Video info if current content or step node has video
@@ -94,7 +126,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
   // Reusable Step Navigation Bar (Top and Bottom)
   const renderStepNavigation = (isTop: boolean) => {
     return (
-      <div className={`${isTop ? 'border-b border-slate-100 pb-4 mb-4' : 'border-t border-slate-100 pt-5 mt-5'} flex items-center justify-between gap-3`}>
+      <div className={`${isTop ? 'border-b border-slate-100 pb-3 mb-3' : 'border-t border-slate-100 pt-4 mt-4'} flex items-center justify-between gap-3`}>
         {navPath.length > 0 ? (
           <button
             type="button"
@@ -115,13 +147,13 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
               onClick={() => handleSelectNode(currentNode.children![0])}
               className="px-6 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-xl shadow-xs transition-all flex items-center gap-2 ml-auto cursor-pointer"
             >
-              <span>{(!currentNode.children[0].title || currentNode.children[0].title.trim() === '' || currentNode.children[0].title === '-') ? 'Continuar' : currentNode.children[0].title}</span>
+              <span>{getCleanButtonTitle(currentNode.children[0].title)}</span>
               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           ) : (
             <div className="flex flex-wrap items-center gap-2 ml-auto justify-end">
               {currentNode.children.map((childNode) => {
-                const childButtonText = (!childNode.title || childNode.title.trim() === '' || childNode.title === '-') ? 'Continuar' : childNode.title;
+                const childButtonText = getCleanButtonTitle(childNode.title);
                 return (
                   <button
                     key={childNode.id}
@@ -155,11 +187,14 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
       {/* =========================================================================
           CONTENEDOR PRINCIPAL FUSIONADO (Tarjeta sin bordes marcados con sombra suave)
           ========================================================================= */}
-      <div className="bg-white border border-slate-100 rounded-2xl p-6 sm:p-8 shadow-md">
+      <div className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-6 shadow-md">
+        {/* Ancla para Auto-Scroll al inicio de la tarjeta */}
+        <div ref={topRef} />
+
         {/* Barra superior de navegación: Breadcrumbs a la izquierda y Controles a la derecha */}
         {navPath.length > 0 && (
-          <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-5 border-b border-slate-100">
-            {/* Breadcrumbs limpios */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 mb-4 border-b border-slate-100">
+            {/* Breadcrumbs limpios filtrados */}
             <nav className="flex flex-wrap items-center gap-1.5 text-xs text-slate-400">
               <button
                 type="button"
@@ -168,24 +203,30 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
               >
                 Inicio
               </button>
-              {navPath.map((stepNode, idx) => (
-                <React.Fragment key={stepNode.id}>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-                  {idx === navPath.length - 1 ? (
-                    <span className="font-semibold text-slate-600 truncate max-w-[200px] sm:max-w-xs">
-                      {stepNode.title}
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => handleJumpToStep(idx)}
-                      className="hover:text-blue-600 font-medium truncate max-w-[150px] sm:max-w-xs cursor-pointer transition-colors"
-                    >
-                      {stepNode.title}
-                    </button>
-                  )}
-                </React.Fragment>
-              ))}
+              {visibleHistory.map((stepNode, idx) => {
+                const isLast = idx === visibleHistory.length - 1;
+                return (
+                  <React.Fragment key={stepNode.id}>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+                    {isLast ? (
+                      <span className="font-semibold text-slate-600 truncate max-w-[200px] sm:max-w-xs">
+                        {stepNode.title}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const targetIdx = navPath.findIndex((n) => n.id === stepNode.id);
+                          if (targetIdx !== -1) handleJumpToStep(targetIdx);
+                        }}
+                        className="hover:text-blue-600 font-medium truncate max-w-[150px] sm:max-w-xs cursor-pointer transition-colors"
+                      >
+                        {stepNode.title}
+                      </button>
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </nav>
 
             {/* Controles discretos fantasma */}
@@ -215,18 +256,8 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
 
         {/* ==================== VISTA 1: PASO DE TUTORIAL ==================== */}
         {currentNode && currentNode.nodeType === 'step' ? (
-          <div className="space-y-5 animate-fadeIn">
-            <div className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-full bg-purple-600 text-white font-extrabold shadow-sm flex items-center justify-center text-sm shrink-0">
-                {navPath.length}
-              </span>
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-200">
-                <ListOrdered className="w-4 h-4 text-purple-600" />
-                Paso de Instrucción
-              </span>
-            </div>
-
-            {currentNode.title && (
+          <div className="space-y-4 animate-fadeIn">
+            {currentNode.title && !isGenericTitle(currentNode.title) && (
               <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
                 {currentNode.title}
               </h3>
@@ -235,8 +266,8 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
             {/* Barra de navegación superior del paso */}
             {renderStepNavigation(true)}
 
-            {/* Renderizado de Bloques de Contenido */}
-            <div className="space-y-8 my-5">
+            {/* Renderizado de Bloques de Contenido con espaciado optimizado */}
+            <div className="space-y-4 mb-4">
               {((currentNode.contentData?.blocks && currentNode.contentData.blocks.length > 0)
                 ? currentNode.contentData.blocks
                 : [
@@ -250,7 +281,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
               ).map((block, index) => {
                 const blockVideo = getEmbedVideoInfo(block.videoUrl);
                 return (
-                  <div key={block.id || `block-${index}`} className="space-y-4">
+                  <div key={block.id || `block-${index}`} className="space-y-3">
                     {block.text && (
                       <div className="text-base sm:text-lg text-slate-700 leading-relaxed whitespace-pre-line font-normal">
                         {block.text}
@@ -258,7 +289,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
                     )}
 
                     {block.imageUrl && (
-                      <div className="w-full flex justify-center my-4">
+                      <div className="w-full flex justify-center my-3">
                         <div 
                           onClick={() => onOpenLightbox && onOpenLightbox(block.imageUrl!, `${currentNode.title} - Imagen ${index + 1}`)}
                           className="relative group cursor-pointer overflow-hidden rounded-2xl border border-slate-200 inline-block max-w-full bg-slate-50 shadow-2xs hover:shadow-md transition-all"
@@ -278,7 +309,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
                     )}
 
                     {blockVideo && (
-                      <div className="w-full flex justify-center my-4">
+                      <div className="w-full flex justify-center my-3">
                         <div className="w-full max-w-3xl aspect-video rounded-2xl overflow-hidden shadow-xs bg-black border border-slate-200">
                           {blockVideo.type === 'direct' ? (
                             <video src={blockVideo.embedUrl} controls className="w-full h-full" />
@@ -304,7 +335,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
           </div>
         ) : currentNode && currentNode.nodeType === 'content' ? (
           /* ==================== VISTA 2: RESOLUCIÓN FINAL ==================== */
-          <div className="space-y-6 animate-fadeIn">
+          <div className="space-y-4 animate-fadeIn">
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -312,9 +343,11 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
               </span>
             </div>
 
-            <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
-              {currentNode.title}
-            </h3>
+            {currentNode.title && !isGenericTitle(currentNode.title) && (
+              <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
+                {currentNode.title}
+              </h3>
+            )}
 
             {currentNode.contentData?.text && (
               <div className="text-base sm:text-lg text-slate-700 leading-relaxed whitespace-pre-line font-normal">
@@ -323,15 +356,15 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
             )}
 
             {currentNode.contentData?.imageUrl && (
-              <div className="w-full flex justify-center my-4">
+              <div className="w-full flex justify-center my-3">
                 <div 
-                  onClick={() => onOpenLightbox && onOpenLightbox(currentNode.contentData!.imageUrl!, currentNode.title)}
+                  onClick={() => onOpenLightbox && onOpenLightbox(currentNode.contentData!.imageUrl!, !isGenericTitle(currentNode.title) ? currentNode.title : 'Resolución')}
                   className="relative group cursor-pointer overflow-hidden rounded-2xl border border-slate-200 inline-block max-w-full bg-slate-50 shadow-2xs hover:shadow-md transition-all"
                   title="Clic para ampliar imagen"
                 >
                   <img 
                     src={currentNode.contentData.imageUrl} 
-                    alt={currentNode.title} 
+                    alt={!isGenericTitle(currentNode.title) ? currentNode.title : 'Resolución'} 
                     className="max-w-full md:max-w-2xl h-auto rounded-2xl object-contain" 
                   />
                   <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center gap-2 text-white text-sm font-bold">
@@ -343,14 +376,14 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
             )}
 
             {currentVideoInfo && (
-              <div className="w-full flex justify-center my-4">
+              <div className="w-full flex justify-center my-3">
                 <div className="w-full max-w-3xl aspect-video rounded-2xl overflow-hidden shadow-xs bg-black border border-slate-200">
                   {currentVideoInfo.type === 'direct' ? (
                     <video src={currentVideoInfo.embedUrl} controls className="w-full h-full" />
                   ) : (
                     <iframe
                       src={currentVideoInfo.embedUrl}
-                      title={currentNode.title}
+                      title={!isGenericTitle(currentNode.title) ? currentNode.title : 'Video'}
                       className="w-full h-full border-0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
@@ -360,7 +393,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
               </div>
             )}
 
-            <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between gap-4">
+            <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
               <button
                 type="button"
                 onClick={handleGoBack}
@@ -384,21 +417,23 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
           /* ==================== VISTA 3: PREGUNTA Y OPCIONES ==================== */
           <div className="animate-fadeIn">
             {/* Pregunta Principal con círculo de paso con peso visual */}
-            <div className="flex items-start gap-3 sm:gap-4 mb-6">
+            <div className="flex items-start gap-3 sm:gap-4 mb-4">
               <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-600 text-white font-extrabold shadow-sm flex items-center justify-center text-sm shrink-0 mt-0.5">
                 {navPath.length + 1}
               </span>
               <div className="flex-1 min-w-0">
                 <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
-                  {currentNode ? currentNode.title : '¿Qué necesitas consultar o resolver?'}
+                  {currentNode && !isGenericTitle(currentNode.title)
+                    ? currentNode.title 
+                    : '¿Qué necesitas consultar o resolver?'}
                 </h3>
               </div>
             </div>
 
-            {/* Grid de opciones con estilo azul por defecto */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
+            {/* Grid de opciones con estilo azul por defecto y margen superior compacto */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4 mt-4">
               {currentOptions.map((option) => {
-                const buttonText = (!option.title || option.title.trim() === '' || option.title === '-') ? 'Continuar' : option.title;
+                const buttonText = getCleanButtonTitle(option.title);
                 return (
                   <button
                     key={option.id}

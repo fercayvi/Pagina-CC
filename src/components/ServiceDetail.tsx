@@ -430,6 +430,11 @@ export default function ServiceDetail({
   const [mobileViewMode, setMobileViewMode] = useState<'editor' | 'preview'>('editor');
   const [lightboxImage, setLightboxImage] = useState<{ url: string; title?: string } | null>(null);
 
+  // Forzar inicio en el tope absoluto al montar la vista de detalle
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   // Reset scroll to top whenever the service changes or is opened
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
