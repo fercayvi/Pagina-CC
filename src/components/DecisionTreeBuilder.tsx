@@ -173,7 +173,7 @@ function NodeItemEditor({
                 type="text"
                 value={node.title}
                 onChange={(e) => handleTitleChange(e.target.value)}
-                placeholder="Texto del botón para el empleado (ej. '¿Tengo dudas con mi sueldo?')..."
+                placeholder="Dejar en blanco para 'Continuar' o escribir opción (ej. Sí / No)"
                 className="w-full text-xs sm:text-sm font-bold text-slate-800 bg-slate-50 hover:bg-white focus:bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
               />
             </div>

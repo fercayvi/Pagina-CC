@@ -115,22 +115,25 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
               onClick={() => handleSelectNode(currentNode.children![0])}
               className="px-6 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-xl shadow-xs transition-all flex items-center gap-2 ml-auto cursor-pointer"
             >
-              <span>{currentNode.children[0].title || 'Siguiente'}</span>
+              <span>{(!currentNode.children[0].title || currentNode.children[0].title.trim() === '' || currentNode.children[0].title === '-') ? 'Continuar' : currentNode.children[0].title}</span>
               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           ) : (
             <div className="flex flex-wrap items-center gap-2 ml-auto justify-end">
-              {currentNode.children.map((childNode) => (
-                <button
-                  key={childNode.id}
-                  type="button"
-                  onClick={() => handleSelectNode(childNode)}
-                  className="px-5 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
-                >
-                  <span>{childNode.title}</span>
-                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
-              ))}
+              {currentNode.children.map((childNode) => {
+                const childButtonText = (!childNode.title || childNode.title.trim() === '' || childNode.title === '-') ? 'Continuar' : childNode.title;
+                return (
+                  <button
+                    key={childNode.id}
+                    type="button"
+                    onClick={() => handleSelectNode(childNode)}
+                    className="px-5 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    <span>{childButtonText}</span>
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                );
+              })}
             </div>
           )
         ) : (
@@ -394,23 +397,26 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
 
             {/* Grid de opciones con estilo azul por defecto */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
-              {currentOptions.map((node) => (
-                <button
-                  key={node.id}
-                  type="button"
-                  onClick={() => handleSelectNode(node)}
-                  className="bg-white border border-blue-300 text-blue-700 hover:bg-blue-50 hover:shadow-md hover:-translate-y-0.5 p-4 sm:p-5 rounded-2xl flex items-center justify-between transition-all group cursor-pointer text-left min-h-[72px] shadow-2xs"
-                >
-                  <div className="pr-3 flex-1 min-w-0">
-                    <span className="text-sm sm:text-base font-bold text-blue-700 leading-snug">
-                      {node.title}
-                    </span>
-                  </div>
-                  <div className="bg-blue-600 text-white rounded-full p-1 flex items-center justify-center shrink-0 shadow-2xs">
-                    <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
-                  </div>
-                </button>
-              ))}
+              {currentOptions.map((option) => {
+                const buttonText = (!option.title || option.title.trim() === '' || option.title === '-') ? 'Continuar' : option.title;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => handleSelectNode(option)}
+                    className="bg-white border border-blue-300 text-blue-700 hover:bg-blue-50 hover:shadow-md hover:-translate-y-0.5 p-4 sm:p-5 rounded-2xl flex items-center justify-between transition-all group cursor-pointer text-left min-h-[72px] shadow-2xs"
+                  >
+                    <div className="pr-3 flex-1 min-w-0">
+                      <span className="text-sm sm:text-base font-bold text-blue-700 leading-snug">
+                        {buttonText}
+                      </span>
+                    </div>
+                    <div className="bg-blue-600 text-white rounded-full p-1 flex items-center justify-center shrink-0 shadow-2xs">
+                      <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+                    </div>
+                  </button>
+                );
+              })}
             </div>
 
             {currentOptions.length === 0 && (

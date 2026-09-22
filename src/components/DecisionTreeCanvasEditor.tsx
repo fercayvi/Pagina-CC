@@ -320,7 +320,7 @@ const CustomDecisionNode: React.FC<NodeProps<DecisionNodeType>> = ({
 
         {/* Node Title */}
         <p className="text-xs font-semibold text-gray-900 leading-snug line-clamp-2">
-          {data.title || 'Sin título'}
+          {(!data.title || data.title.trim() === '' || data.title === '-') ? 'Continuar' : data.title}
         </p>
 
         {/* Content snippet if content or step node */}
@@ -928,7 +928,7 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
                   type="text"
                   value={selectedNode.data.title}
                   onChange={(e) => updateSelectedNodeData({ title: e.target.value })}
-                  placeholder="Ej: ¿Qué tipo de incapacidad tienes?"
+                  placeholder="Dejar en blanco para 'Continuar' o escribir opción (ej. Sí / No)"
                   className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden transition-all"
                 />
                 <p className="text-[11px] text-gray-400">
