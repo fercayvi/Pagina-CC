@@ -39,7 +39,12 @@ export interface ServiceNode {
   children?: ServiceNode[]; // Opcional, si es category o step
   contentData?: ServiceNodeContentData; // Opcional, si es content o step
   blocks?: LayoutBlock[]; // Bloques enriquecidos del Page Builder (LayoutBlock[])
+  text?: string; // Texto directo para retrocompatibilidad
+  imageUrl?: string; // Imagen directa para retrocompatibilidad
+  videoUrl?: string; // Video directo para retrocompatibilidad
 }
+
+export type DecisionTreeNode = ServiceNode;
 
 export interface ServiceFAQ {
   question: string;

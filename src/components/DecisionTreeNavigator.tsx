@@ -111,6 +111,11 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
   // Determine current active node (null means at root level)
   const currentNode = navPath.length > 0 ? navPath[navPath.length - 1] : null;
 
+  // Fallback seguro de bloques de contenido para el nodo actual
+  const currentBlocks: LayoutBlock[] = currentNode
+    ? (currentNode.blocks || (currentNode.text ? [{ id: 'legacy', type: 'text', content: currentNode.text }] : getNodeBlocks(currentNode)))
+    : [];
+
   // Migas de pan filtradas: excluye nodos sin título real, '-', 'Opción' o que comiencen con 'Paso'
   const visibleHistory = navPath.filter(
     (node) =>
@@ -306,7 +311,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
             {/* Renderizado de Bloques Enriquecidos del Page Builder */}
             <div className="my-4">
               <LayoutBlocksRenderer 
-                blocks={currentNode.blocks || getNodeBlocks(currentNode)} 
+                blocks={currentBlocks} 
                 onOpenLightbox={onOpenLightbox}
                 serviceTitle={serviceTitle}
               />
@@ -334,7 +339,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
             {/* Renderizado de Bloques Enriquecidos del Page Builder */}
             <div className="my-4">
               <LayoutBlocksRenderer 
-                blocks={currentNode.blocks || getNodeBlocks(currentNode)} 
+                blocks={currentBlocks} 
                 onOpenLightbox={onOpenLightbox}
                 serviceTitle={serviceTitle}
               />

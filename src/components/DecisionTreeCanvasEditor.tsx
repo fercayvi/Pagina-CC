@@ -628,12 +628,16 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
 
   // Full-screen Page Builder Modal state for editing node blocks
   const [isPageBuilderOpen, setIsPageBuilderOpen] = useState(false);
+  const [editorBlocks, setEditorBlocks] = useState<LayoutBlock[]>([]);
 
   // Compute LayoutBlock[] for selectedNode, migrating legacy contentData if needed
   const selectedNodeBlocks: LayoutBlock[] = useMemo(() => {
     if (!selectedNode) return [];
     if (selectedNode.data.blocks && selectedNode.data.blocks.length > 0) {
       return selectedNode.data.blocks;
+    }
+    if ((selectedNode as any).blocks && (selectedNode as any).blocks.length > 0) {
+      return (selectedNode as any).blocks;
     }
     if (selectedNode.data.contentData?.layoutBlocks && selectedNode.data.contentData.layoutBlocks.length > 0) {
       return selectedNode.data.contentData.layoutBlocks;
@@ -705,6 +709,29 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
     }
     return fallback;
   }, [selectedNode]);
+
+  const handleSaveAndClosePageBuilder = useCallback((blocksToSave: LayoutBlock[]) => {
+    if (!selectedNode) return;
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === selectedNode.id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              blocks: blocksToSave,
+              contentData: {
+                ...node.data.contentData,
+                layoutBlocks: blocksToSave,
+              },
+            },
+          };
+        }
+        return node;
+      })
+    );
+    setIsPageBuilderOpen(false);
+  }, [selectedNode, setNodes]);
 
   const handleSaveNodeBlocks = useCallback((newBlocks: LayoutBlock[]) => {
     if (!selectedNode) return;
@@ -1073,18 +1100,18 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
                         </div>
                       )}
 
-                      {/* Botón para abrir el Page Builder a pantalla completa */}
+                      {/* Botón primario grande: "Abrir Editor de Página para este Paso" */}
                       <button
                         type="button"
-                        onClick={() => setIsPageBuilderOpen(true)}
-                        className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer active:scale-98 ${
-                          selectedNode.data.nodeType === 'step'
-                            ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                            : 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                        }`}
+                        onClick={() => {
+                          const blocksToEdit = selectedNode.data.blocks || (selectedNode as any).blocks || selectedNodeBlocks;
+                          setEditorBlocks(blocksToEdit);
+                          setIsPageBuilderOpen(true);
+                        }}
+                        className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-xl text-sm font-bold shadow-sm transition-all cursor-pointer active:scale-98 bg-blue-600 hover:bg-blue-700 text-white"
                       >
-                        <Edit3 className="w-4 h-4" />
-                        <span>Editar Contenido con Page Builder</span>
+                        <Edit3 className="w-5 h-5" />
+                        <span>Abrir Editor de Página para este Paso</span>
                       </button>
                     </div>
                   </div>
@@ -1169,16 +1196,21 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
         </aside>
       </div>
 
-      {/* Fullscreen Page Builder Editor for editing node blocks */}
+      {/* Modal a pantalla completa (un div con fixed inset-0 z-50 bg-white) */}
       {isPageBuilderOpen && selectedNode && (
-        <PageBuilderFullScreenEditor
-          blocks={selectedNodeBlocks}
-          onChange={(newBlocks) => {
-            handleSaveNodeBlocks(newBlocks);
-          }}
-          onClose={() => setIsPageBuilderOpen(false)}
-          serviceTitle={selectedNode.data.title || serviceTitle || 'Paso del Trámite'}
-        />
+        <div className="fixed inset-0 z-50 bg-white flex flex-col overflow-hidden">
+          <PageBuilderFullScreenEditor
+            blocks={editorBlocks}
+            onChange={(newBlocks) => {
+              setEditorBlocks(newBlocks);
+            }}
+            onClose={() => {
+              // Botón de Guardar y Cerrar en el modal: actualiza el arreglo de blocks del nodo específico en nodes
+              handleSaveAndClosePageBuilder(editorBlocks);
+            }}
+            serviceTitle={selectedNode.data.title || serviceTitle || 'Paso del Trámite'}
+          />
+        </div>
       )}
     </div>
   );

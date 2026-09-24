@@ -231,15 +231,11 @@ export default function App() {
             {/* RENDER SELECTED SERVICE DETAIL (Public or Admin) WITH LIGHT FULLSCREEN BACKDROP */}
             {selectedService ? (
               <div className="relative animate-fadeIn min-h-screen">
-                {/* Light Full-Screen Background Overlay */}
+                {/* Light Full-Screen Background Overlay (Static background, no click-to-close on margins) */}
                 <div 
                   id="service-detail-backdrop"
-                  className="fixed inset-0 bg-slate-50 z-30 transition-opacity"
-                  onClick={() => {
-                    setSelectedService(null);
-                    setServiceEditMode(false);
-                  }}
-                  title="Volver al catálogo"
+                  className="fixed inset-0 bg-slate-50 z-30 pointer-events-none"
+                  aria-hidden="true"
                 />
 
                 {/* Service Detail Full-Width Kiosk Container */}

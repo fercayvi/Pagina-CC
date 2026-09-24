@@ -467,11 +467,11 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
               type="button"
               onClick={onClose}
               className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 shrink-0 shadow-xs"
-              title="Guardar cambios y volver"
+              title="Guardar cambios y cerrar"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Guardar y Volver</span>
-              <span className="sm:hidden">Volver</span>
+              <span className="hidden sm:inline">Guardar y Cerrar</span>
+              <span className="sm:hidden">Guardar</span>
             </button>
 
             <div className="h-5 w-px bg-slate-200 hidden sm:block shrink-0" />

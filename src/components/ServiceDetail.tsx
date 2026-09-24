@@ -671,7 +671,11 @@ export default function ServiceDetail({
   const videoInfo = getEmbedVideoInfo(draft.videoUrl);
 
   return (
-    <div id={`service-detail-${service.id}`} className={`space-y-4 animate-fadeIn ${isEditing ? 'pb-28' : 'pb-16'}`}>
+    <div 
+      id={`service-detail-${service.id}`} 
+      className={`space-y-4 animate-fadeIn cursor-default select-text ${isEditing ? 'pb-28' : 'pb-16'}`}
+      onClick={(e) => e.stopPropagation()}
+    >
       
       {/* Toast Notification */}
       {toastMsg && (
@@ -1153,6 +1157,8 @@ export default function ServiceDetail({
           <div className="bg-white border border-slate-200/90 rounded-2xl px-4 sm:px-5 py-3 sm:py-4 shadow-2xs flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
               <button 
+                id="btn-service-back"
+                type="button"
                 onClick={onBack}
                 className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs sm:text-sm flex items-center gap-1 active:scale-95 transition-all shrink-0 border border-slate-300 shadow-2xs cursor-pointer min-h-[38px]"
                 title="Volver"
