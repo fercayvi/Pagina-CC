@@ -393,14 +393,21 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
             </div>
 
             {currentOptions.length === 0 && (
-              <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 text-center mt-4">
+              <div className="p-6 sm:p-8 bg-slate-50 rounded-2xl border border-slate-200 text-center mt-4">
                 <p className="text-sm font-medium text-slate-500">No hay más opciones disponibles en esta rama.</p>
+              </div>
+            )}
+
+            {/* Barra inferior de navegación: Botón Atrás cuando hay historial de navegación */}
+            {navPath.length > 0 && (
+              <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
                 <button
                   type="button"
                   onClick={handleGoBack}
-                  className="mt-3 px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-xl cursor-pointer"
+                  className="px-4 py-2 sm:px-5 sm:py-2.5 text-sm sm:text-base font-medium text-slate-700 hover:text-slate-900 bg-transparent hover:bg-slate-100 active:scale-95 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
                 >
-                  Volver al paso anterior
+                  <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
+                  <span>Atrás</span>
                 </button>
               </div>
             )}
