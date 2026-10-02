@@ -1161,10 +1161,10 @@ export default function ServiceDetail({
                 type="button"
                 onClick={onBack}
                 className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs sm:text-sm flex items-center gap-1 active:scale-95 transition-all shrink-0 border border-slate-300 shadow-2xs cursor-pointer min-h-[38px]"
-                title="Volver"
+                title="Volver al menú"
               >
                 <ChevronLeft className="w-4 h-4 text-slate-700" />
-                <span>Volver</span>
+                <span>Volver al menú</span>
               </button>
 
               <div className="flex items-center gap-2.5 min-w-0">

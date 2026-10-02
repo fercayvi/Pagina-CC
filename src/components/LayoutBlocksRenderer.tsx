@@ -132,7 +132,7 @@ function SingleFAQBlock({ title, items }: { title?: string; items: { q: string; 
   if (!items || items.length === 0) return null;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm space-y-4">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm space-y-4">
       <h3 className="text-base sm:text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
         <HelpCircle className="w-5 h-5 text-blue-600 shrink-0" />
         <span>{title || 'Preguntas Frecuentes'}</span>
@@ -208,7 +208,7 @@ export const LayoutBlocksRenderer: React.FC<LayoutBlocksRendererProps> = ({
           return (
             <div 
               key={block.id || `text-${index}`}
-              className={`bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-3.5 ${alignClass}`}
+              className={`bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xs space-y-4 ${alignClass}`}
             >
               {block.title && (
                 <h3 className={`text-base sm:text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2 ${block.align === 'center' ? 'justify-center' : block.align === 'right' ? 'justify-end' : ''}`}>
@@ -260,7 +260,7 @@ export const LayoutBlocksRenderer: React.FC<LayoutBlocksRendererProps> = ({
           return (
             <div 
               key={block.id || `alert-${index}`}
-              className={`${containerClass} rounded-xl p-4 sm:p-5 shadow-sm flex items-start gap-3.5 sm:gap-4 transition-all`}
+              className={`${containerClass} rounded-2xl p-6 sm:p-8 shadow-sm flex items-start gap-4 sm:gap-5 transition-all`}
             >
               <IconComponent className={`w-7 h-7 sm:w-8 sm:h-8 shrink-0 mt-0.5 ${iconColor}`} />
               <div className="min-w-0 flex-1 space-y-1">
@@ -391,7 +391,7 @@ export const LayoutBlocksRenderer: React.FC<LayoutBlocksRendererProps> = ({
             return (
               <div 
                 key={block.id || `media-${index}`}
-                className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm space-y-3.5"
+                className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm space-y-4"
               >
                 {block.title && (
                   <h3 className="text-base sm:text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">

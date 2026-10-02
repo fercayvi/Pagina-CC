@@ -1,11 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   ChevronRight, 
-  ChevronLeft, 
   ArrowLeft, 
   ArrowRight, 
-  RotateCcw, 
-  CheckCircle2 
+  RotateCcw 
 } from 'lucide-react';
 import { ServiceNode, LayoutBlock } from '../types';
 import { LayoutBlocksRenderer } from './LayoutBlocksRenderer';
@@ -106,7 +104,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
 }) => {
   // Navigation stack: array of selected nodes from root to current
   const [navPath, setNavPath] = useState<ServiceNode[]>([]);
-  const topRef = useRef<HTMLDivElement>(null);
+  const isInitialMount = useRef(true);
 
   // Determine current active node (null means at root level)
   const currentNode = navPath.length > 0 ? navPath[navPath.length - 1] : null;
@@ -136,10 +134,36 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
   }
 
   const scrollToTop = () => {
-    setTimeout(() => {
-      topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 50);
+    // 1. Scroll al inicio absoluto de la ventana global
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (document.documentElement) {
+      document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    if (document.body) {
+      document.body.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 2. Scroll al inicio del contenedor principal con overflow si existe
+    const mainScrollable = document.getElementById('phone-main-scrollable-content');
+    if (mainScrollable) {
+      mainScrollable.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 3. Fallback adicional para contenedores con scroll vertical activo
+    const scrollContainers = document.querySelectorAll('.overflow-y-auto');
+    scrollContainers.forEach((container) => {
+      container.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   };
+
+  // Scroll al tope superior automáticamente al cambiar de paso
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    scrollToTop();
+  }, [navPath]);
 
   // Handlers for step-by-step navigation
   const handleSelectNode = (node: ServiceNode) => {
@@ -173,9 +197,9 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
           <button
             type="button"
             onClick={handleGoBack}
-            className="px-5 py-2.5 text-sm sm:text-base font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 active:scale-95 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+            className="px-4 py-2 sm:px-5 sm:py-2.5 text-sm sm:text-base font-medium text-slate-700 hover:text-slate-900 bg-transparent hover:bg-slate-100 active:scale-95 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
           >
-            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
             <span>Atrás</span>
           </button>
         ) : (
@@ -230,81 +254,70 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
           CONTENEDOR PRINCIPAL FUSIONADO (Tarjeta sin bordes marcados con sombra suave)
           ========================================================================= */}
       <div className="bg-white border border-slate-100 rounded-2xl p-4 sm:p-6 shadow-md">
-        {/* Ancla para Auto-Scroll al inicio de la tarjeta */}
-        <div ref={topRef} />
-
         {/* Barra superior de navegación: Breadcrumbs a la izquierda y Controles a la derecha */}
-        {navPath.length > 0 && (
-          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 mb-4 border-b border-slate-100">
-            {/* Breadcrumbs limpios filtrados */}
-            <nav className="flex flex-wrap items-center gap-1.5 text-xs text-slate-400">
-              <button
-                type="button"
-                onClick={handleReset}
-                className="hover:text-blue-600 font-medium cursor-pointer transition-colors"
-              >
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 mb-4 border-b border-slate-100">
+          {/* Breadcrumbs limpios con mayor tamaño de fuente y peso */}
+          <nav className="flex flex-wrap items-center gap-2 text-xl sm:text-2xl">
+            {visibleHistory.length === 0 ? (
+              <span className="text-slate-900 font-bold">
                 Inicio
-              </button>
-              {visibleHistory.map((stepNode, idx) => {
-                const isLast = idx === visibleHistory.length - 1;
-                return (
-                  <React.Fragment key={stepNode.id}>
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-                    {isLast ? (
-                      <span className="font-semibold text-slate-600 truncate max-w-[200px] sm:max-w-xs">
-                        {stepNode.title}
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const targetIdx = navPath.findIndex((n) => n.id === stepNode.id);
-                          if (targetIdx !== -1) handleJumpToStep(targetIdx);
-                        }}
-                        className="hover:text-blue-600 font-medium truncate max-w-[150px] sm:max-w-xs cursor-pointer transition-colors"
-                      >
-                        {stepNode.title}
-                      </button>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </nav>
+              </span>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="text-slate-500 font-normal hover:text-slate-800 cursor-pointer transition-colors"
+                >
+                  Inicio
+                </button>
+                {visibleHistory.map((stepNode, idx) => {
+                  const isLast = idx === visibleHistory.length - 1;
+                  return (
+                    <React.Fragment key={stepNode.id}>
+                      <ChevronRight className="w-5 h-5 text-slate-400 shrink-0" />
+                      {isLast ? (
+                        <span className="font-bold text-slate-900 truncate max-w-[280px] sm:max-w-md">
+                          {stepNode.title}
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const targetIdx = navPath.findIndex((n) => n.id === stepNode.id);
+                            if (targetIdx !== -1) handleJumpToStep(targetIdx);
+                          }}
+                          className="text-slate-500 font-normal hover:text-slate-800 truncate max-w-[180px] sm:max-w-xs cursor-pointer transition-colors"
+                        >
+                          {stepNode.title}
+                        </button>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </>
+            )}
+          </nav>
 
-            {/* Controles discretos fantasma */}
-            <div className="flex items-center gap-1 ml-auto">
-              <button
-                type="button"
-                onClick={handleGoBack}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 text-xs font-semibold transition-all cursor-pointer"
-                title="Paso anterior"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <span>Paso anterior</span>
-              </button>
-
+          {/* Controles discretos fantasma alineados a la derecha */}
+          {navPath.length > 0 && (
+            <div className="flex items-center ml-auto shrink-0">
               <button
                 type="button"
                 onClick={handleReset}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 text-xs font-semibold transition-all cursor-pointer"
+                className="flex items-center gap-1.5 py-1 text-slate-500 hover:text-slate-800 text-xs sm:text-sm font-normal transition-colors cursor-pointer bg-transparent border-0"
                 title="Reiniciar asistente"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Reiniciar</span>
+                <RotateCcw className="w-4 h-4 text-slate-500" />
+                <span>Reiniciar</span>
               </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* ==================== VISTA 1: PASO DE TUTORIAL ==================== */}
         {currentNode && currentNode.nodeType === 'step' ? (
           <div className="space-y-4 animate-fadeIn">
-            {currentNode.title && !isGenericTitle(currentNode.title) && (
-              <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
-                {currentNode.title}
-              </h3>
-            )}
-
             {/* Barra de navegación superior del paso */}
             {renderStepNavigation(true)}
 
@@ -323,19 +336,6 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
         ) : currentNode && currentNode.nodeType === 'content' ? (
           /* ==================== VISTA 2: RESOLUCIÓN FINAL ==================== */
           <div className="space-y-4 animate-fadeIn">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                Resolución del Trámite
-              </span>
-            </div>
-
-            {currentNode.title && !isGenericTitle(currentNode.title) && (
-              <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
-                {currentNode.title}
-              </h3>
-            )}
-
             {/* Renderizado de Bloques Enriquecidos del Page Builder */}
             <div className="my-4">
               <LayoutBlocksRenderer 
@@ -349,9 +349,9 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
               <button
                 type="button"
                 onClick={handleGoBack}
-                className="px-5 py-3 text-base font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 active:scale-95 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+                className="px-4 py-2.5 sm:px-5 sm:py-3 text-base font-medium text-slate-700 hover:text-slate-900 bg-transparent hover:bg-slate-100 active:scale-95 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-5 h-5 text-slate-600" />
                 <span>Atrás</span>
               </button>
 
@@ -368,22 +368,8 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
         ) : (
           /* ==================== VISTA 3: PREGUNTA Y OPCIONES ==================== */
           <div className="animate-fadeIn">
-            {/* Pregunta Principal con círculo de paso con peso visual */}
-            <div className="flex items-start gap-3 sm:gap-4 mb-4">
-              <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-600 text-white font-extrabold shadow-sm flex items-center justify-center text-sm shrink-0 mt-0.5">
-                {navPath.length + 1}
-              </span>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
-                  {currentNode && !isGenericTitle(currentNode.title)
-                    ? currentNode.title 
-                    : '¿Qué necesitas consultar o resolver?'}
-                </h3>
-              </div>
-            </div>
-
-            {/* Grid de opciones con estilo azul por defecto y margen superior compacto */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4 mt-4">
+            {/* Grid de opciones con estilo azul por defecto */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
               {currentOptions.map((option) => {
                 const buttonText = getCleanButtonTitle(option.title);
                 return (
