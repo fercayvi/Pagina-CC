@@ -9,8 +9,7 @@ import {
   HelpCircle, 
   CheckCircle2, 
   Sparkles,
-  SlidersHorizontal,
-  Info
+  SlidersHorizontal
 } from 'lucide-react';
 import { Service, CategoryConfig } from '../types';
 import { SERVICE_ICON_MAP } from './ServiceCard';
@@ -347,20 +346,17 @@ export default function SearchTab({
     <div className="space-y-4 animate-fadeIn pb-12">
       {/* Search Bar Input & Filter Header */}
       <section className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-xs">
-        <div className="max-w-3xl mx-auto space-y-3">
+        <div className="max-w-3xl mx-auto space-y-3.5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
                 <Search className="w-6 h-6 text-blue-600 shrink-0" strokeWidth={2.5} />
                 <span>Búsqueda Global de Trámites</span>
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                Escribe palabras clave como vacaciones, nómina, constancia, vales o IMSS.
-              </p>
             </div>
           </div>
 
-          {/* Large Input with Quick Clear and Submit */}
+          {/* Large Input with Quick Clear and Elegant Focus */}
           <div className="relative flex items-center">
             <Search className="absolute left-4 w-5 h-5 text-slate-400 pointer-events-none" />
             <input
@@ -369,15 +365,19 @@ export default function SearchTab({
               value={searchQuery}
               onChange={(e) => onSearchQueryChange(e.target.value)}
               placeholder="Buscar trámite, servicio, nómina, vacaciones..."
-              className="w-full pl-11 pr-11 py-3.5 bg-slate-50 hover:bg-slate-100/80 focus:bg-white text-slate-800 placeholder:text-slate-400 font-medium text-base rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-3 focus:ring-blue-100 outline-none transition-all shadow-inner"
+              className="w-full pl-11 pr-11 py-3.5 sm:py-4 bg-white hover:bg-slate-50/60 focus:bg-white text-slate-900 placeholder:text-slate-400 font-medium text-base rounded-xl border border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:outline-none shadow-xs hover:shadow-sm focus:shadow-md transition-all"
               autoFocus
             />
             {searchQuery && (
               <button
                 type="button"
-                onClick={() => onSearchQueryChange('')}
-                className="absolute right-3.5 p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/70 transition-colors cursor-pointer"
+                onClick={() => {
+                  onSearchQueryChange('');
+                  document.getElementById('global-search-input')?.focus();
+                }}
+                className="absolute right-3.5 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer active:scale-95"
                 title="Limpiar búsqueda"
+                aria-label="Limpiar búsqueda"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -385,24 +385,27 @@ export default function SearchTab({
           </div>
 
           {/* Suggestion Chips */}
-          <div className="flex items-center gap-1.5 flex-wrap pt-1 text-xs text-slate-500">
+          <div className="flex items-center gap-1.5 flex-wrap pt-0.5 text-xs text-slate-500">
             <span className="font-semibold text-slate-400 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-amber-500" /> Búsquedas comunes:
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Búsquedas comunes:
             </span>
-            {popularKeywords.map((kw) => (
-              <button
-                key={kw}
-                type="button"
-                onClick={() => onSearchQueryChange(kw)}
-                className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                  searchQuery.toLowerCase() === kw.toLowerCase()
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
-                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
-                }`}
-              >
-                {kw}
-              </button>
-            ))}
+            {popularKeywords.map((kw) => {
+              const isSelected = searchQuery.trim().toLowerCase() === kw.toLowerCase();
+              return (
+                <button
+                  key={kw}
+                  type="button"
+                  onClick={() => onSearchQueryChange(kw)}
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer select-none active:scale-95 ${
+                    isSelected
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-xs font-semibold'
+                      : 'bg-slate-100/90 text-slate-700 border-slate-200 hover:bg-slate-200 hover:border-slate-300 hover:text-slate-900 shadow-2xs'
+                  }`}
+                >
+                  {kw}
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -611,13 +614,6 @@ export default function SearchTab({
               <h4 className="font-bold text-slate-900 text-sm group-hover:text-violet-800">Tarjetas y Créditos</h4>
               <p className="text-xs text-slate-500 mt-1">Vales de despensa, caja de ahorro, préstamos e Infonavit.</p>
             </div>
-          </div>
-
-          <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 flex items-start gap-2.5 max-w-2xl mx-auto">
-            <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-            <p className="text-xs text-slate-600">
-              <span className="font-bold text-slate-700">Tip de búsqueda:</span> Puedes buscar por palabras clave específicas como <span className="font-semibold text-blue-700">"constancia"</span>, <span className="font-semibold text-blue-700">"reposición"</span> o <span className="font-semibold text-blue-700">"maternidad"</span>.
-            </p>
           </div>
         </section>
       )}
