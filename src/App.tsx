@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { Service, NewsItem, UserProfile, ContactInfo, CategoryConfig } from './types';
 import { initialServices, initialNews, userProfileData, initialContact, defaultCategories } from './data';
@@ -14,6 +14,7 @@ import AdminLoginModal from './components/AdminLoginModal';
 import ScrollProgressBar from './components/ScrollProgressBar';
 
 export default function App() {
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [currentTab, setCurrentTab] = useState<'inicio' | 'buscar' | 'noticias' | 'asistente'>('inicio');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedService, setSelectedService] = useState<(Service & { hidden?: boolean }) | null>(null);
@@ -158,6 +159,7 @@ export default function App() {
 
   // Global Kiosk Inactivity Reset Timer (90 seconds)
   useEffect(() => {
+    if (import.meta.env.DEV) return;
     let timeoutId: NodeJS.Timeout;
 
     const resetInactivityTimer = () => {
@@ -225,10 +227,7 @@ export default function App() {
 
   const handleSelectService = (service: Service & { hidden?: boolean }, startEditing: boolean = false) => {
     window.scrollTo({ top: 0, behavior: 'instant' });
-    const scrollContainer = document.getElementById('phone-main-scrollable-content');
-    if (scrollContainer) {
-      scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
-    }
+    scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' });
     setSelectedService(service);
     setServiceEditMode(startEditing);
   };
@@ -241,7 +240,7 @@ export default function App() {
         <div id="phone-screen-container" className="w-full flex-1 overflow-hidden flex flex-col relative">
 
           {/* TAB CONTENT SCROLLABLE CANVAS */}
-          <div id="phone-main-scrollable-content" className={`flex-1 overflow-y-auto pt-2 sm:pt-3 relative ${isAdminLoggedIn ? 'pb-8' : 'pb-28'}`}>
+          <div id="phone-main-scrollable-content" ref={scrollRef} className={`flex-1 overflow-y-auto pt-2 sm:pt-3 relative ${isAdminLoggedIn ? 'pb-8' : 'pb-28'}`}>
             <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10">
             
             {/* RENDER SELECTED SERVICE DETAIL (Public or Admin) WITH LIGHT FULLSCREEN BACKDROP */}
@@ -308,10 +307,7 @@ export default function App() {
                     }}
                     onGoHome={() => {
                       window.scrollTo({ top: 0, behavior: 'instant' });
-                      const scrollContainer = document.getElementById('phone-main-scrollable-content');
-                      if (scrollContainer) {
-                        scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
-                      }
+                      scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' });
                       setSelectedService(null);
                       setServiceEditMode(false);
                       setCurrentTab('inicio');
@@ -328,10 +324,7 @@ export default function App() {
                           setCurrentTab('buscar');
                           setSelectedService(null);
                           window.scrollTo({ top: 0, behavior: 'instant' });
-                          const scrollContainer = document.getElementById('phone-main-scrollable-content');
-                          if (scrollContainer) {
-                            scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
-                          }
+                          scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' });
                         }}
                         className="w-full mt-4 sm:mt-6 mb-6 relative flex items-center"
                       >

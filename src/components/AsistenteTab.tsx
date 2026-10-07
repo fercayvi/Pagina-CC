@@ -53,7 +53,7 @@ export default function AsistenteTab({
         ) : (
           <div 
             id="info-contact-whatsapp"
-            className="p-4 sm:p-5 bg-slate-50 border border-slate-200 rounded-xl"
+            className="p-4 sm:p-5 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center gap-4"
           >
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
@@ -71,6 +71,11 @@ export default function AsistenteTab({
                 </p>
               </div>
             </div>
+            <img 
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(whatsappUrl)}`} 
+              alt="Escanear para WhatsApp" 
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg shadow-sm shrink-0" 
+            />
           </div>
         )}
       </div>

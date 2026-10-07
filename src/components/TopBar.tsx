@@ -20,10 +20,6 @@ export default function TopBar({
 }: TopBarProps) {
   const handleHomeClick = () => {
     window.scrollTo({ top: 0, behavior: 'instant' });
-    const scrollContainer = document.getElementById('phone-main-scrollable-content');
-    if (scrollContainer) {
-      scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
-    }
     if (onGoHome) {
       onGoHome();
     } else if (setCurrentTab) {
@@ -45,9 +41,16 @@ export default function TopBar({
               e.currentTarget.style.display = 'none';
             }}
           />
-          <button
-            type="button"
+          <div
+            role="button"
+            tabIndex={0}
             onClick={handleHomeClick}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleHomeClick();
+              }
+            }}
             className="flex flex-col text-left cursor-pointer hover:opacity-80 transition-opacity duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 rounded-lg"
             title="Volver al inicio"
           >
@@ -57,7 +60,7 @@ export default function TopBar({
             <span className="hidden lg:inline text-[11px] font-medium text-slate-400">
               Módulo de autoservicio para colaboradores
             </span>
-          </button>
+          </div>
         </div>
 
         {/* Desktop Navigation Links */}
