@@ -115,8 +115,8 @@ export default function TopBar({
           </nav>
         )}
 
-        {/* Admin Login Button - Condicionado por interruptor maestro */}
-        {import.meta.env.VITE_MODO_ADMIN === 'true' && (
+        {/* Admin Login Button - Solo visible en entorno de desarrollo */}
+        {import.meta.env.DEV && (
           <div className="flex items-center gap-2 shrink-0">
             <button 
               onClick={() => setShowAdminLogin(true)} 

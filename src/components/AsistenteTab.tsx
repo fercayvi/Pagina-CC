@@ -30,8 +30,8 @@ export default function AsistenteTab({
           <span>Canales de Contacto Directo</span>
         </h3>
 
-        {/* WhatsApp Button / Contacto - Condicionado por interruptor maestro */}
-        {import.meta.env.VITE_MODO_ADMIN === 'true' ? (
+        {/* WhatsApp Button / Contacto - Condicionado por import.meta.env.DEV */}
+        {import.meta.env.DEV ? (
           <a 
             href={whatsappUrl} 
             target="_blank" 
@@ -52,16 +52,23 @@ export default function AsistenteTab({
           </a>
         ) : (
           <div 
-            id="btn-contact-whatsapp"
-            className="flex items-center justify-between p-4 sm:p-5 bg-emerald-600 rounded-xl shadow-xs text-white w-full min-h-[52px]"
+            id="info-contact-whatsapp"
+            className="p-4 sm:p-5 bg-slate-50 border border-slate-200 rounded-xl"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white text-emerald-700 flex items-center justify-center text-sm font-extrabold shrink-0 shadow-2xs">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                 WA
               </div>
-              <div>
-                <h4 className="text-sm font-bold text-white tracking-tight">WhatsApp de Talento y Cultura</h4>
-                <p className="text-xs text-emerald-100 font-medium mt-0.5">{info.whatsapp}</p>
+              <div className="space-y-0.5">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">
+                  WhatsApp de Talento y Cultura
+                </span>
+                <p className="text-base sm:text-lg font-bold text-slate-900 tracking-tight select-all">
+                  {info.whatsapp}
+                </p>
+                <p className="text-xs text-slate-500 font-normal">
+                  Comunícate a este número vía WhatsApp desde tu dispositivo personal.
+                </p>
               </div>
             </div>
           </div>
