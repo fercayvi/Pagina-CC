@@ -123,17 +123,24 @@ export default function SearchTab({
 }: SearchTabProps) {
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all');
 
-  const popularKeywords = [
-    'Vacaciones',
-    'Nómina',
-    'Constancia',
-    'Incapacidad IMSS',
-    'Días de Pago',
-    'Tarjeta y Vales',
-    'Infonavit',
-    'Préstamos',
-    'Checador'
-  ];
+  const popularKeywords = useMemo(() => {
+    try {
+      const stats = JSON.parse(localStorage.getItem('cc-service-views') || '{}');
+      const publicServices = services.filter(s => !s.hidden);
+
+      // Ordenar por visitas descendente
+      const sorted = [...publicServices].sort((a, b) => {
+        const viewsA = stats[a.id] || 0;
+        const viewsB = stats[b.id] || 0;
+        return viewsB - viewsA;
+      });
+
+      return sorted.slice(0, 5).map(s => s.title);
+    } catch (e) {
+      // Fallback seguro en caso de error
+      return services.slice(0, 5).map(s => s.title);
+    }
+  }, [services]);
 
   // Perform multi-criteria search and scoring
   const searchResults: SearchMatchResult[] = useMemo(() => {

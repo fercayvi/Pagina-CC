@@ -167,6 +167,7 @@ export default function App() {
       timeoutId = setTimeout(() => {
         // Return to home view, close modals and admin session
         setCurrentTab('inicio');
+        setSearchQuery('');
         setSelectedService(null);
         setServiceEditMode(false);
         setIsAdminLoggedIn(false);
@@ -227,7 +228,23 @@ export default function App() {
 
   const handleSelectService = (service: Service & { hidden?: boolean }, startEditing: boolean = false) => {
     window.scrollTo({ top: 0, behavior: 'instant' });
+    const scrollContainer = document.getElementById('phone-main-scrollable-content');
+    if (scrollContainer) {
+      scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
+    }
     scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+    
+    // RASTREADOR DE VISITAS
+    if (!startEditing && service && service.id) {
+      try {
+        const stats = JSON.parse(localStorage.getItem('cc-service-views') || '{}');
+        stats[service.id] = (stats[service.id] || 0) + 1;
+        localStorage.setItem('cc-service-views', JSON.stringify(stats));
+      } catch (e) {
+        console.error('Error tracking view:', e);
+      }
+    }
+
     setSelectedService(service);
     setServiceEditMode(startEditing);
   };
