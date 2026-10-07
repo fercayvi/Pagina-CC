@@ -118,19 +118,17 @@ export default function TopBar({
           </nav>
         )}
 
-        {/* Admin Login Button - Solo visible en entorno de desarrollo */}
-        {import.meta.env.DEV && (
-          <div className="flex items-center gap-2 shrink-0">
-            <button 
-              onClick={() => setShowAdminLogin(true)} 
-              className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 hover:text-slate-800 transition-colors bg-slate-100 hover:bg-slate-200 border border-slate-200 px-3.5 py-2 rounded-xl font-bold cursor-pointer active:scale-95 shadow-2xs"
-              title="Acceso administrativo"
-            >
-              <Lock size={15} className="text-slate-500" /> 
-              <span>Ingresar</span>
-            </button>
-          </div>
-        )}
+        {/* Admin Login Button */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button 
+            onClick={() => setShowAdminLogin(true)} 
+            className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 hover:text-slate-800 transition-colors bg-slate-100 hover:bg-slate-200 border border-slate-200 px-3.5 py-2 rounded-xl font-bold cursor-pointer active:scale-95 shadow-2xs"
+            title="Acceso administrativo"
+          >
+            <Lock size={15} className="text-slate-500" /> 
+            <span>Ingresar</span>
+          </button>
+        </div>
       </div>
     </header>
   );
