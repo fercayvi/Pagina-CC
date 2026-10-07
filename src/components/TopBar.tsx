@@ -31,36 +31,22 @@ export default function TopBar({
     <header id="app-top-header" className="bg-white rounded-2xl border border-slate-200/80 p-2.5 sm:p-3 shadow-xs">
       <div className="flex items-center justify-between gap-2.5 sm:gap-4">
         {/* Header Title with Logo */}
-        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-          <img 
-            src="/logo.png" 
-            alt="Logo de la Empresa" 
+        <div className="flex items-center shrink-0">
+          <button
+            type="button"
             onClick={handleHomeClick}
-            className="h-9 sm:h-10 w-auto object-contain shrink-0 cursor-pointer hover:opacity-80 transition-opacity duration-150"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={handleHomeClick}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleHomeClick();
-              }
-            }}
-            className="flex flex-col text-left cursor-pointer hover:opacity-80 transition-opacity duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 rounded-lg"
+            className="flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-lg"
             title="Volver al inicio"
           >
-            <h1 className="text-lg sm:text-2xl font-bold text-slate-800 tracking-tight leading-tight">
-              Portal Talento y Cultura
-            </h1>
-            <span className="hidden lg:inline text-[11px] font-medium text-slate-400">
-              Módulo de autoservicio para colaboradores
-            </span>
-          </div>
+            <img 
+              src="/ayvi-logo.png" 
+              alt="Grupo Ayvi" 
+              className="h-10 sm:h-14 w-auto object-contain shrink-0"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          </button>
         </div>
 
         {/* Desktop Navigation Links */}
