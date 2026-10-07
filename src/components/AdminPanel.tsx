@@ -284,15 +284,17 @@ export default function AdminPanel({
 
   // Contact Form State
   const [contactForm, setContactForm] = useState<ContactInfo>(() => {
+    if (contactInfo) return contactInfo;
+    if (initialContact) return initialContact;
     try {
       const saved = localStorage.getItem('portalContactInfo') || localStorage.getItem('cc-contact');
       if (saved) {
-        return { ...initialContact, ...(contactInfo || {}), ...JSON.parse(saved) };
+        return { ...initialContact, ...JSON.parse(saved) };
       }
     } catch (e) {
       console.error('Error al leer contacto desde localStorage:', e);
     }
-    return contactInfo || initialContact;
+    return initialContact;
   });
 
   // Sync contactForm if props change

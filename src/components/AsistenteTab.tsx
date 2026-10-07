@@ -30,25 +30,42 @@ export default function AsistenteTab({
           <span>Canales de Contacto Directo</span>
         </h3>
 
-        {/* WhatsApp Button (Solid Emerald Button with Large Target) */}
-        <a 
-          href={whatsappUrl} 
-          target="_blank" 
-          rel="noreferrer"
-          id="btn-contact-whatsapp"
-          className="flex items-center justify-between p-4 sm:p-5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl transition-all active:scale-[0.98] group shadow-xs cursor-pointer text-white w-full min-h-[52px]"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white text-emerald-700 flex items-center justify-center text-sm font-extrabold shrink-0 shadow-2xs">
-              WA
+        {/* WhatsApp Button / Contacto - Condicionado por interruptor maestro */}
+        {import.meta.env.VITE_MODO_ADMIN === 'true' ? (
+          <a 
+            href={whatsappUrl} 
+            target="_blank" 
+            rel="noreferrer"
+            id="btn-contact-whatsapp"
+            className="flex items-center justify-between p-4 sm:p-5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl transition-all active:scale-[0.98] group shadow-xs cursor-pointer text-white w-full min-h-[52px]"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white text-emerald-700 flex items-center justify-center text-sm font-extrabold shrink-0 shadow-2xs">
+                WA
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white tracking-tight">WhatsApp de Talento y Cultura</h4>
+                <p className="text-xs text-emerald-100 font-medium mt-0.5">{info.whatsapp}</p>
+              </div>
             </div>
-            <div>
-              <h4 className="text-sm font-bold text-white tracking-tight">WhatsApp de Talento y Cultura</h4>
-              <p className="text-xs text-emerald-100 font-medium mt-0.5">{info.whatsapp}</p>
+            <ExternalLink className="w-5 h-5 text-white group-hover:translate-x-0.5 transition-transform shrink-0" />
+          </a>
+        ) : (
+          <div 
+            id="btn-contact-whatsapp"
+            className="flex items-center justify-between p-4 sm:p-5 bg-emerald-600 rounded-xl shadow-xs text-white w-full min-h-[52px]"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white text-emerald-700 flex items-center justify-center text-sm font-extrabold shrink-0 shadow-2xs">
+                WA
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white tracking-tight">WhatsApp de Talento y Cultura</h4>
+                <p className="text-xs text-emerald-100 font-medium mt-0.5">{info.whatsapp}</p>
+              </div>
             </div>
           </div>
-          <ExternalLink className="w-5 h-5 text-white group-hover:translate-x-0.5 transition-transform shrink-0" />
-        </a>
+        )}
       </div>
 
       {/* Office Schedule and Location Info */}

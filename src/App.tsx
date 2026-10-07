@@ -26,13 +26,16 @@ export default function App() {
   const [isImageZoomed, setIsImageZoomed] = useState<boolean>(false);
   const [unreadNewsCount, setUnreadNewsCount] = useState<number>(0);
 
-  // 100% Offline / LocalStorage State Initialization
+  // Inicialización de estados: src/data.ts es la fuente de verdad principal y prioritaria
   const [services, setServices] = useState<(Service & { hidden?: boolean })[]>(() => {
+    if (initialServices && initialServices.length > 0) {
+      return initialServices;
+    }
     try {
       const saved = localStorage.getItem('cc-services-cms-v1');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed.map((s: Service) => {
             if (!s.tags || s.tags.length === 0) {
               const defaultMatch = initialServices.find(init => init.id === s.id);
@@ -44,24 +47,34 @@ export default function App() {
           });
         }
       }
-      return initialServices;
     } catch (e) {
       console.error('Error al cargar trámites desde localStorage:', e);
-      return initialServices;
     }
+    return initialServices || [];
   });
 
   const [news, setNews] = useState<NewsItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('cc-news');
-      return saved ? JSON.parse(saved) : initialNews;
-    } catch (e) {
-      console.error('Error al cargar noticias desde localStorage:', e);
+    if (initialNews && initialNews.length > 0) {
       return initialNews;
     }
+    try {
+      const saved = localStorage.getItem('cc-news');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.error('Error al cargar noticias desde localStorage:', e);
+    }
+    return initialNews || [];
   });
 
   const [contactInfo, setContactInfo] = useState<ContactInfo>(() => {
+    if (initialContact && Object.keys(initialContact).length > 0) {
+      return initialContact;
+    }
     try {
       const saved = localStorage.getItem('portalContactInfo') || localStorage.getItem('cc-contact');
       if (saved) {
@@ -74,6 +87,9 @@ export default function App() {
   });
 
   const [categories, setCategories] = useState<CategoryConfig[]>(() => {
+    if (defaultCategories && defaultCategories.length > 0) {
+      return defaultCategories;
+    }
     try {
       const saved = localStorage.getItem('cc-categories');
       if (saved) {
@@ -85,7 +101,7 @@ export default function App() {
     } catch (e) {
       console.error('Error al cargar categorías desde localStorage:', e);
     }
-    return defaultCategories;
+    return defaultCategories || [];
   });
 
   const handleUpdateCategories = (newCategories: CategoryConfig[], updatedServices?: (Service & { hidden?: boolean })[]) => {
