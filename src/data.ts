@@ -548,7 +548,7 @@ export const initialServices: Service[] = [
     "icon": "Stethoscope",
     "shortDesc": "Tipos de incapacidad, documentación requerida del IMSS y proceso para reportarla.",
     "category": "Asistencia y Vacaciones",
-    "fullDescription": "",
+    "fullDescription": "Tipos de incapacidad, documentación requerida del IMSS y proceso para reportarla.",
     "steps": [],
     "requirements": [],
     "faqs": [],
@@ -566,51 +566,13 @@ export const initialServices: Service[] = [
             "id": "node_enf_gen",
             "title": "Enfermedad General",
             "nodeType": "category",
-            "children": [
-              {
-                "id": "node_enf_menor_3",
-                "title": "De 1 a 3 días",
-                "nodeType": "content",
-                "contentData": {
-                  "text": "Las incapacidades por Enfermedad General de 1 a 3 días NO son subsidiadas por el IMSS (art. 96 LSS).\n\n1. Envía foto clara del Certificado (Copia Patrón) por WhatsApp de RH dentro de las primeras 24 hrs.\n2. Al reincorporarte a tu turno, entrega el documento físico original en la ventanilla de Recursos Humanos para justificar tus faltas.",
-                  "imageUrl": ""
-                }
-              },
-              {
-                "id": "node_enf_mayor_3",
-                "title": "4 días o más (con Subsidio)",
-                "nodeType": "content",
-                "contentData": {
-                  "text": "A partir del 4to día, el IMSS cubre el 60% del salario base de cotización registrado.\n\n• Requisito IMSS: Tener al menos 4 cotizaciones semanales inmediatas anteriores.\n• Cobro: Registra tu CLABE interbancaria en el portal IMSS Digital para recibir el pago directo en tu cuenta bancaria sin acudir al banco.",
-                  "imageUrl": ""
-                }
-              }
-            ]
+            "children": []
           },
           {
             "id": "node_riesgo_trabajo",
             "title": "Accidente de Trabajo / Trayecto",
             "nodeType": "category",
-            "children": [
-              {
-                "id": "node_acc_planta",
-                "title": "Ocurrió dentro de la Planta",
-                "nodeType": "content",
-                "contentData": {
-                  "text": "1. Notifica inmediatamente a tu supervisor y al Médico de Planta.\n2. Te emitirán el formato ST-7 (Aviso de Atención Médica Inicial).\n3. El IMSS cubre el 100% de tu salario desde el primer día una vez calificado como Sí de Trabajo por Salud en el Trabajo.",
-                  "imageUrl": ""
-                }
-              },
-              {
-                "id": "node_acc_trayecto",
-                "title": "Ocurrió en Trayecto (Casa - Trabajo)",
-                "nodeType": "content",
-                "contentData": {
-                  "text": "Si el accidente ocurrió en la ruta directa entre tu domicilio y la empresa:\n\n1. Acude al área de urgencias de tu clínica del IMSS.\n2. Solicita en RH tu Carta de Horario y Trayecto Oficial.\n3. Presenta ambos documentos en Salud en el Trabajo de tu clínica para la calificación correspondiente.",
-                  "imageUrl": ""
-                }
-              }
-            ]
+            "children": []
           },
           {
             "id": "node_maternidad",
@@ -618,7 +580,8 @@ export const initialServices: Service[] = [
             "nodeType": "content",
             "contentData": {
               "text": "La incapacidad por Maternidad abarca 84 días naturales (42 días prenatal y 42 días postnatal) y se subsidia al 100% de tu salario registrado por el IMSS.\n\n• Acude a tu UMF entre las semanas 34 y 37 de gestación para la expedición de tu Certificado Único de Maternidad.\n• Entrega en RH la copia patronal inmediatamente tras recibirla para programar tu periodo de descanso.",
-              "imageUrl": ""
+              "imageUrl": "",
+              "videoUrl": ""
             }
           }
         ]
@@ -635,7 +598,13 @@ export const initialServices: Service[] = [
       "st-7",
       "subsidio",
       "constancia"
-    ]
+    ],
+    "location": "",
+    "schedule": "",
+    "contact": "",
+    "attachments": [],
+    "alertNotice": "",
+    "layoutBlocks": []
   },
   {
     "id": "reloj_checador",

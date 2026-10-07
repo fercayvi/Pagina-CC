@@ -210,12 +210,6 @@ function LivePreviewPanel({
             className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-4 cursor-pointer hover:border-blue-300 transition-all flex flex-col gap-2"
             title="Haz clic para editar información general"
           >
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] font-extrabold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md uppercase tracking-wider border border-blue-200/60">
-                {draft.category || 'Categoría'}
-              </span>
-            </div>
-
             <div className="flex items-center gap-3 pt-1">
               {draft.cardImage && typeof draft.cardImage === 'string' && draft.cardImage.trim().length > 0 ? (
                 <img 
@@ -1186,10 +1180,6 @@ export default function ServiceDetail({
                 </h1>
               </div>
             </div>
-
-            <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 sm:px-3 py-1 rounded-lg uppercase tracking-wider border border-blue-200/60 shrink-0">
-              {draft.category}
-            </span>
           </div>
 
           {/* Árbol de Decisión Independiente */}
