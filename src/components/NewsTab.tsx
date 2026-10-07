@@ -58,7 +58,7 @@ export default function NewsTab({ newsList, onUnreadCountChange }: NewsTabProps)
   };
 
   return (
-    <div id="news-tab-container" className="space-y-4">
+    <div id="news-tab-container" className="space-y-3">
       {/* Header with Title and Mark all as read button */}
       <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">

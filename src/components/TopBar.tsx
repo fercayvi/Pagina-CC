@@ -28,7 +28,7 @@ export default function TopBar({
   };
 
   return (
-    <header id="app-top-header" className="bg-white rounded-2xl border border-slate-200/80 p-2.5 sm:p-3 shadow-xs">
+    <header id="app-top-header" className="bg-white rounded-2xl border border-slate-200/80 p-2.5 sm:p-3 shadow-xs mb-3">
       <div className="flex items-center justify-between gap-2.5 sm:gap-4">
         {/* Header Title with Logo */}
         <div className="flex items-center shrink-0">

@@ -326,7 +326,7 @@ export default function App() {
                           window.scrollTo({ top: 0, behavior: 'instant' });
                           scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' });
                         }}
-                        className="w-full mt-4 sm:mt-6 mb-6 relative flex items-center"
+                        className="w-full mb-6 relative flex items-center"
                       >
                         <div className="absolute left-4 sm:left-5 pointer-events-none flex items-center justify-center text-slate-400">
                           <Search className="w-5 h-5 sm:w-6 sm:h-6" />

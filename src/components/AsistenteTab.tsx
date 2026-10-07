@@ -22,7 +22,7 @@ export default function AsistenteTab({
     : `https://wa.me/${info.whatsapp.replace(/[^0-9]/g, '')}`;
 
   return (
-    <div id="contacto-rh-tab-view" className="space-y-4">
+    <div id="contacto-rh-tab-view" className="space-y-3">
       {/* Direct Contact Buttons - Solid High Contrast Kiosk Buttons */}
       <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5" id="rh-contact-buttons-panel">
         <h3 className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
