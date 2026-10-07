@@ -36,7 +36,7 @@ export const defaultCategories: CategoryConfig[] = [
 export const activeCategories: CategoryConfig[] = defaultCategories;
 
 export const initialContact: ContactInfo = {
-  "whatsapp": "https://wa.me/525512345678",
+  "whatsapp": "525512345678",
   "telefono": "Ext. 202 (5512345678)",
   "ubicacion": "Módulo de Servicios al Personal, ubicado a un lado de Ropería.",
   "horario": "Lunes - Viernes: 7:00 am a 8:00 am | 9:00 am a 12:00 pm | 2:30 pm a 3:30 pm\nSábados: 9:30 am a 12:30 pm",
@@ -686,7 +686,17 @@ export const userProfileData: UserProfile = {
   "despensaBalance": 650
 };
 
-export const initialNews: NewsItem[] = [];
+export const initialNews: NewsItem[] = [
+  {
+    "id": "news_1788467824316",
+    "title": "¡Próximamente: Descubre tu nuevo Portal de Talento y Cultura!",
+    "summary": "Muy pronto tendrás todos tus trámites, consultas y tutoriales de Recursos Humanos al alcance de tu celular, sin necesidad de hacer filas. ¡Espéralo!",
+    "content": "Estimado equipo,\n\nEn Talento y Cultura seguimos innovando para hacerte la vida más fácil. Nos emociona anunciar que estamos afinando los últimos detalles para el gran lanzamiento de nuestro nuevo Portal Digital de Servicios al Personal.\n\nSabemos que tu tiempo es valioso, por lo que hemos diseñado una plataforma completamente nueva, pensada para usarse de forma rápida y sencilla desde cualquier teléfono celular.\n\n¿Qué podrás encontrar en este nuevo portal?\n\nTrámites en un clic: Información clara sobre vacaciones, préstamos, control de asistencia y dudas de pago.\n\nTutoriales paso a paso: Guías visuales para que sepas exactamente cómo registrar tus tarjetas o usar las aplicaciones oficiales.\n\nAtención directa: Acceso directo a nuestro WhatsApp oficial, horarios actualizados y un croquis para ubicar nuestra ventanilla rápidamente.\n\nNuestro objetivo es que tengas la información de la empresa disponible las 24 horas del día, los 7 días de la semana, evitándote vueltas innecesarias a la oficina.\n\n¡Mantente atento a nuestros próximos comunicados! Muy pronto te compartiremos el enlace oficial y las instrucciones de acceso para que seas de los primeros en probarlo.\n\nTalento y Cultura",
+    "date": "Hoy",
+    "imageName": "welcome_team",
+    "category": "comunicado"
+  }
+];
 export const newsData = initialNews;
 
 export const avisosData: Aviso[] = [];
