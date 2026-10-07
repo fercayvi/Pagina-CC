@@ -6,10 +6,7 @@ import {
   ArrowUpRight, 
   Tag, 
   FileText, 
-  HelpCircle, 
-  CheckCircle2, 
-  Sparkles,
-  SlidersHorizontal
+  Sparkles
 } from 'lucide-react';
 import { Service, CategoryConfig } from '../types';
 import { SERVICE_ICON_MAP } from './ServiceCard';
@@ -366,7 +363,10 @@ export default function SearchTab({
               onChange={(e) => onSearchQueryChange(e.target.value)}
               placeholder="Buscar trámite, servicio, nómina, vacaciones..."
               className="w-full pl-11 pr-11 py-3.5 sm:py-4 bg-white hover:bg-slate-50/60 focus:bg-white text-slate-900 placeholder:text-slate-400 font-medium text-base rounded-xl border border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:outline-none shadow-xs hover:shadow-sm focus:shadow-md transition-all"
-              autoFocus
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck="false"
+              autoFocus={true}
             />
             {searchQuery && (
               <button
@@ -384,34 +384,29 @@ export default function SearchTab({
             )}
           </div>
 
-          {/* Suggestion Chips */}
-          <div className="flex items-center gap-1.5 flex-wrap pt-0.5 text-xs text-slate-500">
-            <span className="font-semibold text-slate-400 flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Búsquedas comunes:
-            </span>
-            {popularKeywords.map((kw) => {
-              const isSelected = searchQuery.trim().toLowerCase() === kw.toLowerCase();
-              return (
+          {/* Suggestion Chips - Solo se muestran si searchQuery está vacío */}
+          {!searchQuery && (
+            <div className="flex items-center gap-1.5 flex-wrap pt-0.5 text-xs text-slate-500">
+              <span className="font-semibold text-slate-400 flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Búsquedas comunes:
+              </span>
+              {popularKeywords.map((kw) => (
                 <button
                   key={kw}
                   type="button"
                   onClick={() => onSearchQueryChange(kw)}
-                  className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer select-none active:scale-95 ${
-                    isSelected
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-xs font-semibold'
-                      : 'bg-slate-100/90 text-slate-700 border-slate-200 hover:bg-slate-200 hover:border-slate-300 hover:text-slate-900 shadow-2xs'
-                  }`}
+                  className="px-3 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer select-none active:scale-95 bg-slate-100/90 text-slate-700 border-slate-200 hover:bg-slate-200 hover:border-slate-300 hover:text-slate-900 shadow-2xs"
                 >
                   {kw}
                 </button>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Results Section */}
-      {searchQuery.trim() ? (
+      {/* Results Section - Solo se muestra si hay una búsqueda */}
+      {Boolean(searchQuery.trim()) && (
         <section className="space-y-4">
           {/* Header Indicating Match Count (Requirement 2) */}
           <div className="bg-white rounded-xl border border-slate-200/80 p-3 sm:p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -567,54 +562,6 @@ export default function SearchTab({
               </div>
             </div>
           )}
-        </section>
-      ) : (
-        /* Default State when no query is typed yet */
-        <section className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-6">
-          <div className="max-w-2xl mx-auto text-center space-y-2">
-            <h3 className="text-lg sm:text-xl font-black text-slate-800">
-              ¿Qué trámite deseas consultar hoy?
-            </h3>
-            <p className="text-sm text-slate-500 leading-relaxed">
-              Encuentra al instante información sobre tus recibos, vacaciones disponibles, incapacidades, préstamos o checador.
-            </p>
-          </div>
-
-          {/* Quick Category Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 max-w-4xl mx-auto">
-            <div 
-              onClick={() => onSearchQueryChange('nómina')}
-              className="p-4 rounded-xl border border-slate-200 bg-emerald-50/30 hover:bg-emerald-50 hover:border-emerald-300 transition-all cursor-pointer group"
-            >
-              <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
-                <Tag className="w-5 h-5" />
-              </div>
-              <h4 className="font-bold text-slate-900 text-sm group-hover:text-emerald-800">Nómina y Pagos</h4>
-              <p className="text-xs text-slate-500 mt-1">Fechas de pago, recibos de nómina CIF y dudas con depósitos.</p>
-            </div>
-
-            <div 
-              onClick={() => onSearchQueryChange('vacaciones')}
-              className="p-4 rounded-xl border border-slate-200 bg-amber-50/30 hover:bg-amber-50 hover:border-amber-300 transition-all cursor-pointer group"
-            >
-              <div className="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
-              <h4 className="font-bold text-slate-900 text-sm group-hover:text-amber-800">Control y Asistencia</h4>
-              <p className="text-xs text-slate-500 mt-1">Vacaciones, permisos, checador de huella e incapacidades IMSS.</p>
-            </div>
-
-            <div 
-              onClick={() => onSearchQueryChange('tarjeta')}
-              className="p-4 rounded-xl border border-slate-200 bg-violet-50/30 hover:bg-violet-50 hover:border-violet-300 transition-all cursor-pointer group"
-            >
-              <div className="w-10 h-10 rounded-lg bg-violet-100 text-violet-700 flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
-                <SlidersHorizontal className="w-5 h-5" />
-              </div>
-              <h4 className="font-bold text-slate-900 text-sm group-hover:text-violet-800">Tarjetas y Créditos</h4>
-              <p className="text-xs text-slate-500 mt-1">Vales de despensa, caja de ahorro, préstamos e Infonavit.</p>
-            </div>
-          </div>
         </section>
       )}
     </div>
