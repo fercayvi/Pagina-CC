@@ -336,6 +336,13 @@ export default function App() {
                           id="hero-search-input"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
+                          onFocus={() => {
+                            setCurrentTab('buscar');
+                            setSelectedService(null);
+                          }}
+                          autoComplete="off"
+                          autoCorrect="off"
+                          spellCheck="false"
                           placeholder="Ej. Vacaciones, recibos de nómina, vales, incapacidad..."
                           className="w-full pl-12 sm:pl-14 pr-12 py-3.5 sm:py-4 bg-slate-50 focus:bg-white text-base sm:text-lg text-slate-800 placeholder:text-slate-400 font-medium rounded-2xl border border-slate-200 shadow-md hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all"
                         />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lock, Home, FileText, PhoneCall } from 'lucide-react';
+import { Lock, Home, Search, FileText, PhoneCall } from 'lucide-react';
 
 export interface TopBarProps {
   setShowAdminLogin: (show: boolean) => void;
@@ -64,6 +64,20 @@ export default function TopBar({
             >
               <Home className="w-4 h-4" strokeWidth={currentTab === 'inicio' ? 2.5 : 2} />
               <span>Inicio</span>
+            </button>
+
+            <button
+              type="button"
+              id="desktop-nav-buscar"
+              onClick={() => setCurrentTab('buscar')}
+              className={`flex items-center justify-center gap-2 px-5 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${
+                currentTab === 'buscar'
+                  ? 'bg-white text-blue-700 shadow-xs scale-102'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+              }`}
+            >
+              <Search className="w-4 h-4" strokeWidth={currentTab === 'buscar' ? 2.5 : 2} />
+              <span>Buscar</span>
             </button>
 
             <button
