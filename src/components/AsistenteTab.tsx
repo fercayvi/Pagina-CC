@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ExternalLink, MapPin, Clock, MessageSquare, ZoomIn } from 'lucide-react';
+import { ExternalLink, MapPin, Clock, MessageSquare } from 'lucide-react';
 import { UserProfile, ContactInfo } from '../types';
 import { initialContact } from '../data';
 import { ImageLightboxModal } from './ImageLightboxModal';
@@ -129,19 +129,14 @@ export default function AsistenteTab({
               {info.croquisUrl && (
                 <div className="mt-3 flex justify-center w-full">
                   <div 
-                    className="relative group cursor-pointer overflow-hidden rounded-xl inline-block max-w-full border border-slate-200 shadow-2xs"
+                    className="relative cursor-pointer overflow-hidden rounded-xl inline-block max-w-full border border-slate-200 shadow-2xs"
                     onClick={() => setIsLightboxOpen(true)}
-                    title="Clic para ampliar croquis"
                   >
                     <img 
                       src={info.croquisUrl} 
                       alt="Croquis de ubicación" 
-                      className="max-w-full md:max-w-sm h-auto rounded-xl object-contain hover:opacity-95 transition-opacity" 
+                      className="max-w-full md:max-w-sm h-auto rounded-xl object-contain" 
                     />
-                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-1.5 text-white text-xs font-bold">
-                      <ZoomIn className="w-4 h-4" />
-                      <span>Ampliar croquis</span>
-                    </div>
                   </div>
                 </div>
               )}

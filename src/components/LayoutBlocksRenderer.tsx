@@ -12,7 +12,6 @@ import {
   FileDown, 
   ChevronDown, 
   ChevronUp, 
-  ZoomIn, 
   Download,
   FileText,
   ExternalLink
@@ -314,18 +313,13 @@ export const LayoutBlocksRenderer: React.FC<LayoutBlocksRendererProps> = ({
                 {block.url ? (
                   <div 
                     onClick={() => onOpenLightbox && onOpenLightbox(block.url, block.title || serviceTitle)}
-                    className="relative group cursor-pointer overflow-hidden rounded-xl border border-slate-100 bg-slate-50"
-                    title="Clic para ver infografía en pantalla completa con zoom"
+                    className="relative cursor-pointer overflow-hidden rounded-xl border border-slate-100 bg-slate-50"
                   >
                     <img 
                       src={block.url} 
                       alt={block.title || 'Contenido multimedia'} 
                       className="w-full h-auto max-w-full rounded-xl object-contain shadow-2xs mx-auto max-h-[500px]" 
                     />
-                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-2 text-white text-sm font-bold pointer-events-none backdrop-blur-xs">
-                      <ZoomIn className="w-5 h-5" />
-                      <span>Ver imagen completa (Zoom)</span>
-                    </div>
                   </div>
                 ) : (
                   <div className="p-5 bg-slate-50 rounded-xl text-center text-slate-400 text-sm italic">
