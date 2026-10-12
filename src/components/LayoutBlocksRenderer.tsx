@@ -18,12 +18,15 @@ import {
 } from 'lucide-react';
 import { LayoutBlock } from '../types';
 
-export function getEmbedVideoInfo(url?: string | null): { type: 'youtube' | 'vimeo' | 'direct' | 'iframe'; embedUrl: string } | null {
+export function getEmbedVideoInfo(url?: string | null): { type: 'youtube' | 'vimeo' | 'direct'; embedUrl: string } | null {
   if (!url || typeof url !== 'string' || !url.trim()) return null;
   const cleanUrl = url.trim();
 
-  // Base64 Data URL video or direct MP4/WebM/OGG file
-  if (cleanUrl.startsWith('data:video') || cleanUrl.match(/\.(mp4|webm|ogg)$/i)) {
+  // Strip query params and hash when checking direct video extension
+  const urlPath = cleanUrl.split(/[?#]/)[0];
+
+  // Base64 Data URL video or direct MP4/WebM/OGG file (even with params e.g. video.mp4?v=2)
+  if (cleanUrl.startsWith('data:video') || urlPath.match(/\.(mp4|webm|ogg)$/i)) {
     return { type: 'direct', embedUrl: cleanUrl };
   }
 
@@ -41,7 +44,7 @@ export function getEmbedVideoInfo(url?: string | null): { type: 'youtube' | 'vim
     return { type: 'vimeo', embedUrl: `https://player.vimeo.com/video/${vimeoMatch[2]}` };
   }
 
-  return { type: 'iframe', embedUrl: cleanUrl };
+  return null;
 }
 
 // Converts legacy markdown (such as **bold** and *italic*) or raw text with newlines to clean HTML if not already HTML
@@ -106,6 +109,17 @@ function FormattedTextBlock({ content, alignClass = '' }: { content: string; ali
     ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style']
   });
 
+  // Force rel="noopener noreferrer" on all links in rich text
+  const safeHtmlWithRel = cleanHtml.replace(/<a\b([^>]*)>/gi, (match, attrs) => {
+    let newAttrs = attrs;
+    if (/rel\s*=\s*["'][^"']*["']/i.test(newAttrs)) {
+      newAttrs = newAttrs.replace(/rel\s*=\s*["'][^"']*["']/i, 'rel="noopener noreferrer"');
+    } else {
+      newAttrs += ' rel="noopener noreferrer"';
+    }
+    return `<a${newAttrs}>`;
+  });
+
   return (
     <div
       style={{
@@ -113,8 +127,47 @@ function FormattedTextBlock({ content, alignClass = '' }: { content: string; ali
         wordBreak: 'break-word',
       }}
       className={`text-slate-700 leading-relaxed whitespace-pre-wrap break-words ${alignClass} [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5 [&>p]:my-1.5 [&>p:first-child]:mt-0 [&>p:last-child]:mb-0 [&_strong]:font-bold [&_strong]:text-slate-900 [&_b]:font-bold [&_b]:text-slate-900`}
-      dangerouslySetInnerHTML={{ __html: cleanHtml }}
+      dangerouslySetInnerHTML={{ __html: safeHtmlWithRel }}
     />
+  );
+}
+
+// Dedicated image renderer with loading="lazy" and onError fallback
+function MediaImageBlock({
+  url,
+  title,
+  serviceTitle,
+  onOpenLightbox
+}: {
+  url: string;
+  title?: string;
+  serviceTitle?: string;
+  onOpenLightbox?: (url: string, title?: string) => void;
+}) {
+  const [hasError, setHasError] = useState(false);
+
+  if (hasError) {
+    return (
+      <div className="p-8 bg-slate-50 border border-slate-200 rounded-xl text-center text-slate-400 text-sm font-medium flex flex-col items-center justify-center gap-2">
+        <ImageIcon className="w-8 h-8 text-slate-300" />
+        <span>Imagen no disponible</span>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      onClick={() => onOpenLightbox && onOpenLightbox(url, title || serviceTitle)}
+      className="relative cursor-pointer overflow-hidden rounded-xl border border-slate-100 bg-slate-50"
+    >
+      <img 
+        src={url} 
+        alt={title || 'Contenido multimedia'} 
+        loading="lazy"
+        onError={() => setHasError(true)}
+        className="w-full h-auto max-w-full rounded-xl object-contain shadow-2xs mx-auto max-h-[500px]" 
+      />
+    </div>
   );
 }
 
@@ -311,16 +364,12 @@ export const LayoutBlocksRenderer: React.FC<LayoutBlocksRendererProps> = ({
                 )}
 
                 {block.url ? (
-                  <div 
-                    onClick={() => onOpenLightbox && onOpenLightbox(block.url, block.title || serviceTitle)}
-                    className="relative cursor-pointer overflow-hidden rounded-xl border border-slate-100 bg-slate-50"
-                  >
-                    <img 
-                      src={block.url} 
-                      alt={block.title || 'Contenido multimedia'} 
-                      className="w-full h-auto max-w-full rounded-xl object-contain shadow-2xs mx-auto max-h-[500px]" 
-                    />
-                  </div>
+                  <MediaImageBlock
+                    url={block.url}
+                    title={block.title}
+                    serviceTitle={serviceTitle}
+                    onOpenLightbox={onOpenLightbox}
+                  />
                 ) : (
                   <div className="p-5 bg-slate-50 rounded-xl text-center text-slate-400 text-sm italic">
                     Sin imagen cargada
@@ -362,12 +411,14 @@ export const LayoutBlocksRenderer: React.FC<LayoutBlocksRendererProps> = ({
                         className="w-full h-full border-0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                         allowFullScreen
+                        loading="lazy"
+                        sandbox="allow-scripts allow-same-origin allow-presentation"
                       />
                     )}
                   </div>
                 ) : (
                   <div className="p-5 bg-slate-50 rounded-xl text-center text-slate-400 text-sm italic">
-                    Sin video configurado
+                    {block.url?.trim() ? 'Video no disponible' : 'Sin video configurado'}
                   </div>
                 )}
 
@@ -382,6 +433,13 @@ export const LayoutBlocksRenderer: React.FC<LayoutBlocksRendererProps> = ({
 
           // PDF / FORMATO
           if (mediaType === 'pdf') {
+            const rawPdfUrl = (block.url || '').trim();
+            const hasValidPdf = Boolean(rawPdfUrl && rawPdfUrl !== 'https://' && rawPdfUrl !== 'http://');
+
+            if (!hasValidPdf) {
+              return null;
+            }
+
             return (
               <div 
                 key={block.id || `media-${index}`}
@@ -394,37 +452,31 @@ export const LayoutBlocksRenderer: React.FC<LayoutBlocksRendererProps> = ({
                   </h3>
                 )}
 
-                {block.url ? (
-                  <a
-                    href={block.url}
-                    download={block.url.startsWith('data:') ? `${block.title || 'formato_oficial'}.pdf` : undefined}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-4 sm:p-5 rounded-2xl border-2 border-blue-100 hover:border-blue-400 bg-blue-50/70 hover:bg-blue-100/80 transition-all flex items-center justify-between gap-4 group cursor-pointer active:scale-98"
-                  >
-                    <div className="flex items-center gap-3.5 min-w-0">
-                      <div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                        <FileText className="w-6 h-6" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-blue-700 truncate">
-                          {block.title || 'Descargar Formato / Documento Oficial (PDF)'}
-                        </p>
-                        <p className="text-xs sm:text-sm text-slate-600 font-medium mt-0.5">
-                          {block.caption || 'Haz clic para abrir o descargar el documento adjunto'}
-                        </p>
-                      </div>
+                <a
+                  href={block.url}
+                  download={block.url?.startsWith('data:') ? `${block.title || 'formato_oficial'}.pdf` : undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-4 sm:p-5 rounded-2xl border-2 border-blue-100 hover:border-blue-400 bg-blue-50/70 hover:bg-blue-100/80 transition-all flex items-center justify-between gap-4 group cursor-pointer active:scale-98"
+                >
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <FileText className="w-6 h-6" />
                     </div>
-                    <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold shadow-xs group-hover:bg-blue-700 transition-all shrink-0">
-                      <Download className="w-4 h-4" />
-                      <span>Descargar</span>
+                    <div className="min-w-0">
+                      <p className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-blue-700 truncate">
+                        {block.title || 'Descargar Formato / Documento Oficial (PDF)'}
+                      </p>
+                      <p className="text-xs sm:text-sm text-slate-600 font-medium mt-0.5">
+                        {block.caption || 'Haz clic para abrir o descargar el documento adjunto'}
+                      </p>
                     </div>
-                  </a>
-                ) : (
-                  <div className="p-4 bg-slate-50 rounded-xl text-center text-slate-400 text-sm italic">
-                    Sin archivo PDF adjunto
                   </div>
-                )}
+                  <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold shadow-xs group-hover:bg-blue-700 transition-all shrink-0">
+                    <Download className="w-4 h-4" />
+                    <span>Descargar</span>
+                  </div>
+                </a>
               </div>
             );
           }
@@ -479,6 +531,11 @@ export const LayoutBlocksRenderer: React.FC<LayoutBlocksRendererProps> = ({
 
         // ==================== 6. BUTTON BLOCK ====================
         if (block.type === 'button') {
+          const rawBtnUrl = (block.url || '').trim();
+          if (!rawBtnUrl || rawBtnUrl === 'https://' || rawBtnUrl === 'http://') {
+            return null;
+          }
+
           const alignClass = block.align === 'center' ? 'text-center' : block.align === 'right' ? 'text-right' : 'text-left';
           const btnStyle = block.style === 'secondary'
             ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
@@ -487,7 +544,7 @@ export const LayoutBlocksRenderer: React.FC<LayoutBlocksRendererProps> = ({
           return (
             <div key={block.id || `btn-${index}`} className={`my-2 ${alignClass}`}>
               <a
-                href={block.url || '#'}
+                href={block.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-xs hover:shadow-md cursor-pointer ${btnStyle}`}

@@ -21,7 +21,8 @@ import {
   Sparkles,
   LayoutGrid,
   Undo2,
-  Redo2
+  Redo2,
+  X
 } from 'lucide-react';
 import { 
   LayoutBlock, 
@@ -52,6 +53,7 @@ interface PageBuilderFullScreenEditorProps {
   blocks: LayoutBlock[];
   onChange: (blocks: LayoutBlock[]) => void;
   onClose: () => void;
+  onCancel?: () => void;
   serviceTitle?: string;
 }
 
@@ -59,14 +61,31 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
   blocks,
   onChange,
   onClose,
+  onCancel,
   serviceTitle
 }) => {
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [deviceView, setDeviceView] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [previewMode, setPreviewMode] = useState<boolean>(false);
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving'>('saved');
   const [activeDragItem, setActiveDragItem] = useState<any>(null);
   const [mobileTab, setMobileTab] = useState<'tools' | 'canvas' | 'inspector'>('canvas');
+
+  // Track initial blocks state for Cancel / Discard
+  const initialBlocksRef = useRef<LayoutBlock[]>(JSON.parse(JSON.stringify(blocks)));
+  const hasChanges = JSON.stringify(blocks) !== JSON.stringify(initialBlocksRef.current);
+
+  const handleCancel = () => {
+    if (hasChanges) {
+      const confirmDiscard = window.confirm('¿Deseas descartar los cambios no guardados?');
+      if (!confirmDiscard) return;
+    }
+    onChange(initialBlocksRef.current);
+    if (onCancel) {
+      onCancel();
+    } else {
+      onClose();
+    }
+  };
 
   // Sensors for DND: Require 8px movement before dragging starts to allow normal text click & cursor placement in contentEditable
   const sensors = useSensors(
@@ -80,7 +99,6 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
   // History State for Undo/Redo
   const [history, setHistory] = useState<LayoutBlock[][]>([blocks]);
   const [historyIndex, setHistoryIndex] = useState<number>(0);
-  const isHistoryActionRef = useRef<boolean>(false);
   const historyDebounceTimerRef = useRef<any>(null);
 
   const canUndo = historyIndex > 0;
@@ -90,7 +108,6 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
     if (historyIndex > 0) {
       const prevIdx = historyIndex - 1;
       const target = history[prevIdx];
-      isHistoryActionRef.current = true;
       setHistoryIndex(prevIdx);
       onChange(target);
     }
@@ -100,7 +117,6 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
     if (historyIndex < history.length - 1) {
       const nextIdx = historyIndex + 1;
       const target = history[nextIdx];
-      isHistoryActionRef.current = true;
       setHistoryIndex(nextIdx);
       onChange(target);
     }
@@ -140,11 +156,6 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
   const updateBlocksWithHistory = useCallback((newBlocks: LayoutBlock[], immediate: boolean = true) => {
     onChange(newBlocks);
 
-    if (isHistoryActionRef.current) {
-      isHistoryActionRef.current = false;
-      return;
-    }
-
     if (immediate) {
       if (historyDebounceTimerRef.current) {
         clearTimeout(historyDebounceTimerRef.current);
@@ -167,15 +178,6 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
       }, 500);
     }
   }, [historyIndex, onChange]);
-
-  // Autosave indicator timer
-  useEffect(() => {
-    setSaveStatus('saving');
-    const timer = setTimeout(() => {
-      setSaveStatus('saved');
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [blocks]);
 
   // Helper to create a new block given a template type
   const instantiateBlock = (type: string): LayoutBlock => {
@@ -461,17 +463,27 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
         
         {/* ==================== TOP NAVIGATION & CONTROL BAR ==================== */}
         <header className="h-14 bg-white border-b border-slate-200 px-3 sm:px-5 flex items-center justify-between gap-3 shrink-0 shadow-2xs z-20">
-          {/* Left: Back / Save & Close + Title */}
-          <div className="flex items-center gap-3 min-w-0">
+          {/* Left: Back / Save & Close + Cancel + Title */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               type="button"
               onClick={onClose}
-              className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 shrink-0 shadow-xs"
+              className="flex items-center gap-2 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 shrink-0 shadow-xs"
               title="Guardar cambios y cerrar"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <Check className="w-4 h-4 text-emerald-400" />
               <span className="hidden sm:inline">Guardar y Cerrar</span>
               <span className="sm:hidden">Guardar</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-rose-50 text-rose-700 hover:text-rose-800 border border-slate-200 hover:border-rose-300 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 shrink-0 shadow-2xs"
+              title="Descartar cambios y salir"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Cancelar</span>
             </button>
 
             <div className="h-5 w-px bg-slate-200 hidden sm:block shrink-0" />
@@ -602,11 +614,18 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
               </button>
             </div>
 
-            {/* Autosave badge */}
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
-              <span className={`w-1.5 h-1.5 rounded-full ${saveStatus === 'saving' ? 'bg-amber-500 animate-ping' : 'bg-emerald-500'}`} />
-              <span>{saveStatus === 'saving' ? 'Autoguardando...' : 'Guardado'}</span>
-            </div>
+            {/* Status indicator */}
+            {hasChanges ? (
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200/80 shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                <span>Cambios sin guardar</span>
+              </div>
+            ) : (
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-50 text-slate-600 border border-slate-200/80 shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span>Sin cambios pendientes</span>
+              </div>
+            )}
 
             <button
               type="button"

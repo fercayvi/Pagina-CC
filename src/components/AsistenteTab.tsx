@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ExternalLink, MapPin, Clock, MessageSquare } from 'lucide-react';
+import { MapPin, Clock, Phone } from 'lucide-react';
 import { UserProfile, ContactInfo } from '../types';
 import { initialContact } from '../data';
 import { ImageLightboxModal } from './ImageLightboxModal';
@@ -18,12 +18,6 @@ export default function AsistenteTab({
 
   const rawWhatsapp = (contactInfo?.whatsapp ?? info.whatsapp ?? '').trim();
   const hasWhatsapp = Boolean(rawWhatsapp);
-  const isLink = rawWhatsapp.startsWith('http://') || rawWhatsapp.startsWith('https://') || rawWhatsapp.includes('wa.me');
-
-  // Format whatsapp URL
-  const whatsappUrl = isLink
-    ? (rawWhatsapp.startsWith('http') ? rawWhatsapp : `https://${rawWhatsapp}`)
-    : `https://wa.me/${rawWhatsapp.replace(/[^0-9]/g, '')}`;
 
   const formatPhoneNumber = (num: string) => {
     const cleaned = num.replace(/[^0-9]/g, '');
@@ -32,7 +26,7 @@ export default function AsistenteTab({
     }
     if (cleaned.length === 12 && cleaned.startsWith('52')) {
       const ten = cleaned.slice(2);
-      return `+52 ${ten.slice(0, 2)} ${ten.slice(2, 6)} ${ten.slice(6)}`;
+      return `${ten.slice(0, 2)} ${ten.slice(2, 6)} ${ten.slice(6)}`;
     }
     return num;
   };
@@ -43,60 +37,28 @@ export default function AsistenteTab({
       {hasWhatsapp && (
         <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5" id="rh-contact-buttons-panel">
           <h3 className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-emerald-600" />
+            <Phone className="w-4 h-4 text-emerald-600" />
             <span>Canales de Contacto Directo</span>
           </h3>
 
-          {/* WhatsApp Button / Contacto - Condicionado por import.meta.env.DEV */}
-          {import.meta.env.DEV ? (
-            <a 
-              href={whatsappUrl} 
-              target="_blank" 
-              rel="noreferrer"
-              id="btn-contact-whatsapp"
-              className="flex items-center justify-between p-4 sm:p-5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl transition-all active:scale-[0.98] group shadow-xs cursor-pointer text-white w-full min-h-[52px]"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-white text-emerald-700 flex items-center justify-center text-sm font-extrabold shrink-0 shadow-2xs">
-                  WA
-                </div>
-                <div className="min-w-0">
-                  <h4 className="text-sm font-bold text-white tracking-tight">WhatsApp de Talento y Cultura</h4>
-                  <p className="text-xs text-emerald-100 font-medium mt-0.5 break-all">
-                    {rawWhatsapp}
-                  </p>
-                </div>
+          <div 
+            id="info-contact-whatsapp"
+            className="p-4 sm:p-5 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-4"
+          >
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 shadow-2xs">
+                <Phone className="w-5 h-5 text-emerald-600" />
               </div>
-              <ExternalLink className="w-5 h-5 text-white group-hover:translate-x-0.5 transition-transform shrink-0" />
-            </a>
-          ) : (
-            <div 
-              id="info-contact-whatsapp"
-              className="p-4 sm:p-5 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center gap-4"
-            >
-              <div className="flex items-start gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                  WA
-                </div>
-                <div className="space-y-0.5 min-w-0">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">
-                    WhatsApp de Talento y Cultura
-                  </span>
-                  <p className="text-base sm:text-lg font-bold text-slate-900 tracking-tight select-all break-all">
-                    {rawWhatsapp}
-                  </p>
-                  <p className="text-xs text-slate-500 font-normal">
-                    Comunícate a este número vía WhatsApp desde tu dispositivo personal.
-                  </p>
-                </div>
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">
+                  Teléfono de Centro de Servicios
+                </span>
+                <p className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight select-all">
+                  {formatPhoneNumber(rawWhatsapp)}
+                </p>
               </div>
-              <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(whatsappUrl)}`} 
-                alt="Escanear para WhatsApp" 
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg shadow-sm shrink-0" 
-              />
             </div>
-          )}
+          </div>
         </div>
       )}
 

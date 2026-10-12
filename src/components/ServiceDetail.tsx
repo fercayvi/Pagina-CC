@@ -1247,6 +1247,9 @@ export default function ServiceDetail({
             setIsPageBuilderOpen(false);
             showToast('Bloques de contenido actualizados en el borrador');
           }}
+          onCancel={() => {
+            setIsPageBuilderOpen(false);
+          }}
           serviceTitle={draft.title}
         />
       )}

@@ -65,6 +65,7 @@ export const EditServiceModal: React.FC<EditServiceModalProps> = ({
           setEditingService(prev => prev ? ({ ...prev, layoutBlocks: newBlocks }) : prev);
         }}
         onClose={() => setIsPageBuilderOpen(false)}
+        onCancel={() => setIsPageBuilderOpen(false)}
         serviceTitle={editingService.title || 'Trámite'}
       />
     );

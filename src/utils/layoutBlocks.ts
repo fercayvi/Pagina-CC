@@ -60,7 +60,7 @@ export function createNewButtonBlock(): ButtonLayoutBlock {
     id: generateBlockId('btn'),
     type: 'button',
     label: 'Consultar Información',
-    url: 'https://',
+    url: '',
     style: 'primary',
     align: 'center'
   };

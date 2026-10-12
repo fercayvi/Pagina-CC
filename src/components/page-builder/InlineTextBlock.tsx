@@ -37,6 +37,31 @@ function normalizeHtmlContent(html: string): string {
   return html;
 }
 
+// Clean and sanitize rich text allowing strictly: b, strong, i, em, u, p, br, ul, ol, li, a, stripping style & class
+export function sanitizeRichText(html: string): string {
+  if (!html) return '';
+  const sanitized = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['b', 'strong', 'i', 'em', 'u', 'p', 'br', 'ul', 'ol', 'li', 'a'],
+    ALLOWED_ATTR: ['href', 'target', 'rel']
+  });
+
+  // Force rel="noopener noreferrer" and target="_blank" on all links
+  const withRel = sanitized.replace(/<a\b([^>]*)>/gi, (match, attrs) => {
+    let newAttrs = attrs;
+    if (!/target\s*=/i.test(newAttrs)) {
+      newAttrs += ' target="_blank"';
+    }
+    if (/rel\s*=\s*["'][^"']*["']/i.test(newAttrs)) {
+      newAttrs = newAttrs.replace(/rel\s*=\s*["'][^"']*["']/i, 'rel="noopener noreferrer"');
+    } else {
+      newAttrs += ' rel="noopener noreferrer"';
+    }
+    return `<a${newAttrs}>`;
+  });
+
+  return normalizeHtmlContent(withRel);
+}
+
 export const InlineTextBlock: React.FC<InlineTextBlockProps> = ({
   block,
   onChange,
@@ -50,14 +75,14 @@ export const InlineTextBlock: React.FC<InlineTextBlockProps> = ({
   const [isItalicActive, setIsItalicActive] = useState<boolean>(false);
 
   // Check whether content is genuinely empty
-  const cleanContent = normalizeHtmlContent(block.content || '');
+  const cleanContent = sanitizeRichText(block.content || '');
   const hasContent = Boolean(cleanContent !== '');
 
   // Synchronize external block.content into contentEditable without overriding while actively typing
   useEffect(() => {
     if (!readOnly && contentRef.current && document.activeElement !== contentRef.current) {
       const currentHtml = contentRef.current.innerHTML;
-      const targetHtml = block.content || '';
+      const targetHtml = sanitizeRichText(block.content || '');
       if (normalizeHtmlContent(currentHtml) !== normalizeHtmlContent(targetHtml)) {
         contentRef.current.innerHTML = targetHtml;
       }
@@ -89,7 +114,7 @@ export const InlineTextBlock: React.FC<InlineTextBlockProps> = ({
   const handleContentInput = () => {
     if (contentRef.current) {
       const rawHtml = contentRef.current.innerHTML;
-      const cleanHtml = normalizeHtmlContent(rawHtml);
+      const cleanHtml = sanitizeRichText(rawHtml);
       onChange({ ...block, content: cleanHtml });
       updateActiveFormats();
     }
@@ -99,12 +124,39 @@ export const InlineTextBlock: React.FC<InlineTextBlockProps> = ({
     setIsFocused(false);
     if (contentRef.current) {
       const rawHtml = contentRef.current.innerHTML;
-      const cleanHtml = normalizeHtmlContent(rawHtml);
+      const cleanHtml = sanitizeRichText(rawHtml);
       // Clean up stray browser empty tags
       if (cleanHtml === '') {
         contentRef.current.innerHTML = '';
+      } else if (contentRef.current.innerHTML !== cleanHtml) {
+        contentRef.current.innerHTML = cleanHtml;
       }
       onChange({ ...block, content: cleanHtml });
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const clipboardData = e.clipboardData;
+    const htmlData = clipboardData.getData('text/html');
+    const textData = clipboardData.getData('text/plain');
+
+    let contentToInsert = '';
+    if (htmlData) {
+      contentToInsert = sanitizeRichText(htmlData);
+    }
+
+    if (!contentToInsert && textData) {
+      contentToInsert = textData
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\r\n|\r|\n/g, '<br>');
+    }
+
+    if (contentToInsert) {
+      document.execCommand('insertHTML', false, contentToInsert);
+      handleContentInput();
     }
   };
 
@@ -151,7 +203,7 @@ export const InlineTextBlock: React.FC<InlineTextBlockProps> = ({
 
     if (contentRef.current) {
       const rawHtml = contentRef.current.innerHTML;
-      const cleanHtml = normalizeHtmlContent(rawHtml);
+      const cleanHtml = sanitizeRichText(rawHtml);
       onChange({ ...block, content: cleanHtml });
     }
 
@@ -177,7 +229,7 @@ export const InlineTextBlock: React.FC<InlineTextBlockProps> = ({
 
     if (contentRef.current) {
       const rawHtml = contentRef.current.innerHTML;
-      const cleanHtml = normalizeHtmlContent(rawHtml);
+      const cleanHtml = sanitizeRichText(rawHtml);
       onChange({ ...block, content: cleanHtml });
     }
     updateActiveFormats();
@@ -201,13 +253,7 @@ export const InlineTextBlock: React.FC<InlineTextBlockProps> = ({
 
   // READ-ONLY MODE (e.g. Preview Mode)
   if (readOnly) {
-    const sanitizedHtml = DOMPurify.sanitize(cleanContent, {
-      ALLOWED_TAGS: [
-        'b', 'strong', 'i', 'em', 'u', 's', 'strike', 'p', 'br', 'ul', 'ol', 'li',
-        'span', 'div', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre'
-      ],
-      ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style']
-    });
+    const sanitizedHtml = cleanContent;
 
     return (
       <div className="space-y-2">
@@ -370,6 +416,7 @@ export const InlineTextBlock: React.FC<InlineTextBlockProps> = ({
           onInput={handleContentInput}
           onFocus={handleFocus}
           onBlur={handleBlur}
+          onPaste={handlePaste}
           onKeyDown={handleKeyDown}
           onKeyUp={updateActiveFormats}
           onMouseUp={updateActiveFormats}

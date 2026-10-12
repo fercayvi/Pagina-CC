@@ -1208,6 +1208,9 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
               // Botón de Guardar y Cerrar en el modal: actualiza el arreglo de blocks del nodo específico en nodes
               handleSaveAndClosePageBuilder(editorBlocks);
             }}
+            onCancel={() => {
+              setIsPageBuilderOpen(false);
+            }}
             serviceTitle={selectedNode.data.title || serviceTitle || 'Paso del Trámite'}
           />
         </div>
