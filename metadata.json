@@ -1,6 +1,6 @@
 {
   "name": "Portal Talento y Cultura",
-  "description": "Plataforma de autoservicio móvil y kiosco para operarios de producción y personal de planta.",
+  "description": "Plataforma de autoservicio.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
