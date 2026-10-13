@@ -14,10 +14,18 @@ interface DecisionTreeNavigatorProps {
   serviceTitle?: string;
 }
 
-// Helper de retrocompatibilidad: convierte datos antiguos (contentData) en LayoutBlock[]
 function getNodeBlocks(node: ServiceNode): LayoutBlock[] {
   if (node.blocks && node.blocks.length > 0) return node.blocks;
   if (node.contentData?.layoutBlocks && node.contentData.layoutBlocks.length > 0) return node.contentData.layoutBlocks;
+  if (node.text) {
+    return [{
+      id: `legacy-txt-${node.id}`,
+      type: 'text',
+      content: node.text,
+      align: 'left',
+      style: 'normal'
+    }];
+  }
 
   const fallback: LayoutBlock[] = [];
   if (node.contentData?.blocks && node.contentData.blocks.length > 0) {
@@ -109,29 +117,17 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
   // Determine current active node (null means at root level)
   const currentNode = navPath.length > 0 ? navPath[navPath.length - 1] : null;
 
-  // Fallback seguro de bloques de contenido para el nodo actual
-  const currentBlocks: LayoutBlock[] = currentNode
-    ? (currentNode.blocks || (currentNode.text ? [{ id: 'legacy', type: 'text', content: currentNode.text }] : getNodeBlocks(currentNode)))
-    : [];
+  // Usar currentBlocks = getNodeBlocks(currentNode) siempre
+  const currentBlocks: LayoutBlock[] = currentNode ? getNodeBlocks(currentNode) : [];
 
-  // Migas de pan filtradas: excluye nodos sin título real, '-', 'Opción' o que comiencen con 'Paso'
-  const visibleHistory = navPath.filter(
-    (node) =>
-      node.title &&
-      node.title.trim() !== '' &&
-      node.title !== '-' &&
-      node.title.toLowerCase().trim() !== 'opción' &&
-      node.title.toLowerCase().trim() !== 'opcion' &&
-      !node.title.trim().startsWith('Paso')
-  );
-
-  if (!tree || tree.length === 0) {
-    return (
-      <div className="p-8 text-center bg-slate-50 border border-slate-100 rounded-2xl shadow-sm">
-        <p className="text-slate-500 font-medium">No hay opciones configuradas en este árbol de decisiones.</p>
-      </div>
-    );
-  }
+  // Migas de pan filtradas: excluye títulos vacíos, '-', 'Opción'/'Opcion' y títulos genéricos tipo 'Paso 1' (expresión exacta /^paso\s*\d*$/i)
+  const visibleHistory = navPath.filter((node) => {
+    if (!node.title) return false;
+    const t = node.title.trim();
+    if (t === '' || t === '-' || t.toLowerCase() === 'opción' || t.toLowerCase() === 'opcion') return false;
+    if (/^paso\s*\d*$/i.test(t)) return false;
+    return true;
+  });
 
   const scrollToTop = () => {
     // 1. Scroll al inicio absoluto de la ventana global
@@ -156,7 +152,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
     });
   };
 
-  // Scroll al tope superior automáticamente al cambiar de paso
+  // Scroll al tope superior automáticamente al cambiar de paso (siempre antes de returns tempranos)
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
@@ -164,6 +160,14 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
     }
     scrollToTop();
   }, [navPath]);
+
+  if (!tree || tree.length === 0) {
+    return (
+      <div className="p-8 text-center bg-slate-50 border border-slate-100 rounded-2xl shadow-sm">
+        <p className="text-slate-500 font-medium">No hay opciones configuradas en este árbol de decisiones.</p>
+      </div>
+    );
+  }
 
   // Handlers for step-by-step navigation
   const handleSelectNode = (node: ServiceNode) => {
@@ -197,7 +201,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
           <button
             type="button"
             onClick={handleGoBack}
-            className="px-4 py-2 sm:px-5 sm:py-2.5 text-sm sm:text-base font-medium text-slate-700 hover:text-slate-900 bg-transparent hover:bg-slate-100 active:scale-95 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+            className="min-h-[48px] px-4 py-2 sm:px-5 sm:py-2.5 text-sm sm:text-base font-medium text-slate-700 hover:text-slate-900 bg-transparent hover:bg-slate-100 active:scale-95 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
             <span>Atrás</span>
@@ -211,7 +215,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
             <button
               type="button"
               onClick={() => handleSelectNode(currentNode.children![0])}
-              className="px-6 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-xl shadow-xs transition-all flex items-center gap-2 ml-auto cursor-pointer"
+              className="min-h-[48px] px-6 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-xl shadow-xs transition-all flex items-center gap-2 ml-auto cursor-pointer"
             >
               <span>{getCleanButtonTitle(currentNode.children[0].title)}</span>
               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -225,7 +229,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
                     key={childNode.id}
                     type="button"
                     onClick={() => handleSelectNode(childNode)}
-                    className="px-5 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+                    className="min-h-[48px] px-5 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
                   >
                     <span>{childButtonText}</span>
                     <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -238,7 +242,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
           <button
             type="button"
             onClick={handleReset}
-            className="px-5 py-2.5 text-sm sm:text-base font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 active:scale-95 rounded-xl transition-all flex items-center gap-2 ml-auto cursor-pointer"
+            className="min-h-[48px] px-5 py-2.5 text-sm sm:text-base font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 active:scale-95 rounded-xl transition-all flex items-center gap-2 ml-auto cursor-pointer"
           >
             <RotateCcw className="w-4 h-4" />
             <span>Comenzar de nuevo</span>
@@ -267,7 +271,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="text-slate-500 font-normal hover:text-slate-800 cursor-pointer transition-colors"
+                  className="min-h-[48px] inline-flex items-center text-slate-500 font-normal hover:text-slate-800 cursor-pointer transition-colors"
                 >
                   Inicio
                 </button>
@@ -287,7 +291,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
                             const targetIdx = navPath.findIndex((n) => n.id === stepNode.id);
                             if (targetIdx !== -1) handleJumpToStep(targetIdx);
                           }}
-                          className="text-slate-500 font-normal hover:text-slate-800 truncate max-w-[180px] sm:max-w-xs cursor-pointer transition-colors"
+                          className="min-h-[48px] inline-flex items-center text-slate-500 font-normal hover:text-slate-800 truncate max-w-[180px] sm:max-w-xs cursor-pointer transition-colors"
                         >
                           {stepNode.title}
                         </button>
@@ -305,7 +309,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
               <button
                 type="button"
                 onClick={handleReset}
-                className="flex items-center gap-1.5 py-1 text-slate-500 hover:text-slate-800 text-xs sm:text-sm font-normal transition-colors cursor-pointer bg-transparent border-0"
+                className="min-h-[48px] flex items-center gap-1.5 px-3 py-1 text-slate-500 hover:text-slate-800 text-xs sm:text-sm font-normal transition-colors cursor-pointer bg-transparent border-0"
                 title="Reiniciar asistente"
               >
                 <RotateCcw className="w-4 h-4 text-slate-500" />
@@ -323,11 +327,17 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
 
             {/* Renderizado de Bloques Enriquecidos del Page Builder */}
             <div className="my-4">
-              <LayoutBlocksRenderer 
-                blocks={currentBlocks} 
-                onOpenLightbox={onOpenLightbox}
-                serviceTitle={serviceTitle}
-              />
+              {currentBlocks.length > 0 ? (
+                <LayoutBlocksRenderer 
+                  blocks={currentBlocks} 
+                  onOpenLightbox={onOpenLightbox}
+                  serviceTitle={serviceTitle}
+                />
+              ) : (
+                <div className="p-8 text-center bg-slate-50 border border-slate-200 rounded-2xl text-slate-500 font-medium">
+                  Contenido no disponible
+                </div>
+              )}
             </div>
 
             {/* Barra de navegación inferior */}
@@ -338,18 +348,24 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
           <div className="space-y-4 animate-fadeIn">
             {/* Renderizado de Bloques Enriquecidos del Page Builder */}
             <div className="my-4">
-              <LayoutBlocksRenderer 
-                blocks={currentBlocks} 
-                onOpenLightbox={onOpenLightbox}
-                serviceTitle={serviceTitle}
-              />
+              {currentBlocks.length > 0 ? (
+                <LayoutBlocksRenderer 
+                  blocks={currentBlocks} 
+                  onOpenLightbox={onOpenLightbox}
+                  serviceTitle={serviceTitle}
+                />
+              ) : (
+                <div className="p-8 text-center bg-slate-50 border border-slate-200 rounded-2xl text-slate-500 font-medium">
+                  Contenido no disponible
+                </div>
+              )}
             </div>
 
             <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
               <button
                 type="button"
                 onClick={handleGoBack}
-                className="px-4 py-2.5 sm:px-5 sm:py-3 text-base font-medium text-slate-700 hover:text-slate-900 bg-transparent hover:bg-slate-100 active:scale-95 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+                className="min-h-[48px] px-4 py-2.5 sm:px-5 sm:py-3 text-base font-medium text-slate-700 hover:text-slate-900 bg-transparent hover:bg-slate-100 active:scale-95 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
               >
                 <ArrowLeft className="w-5 h-5 text-slate-600" />
                 <span>Atrás</span>
@@ -358,7 +374,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
               <button
                 type="button"
                 onClick={handleReset}
-                className="px-6 py-3 text-base font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-xl shadow-xs transition-all flex items-center gap-2 ml-auto cursor-pointer"
+                className="min-h-[48px] px-6 py-3 text-base font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-xl shadow-xs transition-all flex items-center gap-2 ml-auto cursor-pointer"
               >
                 <RotateCcw className="w-5 h-5" />
                 <span>Finalizar y Reiniciar</span>
@@ -377,7 +393,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
                     key={option.id}
                     type="button"
                     onClick={() => handleSelectNode(option)}
-                    className="bg-white border border-blue-300 text-blue-700 hover:bg-blue-50 hover:shadow-md hover:-translate-y-0.5 p-4 sm:p-5 rounded-2xl flex items-center justify-between transition-all group cursor-pointer text-left min-h-[72px] shadow-2xs"
+                    className="min-h-[48px] bg-white border border-blue-300 text-blue-700 hover:bg-blue-50 hover:shadow-md hover:-translate-y-0.5 p-4 sm:p-5 rounded-2xl flex items-center justify-between transition-all group cursor-pointer text-left shadow-2xs"
                   >
                     <div className="pr-3 flex-1 min-w-0">
                       <span className="text-sm sm:text-base font-bold text-blue-700 leading-snug">
@@ -404,7 +420,7 @@ export const DecisionTreeNavigator: React.FC<DecisionTreeNavigatorProps> = ({
                 <button
                   type="button"
                   onClick={handleGoBack}
-                  className="px-4 py-2 sm:px-5 sm:py-2.5 text-sm sm:text-base font-medium text-slate-700 hover:text-slate-900 bg-transparent hover:bg-slate-100 active:scale-95 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+                  className="min-h-[48px] px-4 py-2 sm:px-5 sm:py-2.5 text-sm sm:text-base font-medium text-slate-700 hover:text-slate-900 bg-transparent hover:bg-slate-100 active:scale-95 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
                   <span>Atrás</span>

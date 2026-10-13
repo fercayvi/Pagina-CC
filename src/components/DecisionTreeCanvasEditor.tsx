@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -253,6 +253,52 @@ export function flowToTree(nodes: DecisionNodeType[], edges: Edge[]): ServiceNod
   return result;
 }
 
+/**
+ * Returns all node IDs reachable from a given node by following outgoing edges.
+ */
+export function getDescendants(startId: string, currentEdges: Edge[]): Set<string> {
+  const toDelete = new Set<string>();
+  const queue = [startId];
+  toDelete.add(startId);
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    const outgoing = currentEdges.filter(e => e.source === current);
+    for (const edge of outgoing) {
+      if (!toDelete.has(edge.target)) {
+        toDelete.add(edge.target);
+        queue.push(edge.target);
+      }
+    }
+  }
+  return toDelete;
+}
+
+/**
+ * Checks whether adding an edge source -> target would form a cycle in currentEdges.
+ */
+export function wouldFormCycle(sourceId: string, targetId: string, currentEdges: Edge[]): boolean {
+  if (sourceId === targetId) return true;
+
+  const visited = new Set<string>();
+  const queue = [targetId];
+  visited.add(targetId);
+
+  while (queue.length > 0) {
+    const curr = queue.shift()!;
+    if (curr === sourceId) return true;
+
+    const outgoing = currentEdges.filter(e => e.source === curr);
+    for (const edge of outgoing) {
+      if (!visited.has(edge.target)) {
+        visited.add(edge.target);
+        queue.push(edge.target);
+      }
+    }
+  }
+  return false;
+}
+
 /* =========================================================================
    CUSTOM FLOW NODE COMPONENT
    ========================================================================= */
@@ -381,7 +427,12 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
   const [nodes, setNodes, onNodesChange] = useNodesState<DecisionNodeType>(initialGraph.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialGraph.edges);
 
-  // History State for Undo/Redo (Reducción de carga cognitiva y prevención de errores)
+  // Track if initial tree arrived empty
+  const initialTreeWasEmptyRef = useRef<boolean>(!tree || tree.length === 0);
+  // Track initial serialized tree for Cancel confirmation
+  const initialTreeJsonRef = useRef<string>(JSON.stringify(tree || []));
+
+  // History State for Undo/Redo
   interface HistoryStep {
     nodes: DecisionNodeType[];
     edges: Edge[];
@@ -390,20 +441,25 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
     { nodes: initialGraph.nodes, edges: initialGraph.edges }
   ]);
   const [historyIndex, setHistoryIndex] = useState<number>(0);
-  const isHistoryActionRef = React.useRef<boolean>(false);
+  const debounceHistoryTimerRef = useRef<any>(null);
   const [showMinimap, setShowMinimap] = useState<boolean>(true);
 
   const pushHistorySnapshot = useCallback((newNodes: DecisionNodeType[], newEdges: Edge[]) => {
-    if (isHistoryActionRef.current) {
-      isHistoryActionRef.current = false;
-      return;
-    }
     setHistory((prev) => {
       const trimmed = prev.slice(0, historyIndex + 1);
       return [...trimmed, { nodes: newNodes, edges: newEdges }].slice(-30);
     });
     setHistoryIndex((prev) => Math.min(prev + 1, 29));
   }, [historyIndex]);
+
+  const scheduleDebouncedHistory = useCallback((newNodes: DecisionNodeType[], newEdges: Edge[]) => {
+    if (debounceHistoryTimerRef.current) {
+      clearTimeout(debounceHistoryTimerRef.current);
+    }
+    debounceHistoryTimerRef.current = setTimeout(() => {
+      pushHistorySnapshot(newNodes, newEdges);
+    }, 500);
+  }, [pushHistorySnapshot]);
 
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
@@ -412,7 +468,6 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
     if (historyIndex > 0) {
       const prevIdx = historyIndex - 1;
       const target = history[prevIdx];
-      isHistoryActionRef.current = true;
       setNodes(target.nodes);
       setEdges(target.edges);
       setHistoryIndex(prevIdx);
@@ -423,7 +478,6 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
     if (historyIndex < history.length - 1) {
       const nextIdx = historyIndex + 1;
       const target = history[nextIdx];
-      isHistoryActionRef.current = true;
       setNodes(target.nodes);
       setEdges(target.edges);
       setHistoryIndex(nextIdx);
@@ -468,26 +522,53 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
     return nodes.find(n => n.id === selectedNodeId) || null;
   }, [nodes, selectedNodeId]);
 
-  // Handle new connection between handles
+  // Validar conexiones en ReactFlow (rechazar self-loop, nodo con padre previo, ciclos)
+  const isValidConnection = useCallback(
+    (connection: Connection | Edge) => {
+      const source = connection.source;
+      const target = connection.target;
+      if (!source || !target) return false;
+      // 1. Rechazar conexiones de un nodo consigo mismo
+      if (source === target) return false;
+
+      // 2. Rechazar conexiones hacia un nodo que ya tiene padre (cada nodo solo puede tener un padre)
+      const edgeId = 'id' in connection ? connection.id : undefined;
+      const targetAlreadyHasParent = edges.some(e => e.target === target && e.id !== edgeId);
+      if (targetAlreadyHasParent) return false;
+
+      // 3. Rechazar conexiones que formen ciclos
+      if (wouldFormCycle(source, target, edges)) return false;
+
+      return true;
+    },
+    [edges]
+  );
+
+  // Handle new connection between handles (sin llamar pushHistorySnapshot dentro del updater de setEdges)
   const onConnect = useCallback(
     (params: Connection) => {
-      setEdges((eds) => {
-        const nextEdges = addEdge(
-          {
-            ...params,
-            type: 'smoothstep',
-            animated: false,
-            style: { stroke: '#3b82f6', strokeWidth: 2 },
-            markerEnd: { type: MarkerType.ArrowClosed, color: '#3b82f6' },
-          } as Edge,
-          eds
-        );
-        pushHistorySnapshot(nodes, nextEdges);
-        return nextEdges;
-      });
+      if (!isValidConnection(params)) return;
+
+      const newEdge: Edge = {
+        ...params,
+        id: `e_${params.source}_${params.target}`,
+        type: 'smoothstep',
+        animated: false,
+        style: { stroke: '#3b82f6', strokeWidth: 2 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#3b82f6' },
+      };
+
+      const nextEdges = addEdge(newEdge, edges);
+      setEdges(nextEdges);
+      pushHistorySnapshot(nodes, nextEdges);
     },
-    [setEdges, pushHistorySnapshot, nodes]
+    [isValidConnection, edges, nodes, setEdges, pushHistorySnapshot]
   );
+
+  // Registrar movimiento de nodos en el historial al soltar
+  const onNodeDragStop = useCallback(() => {
+    pushHistorySnapshot(nodes, edges);
+  }, [nodes, edges, pushHistorySnapshot]);
 
   // Click on a node: select it for the properties sidebar
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
@@ -499,43 +580,78 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
     setSelectedNodeId(null);
   }, []);
 
-  // Update selected node data helper
+  // Update selected node data helper con debounce de 500ms
   const updateSelectedNodeData = useCallback(
-    (updates: Partial<DecisionNodeData>) => {
+    (updates: Partial<DecisionNodeData>, immediateHistory: boolean = false, overrideEdges?: Edge[]) => {
       if (!selectedNodeId) return;
 
-      setNodes((nds) =>
-        nds.map((n) => {
-          if (n.id === selectedNodeId) {
-            let nextContentData = updates.contentData !== undefined
-              ? {
-                  ...n.data.contentData,
-                  ...updates.contentData,
-                }
-              : n.data.contentData;
+      const currentEdges = overrideEdges || edges;
+      const nextNodes = nodes.map((n) => {
+        if (n.id === selectedNodeId) {
+          let nextContentData = updates.contentData !== undefined
+            ? {
+                ...n.data.contentData,
+                ...updates.contentData,
+              }
+            : n.data.contentData;
 
-            // Asegurar copia profunda del arreglo blocks y de cada bloque
-            if (nextContentData?.blocks) {
-              nextContentData = {
-                ...nextContentData,
-                blocks: nextContentData.blocks.map((b) => ({ ...b })),
-              };
-            }
-
-            return {
-              ...n,
-              data: {
-                ...n.data,
-                ...updates,
-                ...(nextContentData ? { contentData: nextContentData } : {}),
-              },
+          // Asegurar copia profunda del arreglo blocks y de cada bloque
+          if (nextContentData?.blocks) {
+            nextContentData = {
+              ...nextContentData,
+              blocks: nextContentData.blocks.map((b) => ({ ...b })),
             };
           }
-          return n;
-        })
-      );
+
+          return {
+            ...n,
+            data: {
+              ...n.data,
+              ...updates,
+              ...(nextContentData ? { contentData: nextContentData } : {}),
+            },
+          };
+        }
+        return n;
+      });
+
+      setNodes(nextNodes);
+
+      if (immediateHistory) {
+        if (debounceHistoryTimerRef.current) clearTimeout(debounceHistoryTimerRef.current);
+        pushHistorySnapshot(nextNodes, currentEdges);
+      } else {
+        scheduleDebouncedHistory(nextNodes, currentEdges);
+      }
     },
-    [selectedNodeId, setNodes]
+    [selectedNodeId, nodes, edges, setNodes, pushHistorySnapshot, scheduleDebouncedHistory]
+  );
+
+  // Cambiar tipo de nodo con confirmación si se cambia a Contenido y tiene ramas conectadas
+  const handleChangeNodeType = useCallback(
+    (newType: 'category' | 'step' | 'content') => {
+      if (!selectedNode) return;
+      const currentType = selectedNode.data.nodeType;
+      if (currentType === newType) return;
+
+      if (newType === 'content' && (currentType === 'category' || currentType === 'step')) {
+        const outgoingEdges = edges.filter((e) => e.source === selectedNode.id);
+        if (outgoingEdges.length > 0) {
+          const confirmChange = window.confirm(
+            `Este nodo tiene ${outgoingEdges.length} ${outgoingEdges.length === 1 ? 'rama conectada' : 'ramas conectadas'}. Al cambiar el tipo a Contenido Final, se eliminarán esas ramas. ¿Deseas continuar?`
+          );
+          if (!confirmChange) return;
+
+          const nextEdges = edges.filter((e) => e.source !== selectedNode.id);
+          setEdges(nextEdges);
+          updateSelectedNodeData({ nodeType: 'content' }, true, nextEdges);
+          return;
+        }
+      }
+
+      updateSelectedNodeData({ nodeType: newType }, true);
+    },
+    [selectedNode, edges, setEdges, updateSelectedNodeData]
   );
 
   // Add a new branch/child connected to the selected category node
@@ -603,14 +719,21 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
     setSelectedNodeId(newId);
   }, [nodes, edges, setNodes, pushHistorySnapshot]);
 
-  // Delete the selected node
+  // Delete the selected node and all its descendants with window.confirm
   const handleDeleteSelectedNode = useCallback(() => {
     if (!selectedNodeId) return;
 
-    // Remove node
-    const nextNodes = nodes.filter((n) => n.id !== selectedNodeId);
-    // Remove any connected edges
-    const nextEdges = edges.filter((e) => e.source !== selectedNodeId && e.target !== selectedNodeId);
+    const toDelete = getDescendants(selectedNodeId, edges);
+    const count = toDelete.size;
+    const message = count === 1
+      ? '¿Deseas eliminar este nodo? Se borrará 1 nodo.'
+      : `¿Deseas eliminar este nodo y todos sus descendientes? Se borrarán ${count} nodos en total.`;
+
+    if (!window.confirm(message)) return;
+
+    const nextNodes = nodes.filter((n) => !toDelete.has(n.id));
+    const nextEdges = edges.filter((e) => !toDelete.has(e.source) && !toDelete.has(e.target));
+
     setNodes(nextNodes);
     setEdges(nextEdges);
     pushHistorySnapshot(nextNodes, nextEdges);
@@ -744,11 +867,80 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
     });
   }, [selectedNode, updateSelectedNodeData]);
 
-  // Save and Close handler
-  const handleSaveAndClose = () => {
+  // Cancel with unsaved changes confirmation
+  const handleCancel = useCallback(() => {
+    const currentTree = flowToTree(nodes, edges);
+    const hasChanges = JSON.stringify(currentTree) !== initialTreeJsonRef.current;
+    if (hasChanges) {
+      const confirmDiscard = window.confirm('¿Deseas descartar los cambios no guardados en el árbol de decisiones?');
+      if (!confirmDiscard) return;
+    }
+    onClose();
+  }, [nodes, edges, onClose]);
+
+  // Save and Close handler with validations and starter node check
+  const handleSaveAndClose = useCallback(() => {
+    // 7. Si el árbol llegó vacío y sigue siendo solo el nodo inicial de ejemplo no editado, no guardarlo (guardar vacío)
+    if (initialTreeWasEmptyRef.current && nodes.length === 1 && edges.length === 0) {
+      const single = nodes[0];
+      const isDefaultTitle = single.data.title === 'Pregunta Inicial / Opción 1';
+      const isDefaultType = single.data.nodeType === 'category';
+      const hasNoContent = (!single.data.blocks || single.data.blocks.length === 0) &&
+                           (!single.data.contentData?.text || single.data.contentData.text.trim() === '');
+      if (isDefaultTitle && isDefaultType && hasNoContent) {
+        onSave([]);
+        return;
+      }
+    }
+
+    // 4. Validar y avisar con un mensaje claro antes de guardar
+    const warnings: string[] = [];
+
+    // Nodos sueltos sin conexión que se volverían opciones principales (si hay más de 1 nodo)
+    const isolatedNodes = nodes.filter(
+      (n) => nodes.length > 1 && !edges.some((e) => e.source === n.id) && !edges.some((e) => e.target === n.id)
+    );
+    if (isolatedNodes.length > 0) {
+      warnings.push(`• ${isolatedNodes.length} ${isolatedNodes.length === 1 ? 'nodo suelto sin conexión' : 'nodos sueltos sin conexión'} (se mostrarían como opciones principales al inicio).`);
+    }
+
+    // Categorías sin ramas
+    const emptyCategories = nodes.filter(
+      (n) => n.data.nodeType === 'category' && !edges.some((e) => e.source === n.id)
+    );
+    if (emptyCategories.length > 0) {
+      warnings.push(`• ${emptyCategories.length} ${emptyCategories.length === 1 ? 'categoría sin ramas conectadas' : 'categorías sin ramas conectadas'} (no conducen a ningún paso o contenido).`);
+    }
+
+    // Nodos de Contenido o Paso sin bloques de contenido
+    const emptyContentNodes = nodes.filter((n) => {
+      if (n.data.nodeType !== 'content' && n.data.nodeType !== 'step') return false;
+      const blks = n.data.blocks || n.data.contentData?.layoutBlocks || [];
+      const txt = n.data.contentData?.text?.trim() || '';
+      return blks.length === 0 && !txt;
+    });
+    if (emptyContentNodes.length > 0) {
+      warnings.push(`• ${emptyContentNodes.length} ${emptyContentNodes.length === 1 ? 'nodo de Contenido o Paso sin bloques de contenido' : 'nodos de Contenido o Paso sin bloques de contenido'}.`);
+    }
+
+    // Nodos sin título
+    const untitledNodes = nodes.filter(
+      (n) => !n.data.title || n.data.title.trim() === '' || n.data.title.trim() === '-'
+    );
+    if (untitledNodes.length > 0) {
+      warnings.push(`• ${untitledNodes.length} ${untitledNodes.length === 1 ? 'nodo sin título' : 'nodos sin título'}.`);
+    }
+
+    if (warnings.length > 0) {
+      const confirmSave = window.confirm(
+        `Se encontraron las siguientes observaciones en el árbol de decisiones:\n\n${warnings.join('\n')}\n\n¿Deseas guardar de todos modos? (Presiona 'Cancelar' para corregir o 'Aceptar' para guardar).`
+      );
+      if (!confirmSave) return;
+    }
+
     const finalTree = flowToTree(nodes, edges);
     onSave(finalTree);
-  };
+  }, [nodes, edges, onSave]);
 
   return (
     <div className="w-screen h-screen fixed inset-0 z-50 bg-gray-50 flex flex-col overflow-hidden font-sans">
@@ -770,7 +962,7 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleCancel}
             className="flex items-center gap-1.5 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl text-sm font-medium transition-colors cursor-pointer"
             title="Descartar y volver sin guardar"
           >
@@ -863,6 +1055,9 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
             onConnect={onConnect}
             onNodeClick={onNodeClick}
             onPaneClick={onPaneClick}
+            onNodeDragStop={onNodeDragStop}
+            isValidConnection={isValidConnection}
+            deleteKeyCode={null}
             nodeTypes={nodeTypes}
             fitView
             fitViewOptions={{ padding: 0.25 }}
@@ -987,7 +1182,7 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
-                    onClick={() => updateSelectedNodeData({ nodeType: 'category' })}
+                    onClick={() => handleChangeNodeType('category')}
                     className={`p-2.5 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
                       selectedNode.data.nodeType === 'category'
                         ? 'border-blue-600 bg-blue-50/50 ring-1 ring-blue-600 text-blue-950 shadow-2xs'
@@ -1005,7 +1200,7 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
 
                   <button
                     type="button"
-                    onClick={() => updateSelectedNodeData({ nodeType: 'step' })}
+                    onClick={() => handleChangeNodeType('step')}
                     className={`p-2.5 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
                       selectedNode.data.nodeType === 'step'
                         ? 'border-purple-600 bg-purple-50/50 ring-1 ring-purple-600 text-purple-950 shadow-2xs'
@@ -1023,7 +1218,7 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
 
                   <button
                     type="button"
-                    onClick={() => updateSelectedNodeData({ nodeType: 'content' })}
+                    onClick={() => handleChangeNodeType('content')}
                     className={`p-2.5 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
                       selectedNode.data.nodeType === 'content'
                         ? 'border-emerald-600 bg-emerald-50/50 ring-1 ring-emerald-600 text-emerald-950 shadow-2xs'
