@@ -35,7 +35,8 @@ import {
   FileDown,
   GitBranch,
   Code,
-  Copy
+  Copy,
+  Settings
 } from 'lucide-react';
 import {
   DndContext,
@@ -54,8 +55,8 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Service, NewsItem, ServiceId, StepItem, ServiceFAQ, ContactInfo, CategoryConfig } from '../types';
-import { getDefaultServiceDetails, initialContact, defaultCategories, initialRecognitions, userProfileData } from '../data';
+import { Service, NewsItem, ServiceId, StepItem, ServiceFAQ, ContactInfo, CategoryConfig, SiteSettings } from '../types';
+import { getDefaultServiceDetails, initialContact, defaultCategories, initialRecognitions, userProfileData, siteSettings as defaultSiteSettings } from '../data';
 import { SERVICE_ICON_MAP } from './ServiceCard';
 import { MediaUploadField } from './MediaUploadField';
 import { DecisionTreeBuilder } from './DecisionTreeBuilder';
@@ -242,6 +243,8 @@ interface AdminPanelProps {
   categories?: CategoryConfig[];
   onUpdateCategories?: (categories: CategoryConfig[], updatedServices?: (Service & { hidden?: boolean })[]) => void;
   onLogout: () => void;
+  settings?: SiteSettings;
+  setSettings?: (settings: SiteSettings) => void;
 }
 
 export default function AdminPanel({
@@ -254,11 +257,15 @@ export default function AdminPanel({
   onUpdateContact,
   categories,
   onUpdateCategories,
-  onLogout
+  onLogout,
+  settings,
+  setSettings
 }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'tramites' | 'categorias' | 'noticias' | 'contacto' | 'sincronizar'>('tramites');
+  const [activeTab, setActiveTab] = useState<'tramites' | 'categorias' | 'noticias' | 'contacto' | 'configuracion' | 'sincronizar'>('tramites');
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string>('');
+
+  const currentSettings = settings || defaultSiteSettings;
 
   // Categories Form State
   const [categoryForms, setCategoryForms] = useState<CategoryConfig[]>(() => {
@@ -387,6 +394,7 @@ export default function AdminPanel({
       servicesData = services || [];
     }
 
+    const settingsJson = JSON.stringify(currentSettings, null, 2);
     const categoriesJson = JSON.stringify(categoriesData.length > 0 ? categoriesData : defaultCategories, null, 2);
     const servicesJson = JSON.stringify(servicesData.length > 0 ? servicesData : services, null, 2);
     const contactJson = JSON.stringify(contactForm || initialContact, null, 2);
@@ -394,7 +402,9 @@ export default function AdminPanel({
     const userProfileJson = JSON.stringify(userProfileData || {}, null, 2);
     const newsJson = JSON.stringify(news && news.length > 0 ? news : [], null, 2);
 
-    return `import { ServiceId, Service, FAQ, NewsItem, Aviso, UserProfile, MonthlyRecognition, ContactInfo, CategoryConfig } from './types';
+    return `import { ServiceId, Service, FAQ, NewsItem, Aviso, UserProfile, MonthlyRecognition, ContactInfo, CategoryConfig, SiteSettings } from './types';
+
+export const siteSettings: SiteSettings = ${settingsJson};
 
 export const defaultCategories: CategoryConfig[] = ${categoriesJson};
 
@@ -405,7 +415,7 @@ export const initialContact: ContactInfo = ${contactJson};
 
 export const initialRecognitions: MonthlyRecognition[] = ${recognitionsJson};
 
-export const recognitionData: MonthlyRecognition = initialRecognitions[0];
+export const recognitionData: MonthlyRecognition | undefined = initialRecognitions[0];
 
 export const initialServices: Service[] = ${servicesJson};
 
@@ -879,6 +889,19 @@ export const faqsData: FAQ[] = [];
         </button>
 
         <button
+          id="admin-tab-configuracion"
+          onClick={() => setActiveTab('configuracion')}
+          className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 min-h-[42px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.98] cursor-pointer ${
+            activeTab === 'configuracion'
+              ? 'bg-slate-900 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          }`}
+        >
+          <Settings className="w-4 h-4" />
+          <span>Configuración</span>
+        </button>
+
+        <button
           id="admin-tab-sincronizar"
           onClick={() => setActiveTab('sincronizar')}
           className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 min-h-[42px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.98] cursor-pointer ${
@@ -1292,6 +1315,173 @@ export const faqsData: FAQ[] = [];
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW: CONFIGURACIÓN GENERAL */}
+      {activeTab === 'configuracion' && (
+        <div className="space-y-6 max-w-4xl mx-auto py-2 animate-fadeIn">
+          {/* Header */}
+          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <Settings className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 font-display">
+                  Configuración General del Portal
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-500">
+                  Personaliza el comportamiento visual y la pantalla principal de inicio del quiosco.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Setting Card: Default Home View */}
+          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+              <div>
+                <span className="text-xs font-bold text-blue-600 uppercase tracking-wider block mb-1">
+                  Pantalla Principal (Home)
+                </span>
+                <h4 className="text-sm sm:text-base font-bold text-slate-900">
+                  Vista Inicial por Defecto
+                </h4>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Elige qué pantalla verán los colaboradores al abrir o reiniciar el quiosco.
+                </p>
+              </div>
+
+              {/* Direct Switch/Toggle element */}
+              <div className="flex items-center gap-3 shrink-0 self-start sm:self-center bg-slate-50 p-2 rounded-xl border border-slate-200">
+                <span className={`text-xs font-bold ${currentSettings.defaultHomeView === 'categories' ? 'text-blue-700' : 'text-slate-500'}`}>
+                  Categorías
+                </span>
+                <button
+                  type="button"
+                  role="switch"
+                  id="toggle-default-home-view"
+                  aria-checked={currentSettings.defaultHomeView === 'all_services'}
+                  onClick={() => {
+                    const next = currentSettings.defaultHomeView === 'all_services' ? 'categories' : 'all_services';
+                    setSettings?.({ ...currentSettings, defaultHomeView: next });
+                  }}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+                    currentSettings.defaultHomeView === 'all_services' ? 'bg-blue-600' : 'bg-slate-300'
+                  }`}
+                  title="Cambiar vista inicial"
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      currentSettings.defaultHomeView === 'all_services' ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+                <span className={`text-xs font-bold ${currentSettings.defaultHomeView === 'all_services' ? 'text-blue-700' : 'text-slate-500'}`}>
+                  Todos los trámites
+                </span>
+              </div>
+            </div>
+
+            {/* Interactive Selectable Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Option 1: Categorías */}
+              <div
+                role="button"
+                tabIndex={0}
+                id="option-homeview-categories"
+                onClick={() => setSettings?.({ ...currentSettings, defaultHomeView: 'categories' })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSettings?.({ ...currentSettings, defaultHomeView: 'categories' });
+                  }
+                }}
+                className={`p-4 sm:p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-3 text-left ${
+                  currentSettings.defaultHomeView === 'categories'
+                    ? 'border-blue-600 bg-blue-50/40 shadow-xs ring-2 ring-blue-100'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                }`}
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                      <LayoutGrid className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    {currentSettings.defaultHomeView === 'categories' ? (
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-600 text-white flex items-center gap-1 shadow-2xs">
+                        <Check className="w-3 h-3" /> Activo
+                      </span>
+                    ) : (
+                      <span className="w-4 h-4 rounded-full border-2 border-slate-300" />
+                    )}
+                  </div>
+                  <h5 className="font-bold text-slate-900 text-sm sm:text-base">
+                    1. Vista de Categorías (Nivel 1)
+                  </h5>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    La pantalla principal muestra las tarjetas de categorías principales (Nómina, Tarjetas, Asistencia, etc.). El usuario presiona una categoría para ver sus trámites y tiene el botón de volver.
+                  </p>
+                </div>
+                <div className="pt-2 text-[11px] font-semibold text-slate-500 border-t border-slate-200/60">
+                  Ideal para portales con muchos trámites organizados por área temática.
+                </div>
+              </div>
+
+              {/* Option 2: Todos los trámites */}
+              <div
+                role="button"
+                tabIndex={0}
+                id="option-homeview-allservices"
+                onClick={() => setSettings?.({ ...currentSettings, defaultHomeView: 'all_services' })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSettings?.({ ...currentSettings, defaultHomeView: 'all_services' });
+                  }
+                }}
+                className={`p-4 sm:p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-3 text-left ${
+                  currentSettings.defaultHomeView === 'all_services'
+                    ? 'border-blue-600 bg-blue-50/40 shadow-xs ring-2 ring-blue-100'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                }`}
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                      <Layers className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    {currentSettings.defaultHomeView === 'all_services' ? (
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-600 text-white flex items-center gap-1 shadow-2xs">
+                        <Check className="w-3 h-3" /> Activo
+                      </span>
+                    ) : (
+                      <span className="w-4 h-4 rounded-full border-2 border-slate-300" />
+                    )}
+                  </div>
+                  <h5 className="font-bold text-slate-900 text-sm sm:text-base">
+                    2. Cuadrícula Directa de Todos los Trámites
+                  </h5>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    La pantalla principal muestra directamente la cuadrícula con todos los trámites disponibles sin pasar por las categorías. Se oculta el botón "Volver a Categorías".
+                  </p>
+                </div>
+                <div className="pt-2 text-[11px] font-semibold text-slate-500 border-t border-slate-200/60">
+                  Acceso directo e instantáneo a cualquier trámite en una sola pantalla.
+                </div>
+              </div>
+            </div>
+
+            {/* Note & export reminder */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-start gap-3">
+              <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+              <div className="text-xs text-slate-600 leading-relaxed">
+                <span className="font-bold text-slate-800">Persistencia y Sincronización: </span>
+                Esta configuración se guarda automáticamente en este dispositivo. Para que perdure en la versión pública, ve a la pestaña <span className="font-bold text-slate-800">"Sincronizar"</span> y copia el código generado hacia tu archivo <code className="px-1 py-0.5 bg-slate-200/80 rounded font-mono text-[11px] text-slate-900">src/data.ts</code>.
+              </div>
+            </div>
           </div>
         </div>
       )}

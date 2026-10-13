@@ -1,8 +1,9 @@
 import React from 'react';
-import { Lock, Home, Search, FileText, PhoneCall } from 'lucide-react';
+import { Settings, Home, Search, FileText, PhoneCall } from 'lucide-react';
 
 export interface TopBarProps {
-  setShowAdminLogin: (show: boolean) => void;
+  setShowAdminLogin?: (show: boolean) => void;
+  onLoginClick?: () => void;
   currentTab?: 'inicio' | 'buscar' | 'noticias' | 'asistente';
   setCurrentTab?: (tab: 'inicio' | 'buscar' | 'noticias' | 'asistente') => void;
   unreadNewsCount?: number;
@@ -13,6 +14,7 @@ export interface TopBarProps {
 
 export default function TopBar({ 
   setShowAdminLogin, 
+  onLoginClick,
   currentTab = 'inicio', 
   setCurrentTab,
   unreadNewsCount = 0,
@@ -118,15 +120,21 @@ export default function TopBar({
           </nav>
         )}
 
-        {/* Admin Login Button */}
+        {/* Admin / Config Button */}
         <div className="flex items-center gap-2 shrink-0">
           <button 
-            onClick={() => setShowAdminLogin(true)} 
+            onClick={() => {
+              if (onLoginClick) {
+                onLoginClick();
+              } else if (setShowAdminLogin) {
+                setShowAdminLogin(true);
+              }
+            }} 
             className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 hover:text-slate-800 transition-colors bg-slate-100 hover:bg-slate-200 border border-slate-200 px-3.5 py-2 rounded-xl font-bold cursor-pointer active:scale-95 shadow-2xs"
-            title="Acceso administrativo"
+            title="Configuración"
           >
-            <Lock size={15} className="text-slate-500" /> 
-            <span>Ingresar</span>
+            <Settings size={15} className="text-slate-500" /> 
+            <span>Configuración</span>
           </button>
         </div>
       </div>

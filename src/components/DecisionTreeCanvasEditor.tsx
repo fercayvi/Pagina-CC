@@ -39,7 +39,9 @@ import {
   Redo2,
   Compass,
   Edit3,
-  Layers
+  Layers,
+  AlertTriangle,
+  X
 } from 'lucide-react';
 import { ServiceNode, ServiceNodeContentData, ContentBlock, LayoutBlock } from '../types';
 import { PageBuilderFullScreenEditor } from './PageBuilderFullScreenEditor';
@@ -444,6 +446,18 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
   const debounceHistoryTimerRef = useRef<any>(null);
   const [showMinimap, setShowMinimap] = useState<boolean>(true);
 
+  // In-app modal confirmation states (prevents silent iframe browser dialog suppression)
+  const [deleteModal, setDeleteModal] = useState<{
+    nodeId: string;
+    count: number;
+    title: string;
+  } | null>(null);
+  const [typeChangeModal, setTypeChangeModal] = useState<{
+    outgoingCount: number;
+  } | null>(null);
+  const [saveWarningsModal, setSaveWarningsModal] = useState<string[] | null>(null);
+  const [cancelModalOpen, setCancelModalOpen] = useState<boolean>(false);
+
   const pushHistorySnapshot = useCallback((newNodes: DecisionNodeType[], newEdges: Edge[]) => {
     setHistory((prev) => {
       const trimmed = prev.slice(0, historyIndex + 1);
@@ -637,22 +651,24 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
       if (newType === 'content' && (currentType === 'category' || currentType === 'step')) {
         const outgoingEdges = edges.filter((e) => e.source === selectedNode.id);
         if (outgoingEdges.length > 0) {
-          const confirmChange = window.confirm(
-            `Este nodo tiene ${outgoingEdges.length} ${outgoingEdges.length === 1 ? 'rama conectada' : 'ramas conectadas'}. Al cambiar el tipo a Contenido Final, se eliminarán esas ramas. ¿Deseas continuar?`
-          );
-          if (!confirmChange) return;
-
-          const nextEdges = edges.filter((e) => e.source !== selectedNode.id);
-          setEdges(nextEdges);
-          updateSelectedNodeData({ nodeType: 'content' }, true, nextEdges);
+          setTypeChangeModal({ outgoingCount: outgoingEdges.length });
           return;
         }
       }
 
       updateSelectedNodeData({ nodeType: newType }, true);
     },
-    [selectedNode, edges, setEdges, updateSelectedNodeData]
+    [selectedNode, edges, updateSelectedNodeData]
   );
+
+  const confirmTypeChange = useCallback(() => {
+    if (!selectedNode || !typeChangeModal) return;
+
+    const nextEdges = edges.filter((e) => e.source !== selectedNode.id);
+    setEdges(nextEdges);
+    updateSelectedNodeData({ nodeType: 'content' }, true, nextEdges);
+    setTypeChangeModal(null);
+  }, [selectedNode, typeChangeModal, edges, setEdges, updateSelectedNodeData]);
 
   // Add a new branch/child connected to the selected category node
   const handleAddChildBranch = useCallback(() => {
@@ -719,18 +735,24 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
     setSelectedNodeId(newId);
   }, [nodes, edges, setNodes, pushHistorySnapshot]);
 
-  // Delete the selected node and all its descendants with window.confirm
+  // Delete the selected node and all its descendants (opens in-app confirmation modal)
   const handleDeleteSelectedNode = useCallback(() => {
-    if (!selectedNodeId) return;
+    if (!selectedNode) return;
 
-    const toDelete = getDescendants(selectedNodeId, edges);
+    const toDelete = getDescendants(selectedNode.id, edges);
     const count = toDelete.size;
-    const message = count === 1
-      ? '¿Deseas eliminar este nodo? Se borrará 1 nodo.'
-      : `¿Deseas eliminar este nodo y todos sus descendientes? Se borrarán ${count} nodos en total.`;
 
-    if (!window.confirm(message)) return;
+    setDeleteModal({
+      nodeId: selectedNode.id,
+      count,
+      title: selectedNode.data.title || 'Continuar'
+    });
+  }, [selectedNode, edges]);
 
+  const confirmDeleteNode = useCallback(() => {
+    if (!deleteModal) return;
+
+    const toDelete = getDescendants(deleteModal.nodeId, edges);
     const nextNodes = nodes.filter((n) => !toDelete.has(n.id));
     const nextEdges = edges.filter((e) => !toDelete.has(e.source) && !toDelete.has(e.target));
 
@@ -738,7 +760,8 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
     setEdges(nextEdges);
     pushHistorySnapshot(nextNodes, nextEdges);
     setSelectedNodeId(null);
-  }, [selectedNodeId, nodes, edges, setNodes, setEdges, pushHistorySnapshot]);
+    setDeleteModal(null);
+  }, [deleteModal, edges, nodes, setNodes, setEdges, pushHistorySnapshot]);
 
   // Auto-arrange layout
   const handleAutoArrange = useCallback(() => {
@@ -872,8 +895,8 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
     const currentTree = flowToTree(nodes, edges);
     const hasChanges = JSON.stringify(currentTree) !== initialTreeJsonRef.current;
     if (hasChanges) {
-      const confirmDiscard = window.confirm('¿Deseas descartar los cambios no guardados en el árbol de decisiones?');
-      if (!confirmDiscard) return;
+      setCancelModalOpen(true);
+      return;
     }
     onClose();
   }, [nodes, edges, onClose]);
@@ -932,10 +955,8 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
     }
 
     if (warnings.length > 0) {
-      const confirmSave = window.confirm(
-        `Se encontraron las siguientes observaciones en el árbol de decisiones:\n\n${warnings.join('\n')}\n\n¿Deseas guardar de todos modos? (Presiona 'Cancelar' para corregir o 'Aceptar' para guardar).`
-      );
-      if (!confirmSave) return;
+      setSaveWarningsModal(warnings);
+      return;
     }
 
     const finalTree = flowToTree(nodes, edges);
@@ -1408,6 +1429,187 @@ export const DecisionTreeCanvasEditor: React.FC<DecisionTreeCanvasEditorProps> =
             }}
             serviceTitle={selectedNode.data.title || serviceTitle || 'Paso del Trámite'}
           />
+        </div>
+      )}
+
+      {/* 1. MODAL: CONFIRMAR ELIMINACIÓN DE NODO Y DESCENDIENTES */}
+      {deleteModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-100">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-bold text-slate-900">
+                  ¿Eliminar este nodo?
+                </h3>
+                <p className="text-xs text-slate-500 mt-1 truncate">
+                  Nodo: <span className="font-semibold text-slate-700">"{deleteModal.title}"</span>
+                </p>
+                <div className="mt-2.5 text-xs text-slate-600 bg-red-50/60 border border-red-100/80 rounded-xl p-3">
+                  {deleteModal.count === 1 ? (
+                    <p>Esta acción eliminará este nodo del diagrama y no se puede deshacer.</p>
+                  ) : (
+                    <p>
+                      Se eliminarán <strong className="text-red-700 font-bold">{deleteModal.count} nodos en total</strong> (el nodo seleccionado y todas sus ramas descendientes conectadas).
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setDeleteModal(null)}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteNode}
+                className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>
+                  Eliminar {deleteModal.count > 1 ? `(${deleteModal.count} nodos)` : 'nodo'}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. MODAL: CAMBIO A TIPO CONTENIDO CON RAMAS EXISTENTES */}
+      {typeChangeModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-bold text-slate-900">
+                  Cambiar a Contenido Final
+                </h3>
+                <p className="text-xs text-slate-600 mt-1">
+                  Este nodo tiene <strong className="text-slate-900">{typeChangeModal.outgoingCount} {typeChangeModal.outgoingCount === 1 ? 'rama conectada' : 'ramas conectadas'}</strong>. Un nodo de tipo "Contenido" es terminal y no puede tener ramas descendientes.
+                </p>
+                <p className="text-xs text-amber-800 font-medium bg-amber-50 rounded-xl p-2.5 mt-2 border border-amber-200/60">
+                  ¿Deseas cambiar el tipo a Contenido y eliminar las ramas conectadas?
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setTypeChangeModal(null)}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmTypeChange}
+                className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
+              >
+                Cambiar y eliminar ramas
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. MODAL: ADVERTENCIAS ANTES DE GUARDAR */}
+      {saveWarningsModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-bold text-slate-900">
+                  Observaciones en el Árbol de Decisiones
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Se detectaron las siguientes situaciones antes de guardar:
+                </p>
+                <div className="mt-2.5 space-y-1.5 max-h-48 overflow-y-auto bg-slate-50 rounded-xl p-3 border border-slate-200/80">
+                  {saveWarningsModal.map((w, idx) => (
+                    <p key={idx} className="text-xs text-slate-700">
+                      {w}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setSaveWarningsModal(null)}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                Corregir en el diagrama
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSaveWarningsModal(null);
+                  const finalTree = flowToTree(nodes, edges);
+                  onSave(finalTree);
+                }}
+                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
+              >
+                Guardar de todos modos
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. MODAL: DESCARTAR CAMBIOS AL CANCELAR */}
+      {cancelModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-bold text-slate-900">
+                  ¿Descartar cambios no guardados?
+                </h3>
+                <p className="text-xs text-slate-600 mt-1">
+                  Tienes modificaciones sin guardar en el árbol de decisiones. Si sales ahora, se perderán estos cambios.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setCancelModalOpen(false)}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                Seguir editando
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCancelModalOpen(false);
+                  onClose();
+                }}
+                className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
+              >
+                Descartar y salir
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

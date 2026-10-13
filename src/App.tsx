@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
-import { Service, NewsItem, UserProfile, ContactInfo, CategoryConfig } from './types';
-import { initialServices, initialNews, userProfileData, initialContact, defaultCategories } from './data';
+import { Service, NewsItem, UserProfile, ContactInfo, CategoryConfig, SiteSettings } from './types';
+import { initialServices, initialNews, userProfileData, initialContact, defaultCategories, siteSettings } from './data';
 import BottomNav from './components/BottomNav';
 import TopBar from './components/TopBar';
 import HomeTab from './components/HomeTab';
@@ -10,7 +10,6 @@ import NewsTab from './components/NewsTab';
 import AsistenteTab from './components/AsistenteTab';
 import SearchTab from './components/SearchTab';
 import AdminPanel from './components/AdminPanel';
-import AdminLoginModal from './components/AdminLoginModal';
 import ScrollProgressBar from './components/ScrollProgressBar';
 
 export default function App() {
@@ -23,9 +22,32 @@ export default function App() {
   
   // Admin State
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
   const [isImageZoomed, setIsImageZoomed] = useState<boolean>(false);
   const [unreadNewsCount, setUnreadNewsCount] = useState<number>(0);
+
+  // Configuración general del sitio (persistencia de vista principal)
+  const [settings, setSettings] = useState<SiteSettings>(() => {
+    try {
+      const saved = localStorage.getItem('cc-site-settings-v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && (parsed.defaultHomeView === 'categories' || parsed.defaultHomeView === 'all_services')) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.error('Error cargando siteSettings de localStorage:', e);
+    }
+    return siteSettings;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cc-site-settings-v1', JSON.stringify(settings));
+    } catch (e) {
+      console.error('Error guardando siteSettings en localStorage:', e);
+    }
+  }, [settings]);
 
   // Inicialización de estados: src/data.ts es la fuente de verdad principal y prioritaria
   const [services, setServices] = useState<(Service & { hidden?: boolean })[]>(() => {
@@ -165,13 +187,12 @@ export default function App() {
     const resetInactivityTimer = () => {
       if (timeoutId) clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
-        // Return to home view, close modals and admin session
+        // Return to home view and exit admin session
         setCurrentTab('inicio');
         setSearchQuery('');
         setSelectedService(null);
         setServiceEditMode(false);
         setIsAdminLoggedIn(false);
-        setIsLoginModalOpen(false);
         setSelectedCategory(null);
       }, 90000); // 90 seconds
     };
@@ -304,12 +325,14 @@ export default function App() {
                     setIsAdminLoggedIn(false);
                     setSelectedService(null);
                   }}
+                  settings={settings}
+                  setSettings={setSettings}
                 />
               ) : (
                 <>
-                  {/* TopBar with Navigation & Admin Lock Button */}
+                  {/* TopBar with Navigation & Direct Admin Access */}
                   <TopBar 
-                    setShowAdminLogin={setIsLoginModalOpen}
+                    onLoginClick={() => setIsAdminLoggedIn(true)}
                     currentTab={currentTab}
                     setCurrentTab={(tab) => {
                       setCurrentTab(tab);
@@ -382,6 +405,7 @@ export default function App() {
                         selectedCategory={selectedCategory}
                         onSelectCategory={setSelectedCategory}
                         categories={categories}
+                        settings={settings}
                       />
                     </div>
                   )}
@@ -433,13 +457,6 @@ export default function App() {
 
         </div>
       </main>
-
-      {/* Admin Login Modal */}
-      <AdminLoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        onLoginSuccess={() => setIsAdminLoggedIn(true)}
-      />
 
       {/* Global Scroll Progress Bar */}
       <ScrollProgressBar className={isImageZoomed ? 'hidden' : ''} />

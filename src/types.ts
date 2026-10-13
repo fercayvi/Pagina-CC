@@ -228,17 +228,10 @@ export interface MonthlyRecognition {
 
 export interface UserProfile {
   name: string;
-  employeeId: string;
   position: string;
   department: string;
   supervisor: string;
   shift: string;
-  hiringDate: string;
-  nss: string;
-  rfc: string;
-  vacationDaysAvailable: number;
-  fondoAhorroBalance: number;
-  despensaBalance: number;
 }
 
 export interface ContactInfo {
@@ -247,4 +240,8 @@ export interface ContactInfo {
   ubicacion: string;
   horario: string;
   croquisUrl?: string;
+}
+
+export interface SiteSettings {
+  defaultHomeView: 'categories' | 'all_services';
 }

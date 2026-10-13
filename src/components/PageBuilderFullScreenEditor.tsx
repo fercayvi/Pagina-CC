@@ -22,6 +22,7 @@ import {
   LayoutGrid,
   Undo2,
   Redo2,
+  AlertTriangle,
   X
 } from 'lucide-react';
 import { 
@@ -73,18 +74,23 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
   // Track initial blocks state for Cancel / Discard
   const initialBlocksRef = useRef<LayoutBlock[]>(JSON.parse(JSON.stringify(blocks)));
   const hasChanges = JSON.stringify(blocks) !== JSON.stringify(initialBlocksRef.current);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
 
-  const handleCancel = () => {
-    if (hasChanges) {
-      const confirmDiscard = window.confirm('¿Deseas descartar los cambios no guardados?');
-      if (!confirmDiscard) return;
-    }
+  const executeCancel = () => {
     onChange(initialBlocksRef.current);
     if (onCancel) {
       onCancel();
     } else {
       onClose();
     }
+  };
+
+  const handleCancel = () => {
+    if (hasChanges) {
+      setCancelModalOpen(true);
+      return;
+    }
+    executeCancel();
   };
 
   // Sensors for DND: Require 8px movement before dragging starts to allow normal text click & cursor placement in contentEditable
@@ -700,6 +706,47 @@ export const PageBuilderFullScreenEditor: React.FC<PageBuilderFullScreenEditorPr
             </div>
           ) : null}
         </DragOverlay>
+
+        {/* Cancel Confirmation Modal */}
+        {cancelModalOpen && (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100">
+                  <AlertTriangle className="w-6 h-6" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-bold text-slate-900">
+                    ¿Descartar cambios no guardados?
+                  </h3>
+                  <p className="text-xs text-slate-600 mt-1">
+                    Tienes modificaciones sin guardar en los bloques de la página. Si sales ahora, se perderán estos cambios.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setCancelModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  Seguir editando
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCancelModalOpen(false);
+                    executeCancel();
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
+                >
+                  Descartar y salir
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </DndContext>

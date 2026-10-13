@@ -7,7 +7,7 @@ import {
   ArrowLeft,
   Info
 } from 'lucide-react';
-import { Service, CategoryConfig } from '../types';
+import { Service, CategoryConfig, SiteSettings } from '../types';
 import { defaultCategories } from '../data';
 import ServiceCard from './ServiceCard';
 
@@ -43,6 +43,7 @@ interface HomeTabProps {
   selectedCategory?: string | null;
   onSelectCategory?: (category: string | null) => void;
   categories?: CategoryConfig[];
+  settings?: SiteSettings;
 }
 
 export default function HomeTab({
@@ -51,17 +52,28 @@ export default function HomeTab({
   selectedCategory: controlledCategory,
   onSelectCategory,
   categories,
+  settings,
 }: HomeTabProps) {
-  // Manejo de Estado (inicializado en null)
-  const [internalCategory, setInternalCategory] = useState<string | null>(null);
+  const isAllServicesDefault = settings?.defaultHomeView === 'all_services';
+
+  // Manejo de Estado (inicializado en 'all' si defaultHomeView es 'all_services', de lo contrario null)
+  const [internalCategory, setInternalCategory] = useState<string | null>(() => {
+    return isAllServicesDefault ? 'all' : null;
+  });
 
   const activeCategories = useMemo(() => {
     return categories && categories.length > 0 ? categories : defaultCategories;
   }, [categories]);
 
-  const selectedCategory = controlledCategory !== undefined 
+  // Si defaultHomeView es 'all_services' y la categoría es null (vista inicial),
+  // se muestra directamente la vista de "Todos los trámites" ('all')
+  const rawCategory = controlledCategory !== undefined 
     ? controlledCategory 
     : internalCategory;
+
+  const selectedCategory = (rawCategory === null && isAllServicesDefault)
+    ? 'all'
+    : rawCategory;
 
   const handleCategoryChange = (cat: string | null) => {
     if (onSelectCategory) {
@@ -81,6 +93,13 @@ export default function HomeTab({
   }, [activeCategories, selectedCategory]);
 
   const categoryDisplayTitle = activeCategoryObj ? activeCategoryObj.label : selectedCategory;
+
+  const isShowingAllServices =
+    selectedCategory === 'all' ||
+    selectedCategory === 'Todos los trámites' ||
+    activeCategoryObj?.id === 'all' ||
+    (typeof categoryDisplayTitle === 'string' &&
+      categoryDisplayTitle.trim().toLowerCase() === 'todos los trámites');
 
   // Filtrado de servicios para Nivel 2
   const filteredServices = useMemo(() => {
@@ -245,23 +264,27 @@ export default function HomeTab({
       ) : (
         /* 2. VISTA SECUNDARIA (NIVEL 2 - TRÁMITES DE LA CATEGORÍA SELECCIONADA) */
         <div className="py-2 animate-fadeIn">
-          {/* Botón superior de volver a categorías */}
-          <div>
-            <button
-              type="button"
-              id="back-to-categories-btn"
-              onClick={() => handleCategoryChange(null)}
-              className="text-blue-600 font-bold hover:bg-blue-50 px-4 py-2 rounded-xl mb-6 inline-flex items-center gap-2 -ml-4 cursor-pointer transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span>Volver a Categorías</span>
-            </button>
-          </div>
+          {/* Botón superior de volver a categorías (oculto si la pantalla principal por defecto es 'Todos los trámites') */}
+          {!(isAllServicesDefault && isShowingAllServices) && (
+            <div>
+              <button
+                type="button"
+                id="back-to-categories-btn"
+                onClick={() => handleCategoryChange(null)}
+                className="text-blue-600 font-bold hover:bg-blue-50 px-4 py-2 rounded-xl mb-6 inline-flex items-center gap-2 -ml-4 cursor-pointer transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                <span>Volver a Categorías</span>
+              </button>
+            </div>
+          )}
 
-          {/* Título de la categoría seleccionada con nombre personalizado */}
-          <h2 className="text-2xl font-bold mb-6 text-gray-900">
-            {categoryDisplayTitle}
-          </h2>
+          {/* Título de la categoría seleccionada con nombre personalizado (se oculta si muestra todos los trámites) */}
+          {!isShowingAllServices && (
+            <h2 className="text-2xl font-bold mb-6 text-gray-900">
+              {categoryDisplayTitle}
+            </h2>
+          )}
 
           {/* Cuadrícula con las tarjetas de los trámites */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2.5 sm:gap-3.5 pb-2">

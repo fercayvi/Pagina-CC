@@ -1,4 +1,8 @@
-import { ServiceId, Service, FAQ, NewsItem, Aviso, UserProfile, MonthlyRecognition, ContactInfo, CategoryConfig } from './types';
+import { ServiceId, Service, FAQ, NewsItem, Aviso, UserProfile, MonthlyRecognition, ContactInfo, CategoryConfig, SiteSettings } from './types';
+
+export const siteSettings: SiteSettings = {
+  defaultHomeView: 'categories'
+};
 
 export const defaultCategories: CategoryConfig[] = [
   {
@@ -43,18 +47,9 @@ export const initialContact: ContactInfo = {
   "croquisUrl": ""
 };
 
-export const initialRecognitions: MonthlyRecognition[] = [
-  {
-    "id": "rec-1",
-    "badgeTitle": "Reconocimiento Mensual",
-    "name": "Mateo Rodríguez",
-    "initials": "MR",
-    "position": "Línea 2 - Montacargas • ¡Cero Retardos y 5S Perfecto!",
-    "message": "Mateo mantuvo su área de almacén 100% limpia y ordenada, asegurando que los materiales llegaran a tiempo a la línea de ensamble. ¡Gracias por tu esfuerzo, Mateo!"
-  }
-];
+export const initialRecognitions: MonthlyRecognition[] = [];
 
-export const recognitionData: MonthlyRecognition = initialRecognitions[0];
+export const recognitionData: MonthlyRecognition | undefined = initialRecognitions[0];
 
 export const initialServices: Service[] = [
   {
@@ -642,17 +637,10 @@ export const servicesData = initialServices;
 
 export const userProfileData: UserProfile = {
   "name": "Colaborador Planta",
-  "employeeId": "OP-4820",
   "position": "Operador de Ensamble A",
   "department": "Producción - Línea 3",
-  "supervisor": "Ing. Héctor Ramírez (Cel: 55-9876-5432)",
-  "shift": "Primer Turno (06:00 AM - 02:00 PM)",
-  "hiringDate": "12 de Enero, 2026",
-  "nss": "12987456321",
-  "rfc": "MANJ950812HDF",
-  "vacationDaysAvailable": 12,
-  "fondoAhorroBalance": 1840.5,
-  "despensaBalance": 650
+  "supervisor": "Ing. Héctor Ramírez",
+  "shift": "Primer Turno (06:00 AM - 02:00 PM)"
 };
 
 export const initialNews: NewsItem[] = [
